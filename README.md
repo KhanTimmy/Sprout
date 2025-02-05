@@ -1,2 +1,2 @@
-# ChorePal
+# Baby Tracker
 
