@@ -3,6 +3,7 @@ import React, { useState } from "react"
 import { auth } from "../FirebaseConfig"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { router } from "expo-router"
+import { Image } from 'expo-image';
 
 const index = () => {
     const [email, setEmail] = useState('');
@@ -23,8 +24,11 @@ const index = () => {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>SPROUT</Text>
-        <View style={styles.logoPlaceholder}>
-          <Text>Logo</Text>
+        <View style={styles.container}>
+          <Image
+            style={styles.image}
+            source={require('../assets/images/logo.png')}
+          />
         </View>
 
         <TextInput
@@ -67,18 +71,13 @@ const styles = StyleSheet.create({
       backgroundColor: '#fff',
     },
     title: {
-      fontSize: 32,
+      fontSize: 64,
       fontWeight: 'bold',
-      marginBottom: 20,
+      marginBottom: 0,
     },
-    logoPlaceholder: {
-      width: 100,
-      height: 100,
-      marginBottom: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#ddd',
-      borderRadius: 50,
+    image: {
+      width: 300,
+      height: 300,
     },
     input: {
       width: '100%',
@@ -92,7 +91,7 @@ const styles = StyleSheet.create({
     forgotPassword: {
       alignSelf: 'flex-end',
       marginBottom: 20,
-      color: '#007BFF',
+      color: '#808080',
     },
     button: {
       width: '100%',
