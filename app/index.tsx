@@ -3,11 +3,12 @@ import React, { useState } from "react"
 import { auth } from "../FirebaseConfig"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { router } from "expo-router"
+import CustomButton from "@/components/CustomButton";
 
 const index = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
+  
     const isInputValid = email.trim() !== '' && password.trim() !== '';
 
     const logIn = async() => {
@@ -46,13 +47,19 @@ const index = () => {
           <Text style={styles.forgotPassword}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button, !isInputValid && styles.disabledButton]} onPress={logIn}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={() => router.push('/register')}>
-          <Text style={styles.buttonText}>Register</Text>
-        </TouchableOpacity>
+        <CustomButton
+          title="Login"
+          onPress={logIn}
+          variant={isInputValid ? "primary" : "secondary"} // Example to reflect the disabled state
+          style={isInputValid ? {} : styles.disabledButton}
+        />
+
+        <CustomButton
+          title="Register"
+          onPress={() => router.push('/register')}
+          variant="primary"
+      />
 
       </SafeAreaView>
     )
@@ -93,20 +100,6 @@ const styles = StyleSheet.create({
       alignSelf: 'flex-end',
       marginBottom: 20,
       color: '#007BFF',
-    },
-    button: {
-      width: '100%',
-      height: 50,
-      backgroundColor: '#007BFF',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 10,
-      marginBottom: 15,
-    },
-    buttonText: {
-      color: '#fff',
-      fontSize: 16,
-      fontWeight: 'bold',
     },
     disabledButton: {
       backgroundColor: "#A9A9A9",

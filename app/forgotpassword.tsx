@@ -3,6 +3,7 @@ import React, { useState } from "react"
 import { auth } from "../FirebaseConfig"
 import { sendPasswordResetEmail } from "firebase/auth"
 import { router } from "expo-router"
+import CustomButton from "@/components/CustomButton";
 
 export default function ForgotPassword() {
 
@@ -24,19 +25,27 @@ export default function ForgotPassword() {
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.forgotPassword}>We'll email you a link to reset your password</Text>
-                <View style={styles.content}>
-                    <TextInput
+            <View style={styles.content}>
+                <TextInput
                     style={styles.input}
                     placeholder="Enter your email"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    />
-                    <TouchableOpacity style={[styles.button, !isInputValid && styles.disabledButton]} onPress={forgotPassword}>
-                    <Text style={styles.buttonText}>Reset Password</Text>
-                    </TouchableOpacity>
-                </View>
+                />
+                <CustomButton
+                    title="Reset Password"
+                    onPress={forgotPassword}
+                    variant={isInputValid ? "primary" : "secondary"} // Reflect validity via the variant
+                    style={isInputValid ? {} : styles.disabledButton} // Apply optional disabled styling
+                />
+                <CustomButton
+                    title="Cancel"
+                    onPress={() => router.back()}
+                    variant="danger"
+                />
+            </View>
         </SafeAreaView>
     );
 }
@@ -64,24 +73,13 @@ const styles = StyleSheet.create({
       paddingHorizontal: 15,
       fontSize: 16,
     },
-    button: {
-      width: "100%",
-      height: 50,
-      backgroundColor: "#007BFF",
-      borderRadius: 8,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    buttonText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "bold",
-    },
     forgotPassword: {
         alignSelf: 'flex-start',
+        fontSize: 32,
         marginBottom: 20,
     },
     disabledButton: {
         backgroundColor: "#A9A9A9",
     },
-  });
+});
+
