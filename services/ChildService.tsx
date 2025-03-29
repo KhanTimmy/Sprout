@@ -30,9 +30,9 @@ import {
     // Fetch children associated with current user
     async fetchUserChildren(): Promise<ChildData[]> {
       const user = getAuth().currentUser;
-      if (!user || !user.uid) return [];
+      if (!user || !user.email) return [];
       
-      console.log('Fetching children for user UID:', user.uid);
+      console.log('Fetching children for user email:', user.email);
       
       try {
         const childrenCollection = collection(db, 'children');
@@ -125,7 +125,7 @@ import {
           // Authorized: Remove user's UID from authorized_uid array
           const childDocRef = doc(db, 'children', child.id);
           await updateDoc(childDocRef, {
-            authorized_uid: arrayRemove(user.uid),
+            authorized_uid: arrayRemove(user.email),
           });
         }
       } catch (error) {

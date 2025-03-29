@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import CustomButton from '@/components/CustomButton';
 import { ChildService, ChildData } from '@/services/ChildService';
@@ -68,6 +68,26 @@ export default function AccessScreen() {
     }
   };
 
+  const handleRemovalButtonPress = async () => {
+    if (!selectedChild) {
+      Alert.alert('No child selected', 'Please select a child to proceed.');
+      return;
+    }
+
+    try {
+      await ChildService.removeChildOrAccess(selectedChild);
+      
+      const actionType = selectedChild.type === 'Parent' ? 'deleted' : 'removed';
+      Alert.alert('Success', `Child has been ${actionType} successfully.`);
+      
+      // Clear selected child after action
+      await clearSelectedChild();
+    } catch (error) {
+      console.error('Error performing action:', error);
+      Alert.alert('Error', 'There was an issue performing the requested action.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Manage Access</Text>
@@ -91,6 +111,14 @@ export default function AccessScreen() {
         </View>
       ) : (
         <Text style={styles.infoText}>No child selected. Please select a child first.</Text>
+      )}
+
+      {selectedChild && (
+        <CustomButton 
+          title={selectedChild.type === 'Parent' ? 'Delete Child' : 'Remove Access'} 
+          onPress={handleRemovalButtonPress}
+          variant="danger" // Makes it 80% width like in original
+        />
       )}
 
       {selectedChild && selectedChild.type === 'Parent' && (
@@ -187,6 +215,12 @@ export default function AccessScreen() {
             variant="primary"
           />
         </CustomModal>
+
+        <CustomButton
+            title="Back"
+            onPress={() => router.back()}
+            variant="primary"
+        />
     </View>
   );
 }
@@ -260,7 +294,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   removeButton: {
-    backgroundColor: '#ff5252',
+    backgroundColor: '#DC3545',
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
