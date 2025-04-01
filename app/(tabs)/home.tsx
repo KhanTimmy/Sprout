@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { auth } from '@/FirebaseConfig';
@@ -8,9 +8,20 @@ import CustomModal from '@/components/CustomModal';
 import RadioButton from '@/components/RadioButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData } from '@/services/ChildService';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+
 
 export default function Home() {
+
+  // date picker functions
+  const [isDatePickerVisible, setDatePickerVisibility] =useState(false);
+
+  // modal functions
   const [modalVisible, setModalVisible] = useState(false);
+  const [activityModalVisible, setActivityModalVisible] = useState(false);
+  const [sleepModalVisible, setSleepModalVisible] =useState(false);
+  
+  // child functions
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const { selectedChild, saveSelectedChild, clearSelectedChild } = useSelectedChild();
 
@@ -29,6 +40,35 @@ export default function Home() {
       console.error('Error fetching children:', error);
     }
   };
+
+  // show modal to select type of activity to be recorded
+  const activityModal = () => {
+    try {
+      setActivityModalVisible(true);
+    } catch (error) {
+      console.error('Error activity modal:', error);
+    }
+  }
+
+  // show sleep modal to record sleep activity
+  const sleepActivityModal = () => {
+    try {
+      setSleepModalVisible(true);
+    } catch (error) {
+      console.error('Error activity modal:', error);
+    }
+  }
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+  const handleDatePickerConfirm = (datetime: Date) => {
+    console.warn("This has been picked: ", datetime);
+    setDatePickerVisibility(false);
+  }
 
   return (
     <View style={styles.container}>
@@ -55,6 +95,13 @@ export default function Home() {
       ) : (
         <Text style={styles.infoText}>No child selected. Please select a child first.</Text>
       )}
+
+      {/* Record Activity Button */}
+      <CustomButton
+        title="New Activity"
+        onPress={activityModal}
+        variant="primary"
+      />
 
       {/* Sign Out Button */}
       <CustomButton 
@@ -107,6 +154,67 @@ export default function Home() {
           variant="primary"
         />
       </CustomModal>
+
+      { /* Select activity type modal */ }
+      <CustomModal
+        visible={activityModalVisible}
+        onClose={() => setActivityModalVisible(false)}
+        title="Select Activity Type"
+        >
+          <CustomButton
+            title="Sleep"
+            onPress={() => {
+              setActivityModalVisible(false)
+              setSleepModalVisible(true)
+            }}
+            variant="primary"
+            />
+          <CustomButton
+            title="Feed"
+            onPress={() => setActivityModalVisible(false)}
+            variant="primary"
+            />
+          <CustomButton
+            title="Diaper Change"
+            onPress={() => setActivityModalVisible(false)}
+            variant="primary"
+            />
+          <CustomButton
+            title="Close"
+            onPress={() => setActivityModalVisible(false)}
+            variant="primary"
+            />
+        </CustomModal>
+
+        {/* Sleep Modal */}
+        <CustomModal
+          visible={sleepModalVisible}
+          onClose={() => setSleepModalVisible(false)}
+          title="Input Sleep Data"
+          >
+            <CustomButton title="Start Time" onPress={showDatePicker}/>
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="datetime"
+              onConfirm={handleDatePickerConfirm}
+              onCancel={hideDatePicker}
+              />
+            <CustomButton title="End Time" onPress={showDatePicker}/>
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="datetime"
+              onConfirm={handleDatePickerConfirm}
+              onCancel={hideDatePicker}
+              />
+            <CustomButton
+              title="Cancel"
+              onPress={() => setSleepModalVisible(false)}
+              variant='primary'
+              />
+          </CustomModal>
+        {/* Feeding Modal */}
+
+        {/* Diaper Change modal */}
     </View>
   );
 }
