@@ -25,6 +25,13 @@ import {
     dob: string;
     sex: string;
   }
+
+  export interface SleepData {
+    id: string
+    start: Date
+    end: Date
+    quality: number
+  }
   
   export const ChildService = {
     // Fetch children associated with current user
@@ -130,6 +137,28 @@ import {
         }
       } catch (error) {
         console.error('Error performing action:', error);
+        throw error;
+      }
+    },
+    async addSleep(sleepData: SleepData): Promise<SleepData> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to add a sleep activity.');
+      }
+      try {
+        const docRef = await addDoc(collection(db, 'children', sleepData.id, 'sleep'), {
+          start: sleepData.start,
+          end: sleepData.end,
+          quality: sleepData.quality
+        });
+        return {
+          id: sleepData.id,
+          start: sleepData.start,
+          end: sleepData.end,
+          quality: sleepData.quality,
+        }
+      } catch (error) {
+        console.error('Error adding sleep activity:', error);
         throw error;
       }
     }

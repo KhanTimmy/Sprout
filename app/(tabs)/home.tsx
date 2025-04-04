@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { auth } from '@/FirebaseConfig';
@@ -7,14 +7,30 @@ import CustomButton from '@/components/CustomButton';
 import CustomModal from '@/components/CustomModal';
 import RadioButton from '@/components/RadioButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData } from '@/services/ChildService';
+import { ChildService, ChildData, SleepData } from '@/services/ChildService';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import {SelectList} from 'react-native-dropdown-select-list'
 
 
 export default function Home() {
 
+  // sleep data
+  const [startDateTime, setStartDateTime] = useState(new Date);
+  const [endDateTime, setEndDateTime] = useState(new Date);
+  const [qualityInput, setQualityInput] = useState(0);
+
   // date picker functions
   const [isDatePickerVisible, setDatePickerVisibility] =useState(false);
+
+  // selection for quality selector
+  const [selected, setSelected] = React.useState(0);
+  const data = [
+    {key:'1', value:1},
+    {key:'2', value:2},
+    {key:'3', value:3},
+    {key:'4', value:4},
+    {key:'5', value:5},
+  ]
 
   // modal functions
   const [modalVisible, setModalVisible] = useState(false);
@@ -65,9 +81,26 @@ export default function Home() {
   const hideDatePicker = () => {
     setDatePickerVisibility(false);
   };
-  const handleDatePickerConfirm = (datetime: Date) => {
-    console.warn("This has been picked: ", datetime);
-    setDatePickerVisibility(false);
+
+
+  // sleep data function
+  const saveSleep = async () => {
+    try {
+      if (selectedChild == null) {
+        throw new Error('No child selected.')
+      }
+      const sleepData: SleepData = {
+        id: selectedChild.id,
+        start: startDateTime,
+        end: endDateTime,
+        quality: qualityInput,
+      };
+      const newSleepData = await ChildService.addSleep(sleepData);
+      Alert.alert('Success', 'Sleep data added!');
+    } catch (error) {
+      console.error('Error adding sleep:', error);
+      Alert.alert('Error', 'Error adding sleep data. Please try again.');
+    }
   }
 
   return (
@@ -192,25 +225,43 @@ export default function Home() {
           onClose={() => setSleepModalVisible(false)}
           title="Input Sleep Data"
           >
+            {startDateTime && (
+              <Text>{startDateTime.toTimeString()}</Text>
+            )}
             <CustomButton title="Start Time" onPress={showDatePicker}/>
             <DateTimePickerModal
               isVisible={isDatePickerVisible}
               mode="datetime"
-              onConfirm={handleDatePickerConfirm}
+              onConfirm={setStartDateTime}
               onCancel={hideDatePicker}
               />
+            {endDateTime && (
+              <Text>{endDateTime.toTimeString()}</Text>
+            )}
             <CustomButton title="End Time" onPress={showDatePicker}/>
             <DateTimePickerModal
               isVisible={isDatePickerVisible}
               mode="datetime"
-              onConfirm={handleDatePickerConfirm}
+              onConfirm={setEndDateTime}
               onCancel={hideDatePicker}
               />
+            <SelectList
+              setSelected={(val: any) => setSelected(val)}
+              data={data}
+              save="value"
+              placeholder='Sleep Quality (1-5)'
+              onSelect={ () => setQualityInput}
+            />
+            <CustomButton
+              title='Confirm'
+              onPress={saveSleep}
+              variant="success"
+            />
             <CustomButton
               title="Cancel"
               onPress={() => setSleepModalVisible(false)}
               variant='primary'
-              />
+            />
           </CustomModal>
         {/* Feeding Modal */}
 
