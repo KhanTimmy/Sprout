@@ -7,9 +7,9 @@ import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '@/FirebaseConfig';
 import { router } from 'expo-router';
-import CustomModal from '@/components/CustomModal';
-import RadioButton from '@/components/RadioButton';
+import ChildSelectionModal from '@/components/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AccessScreen() {
   const { selectedChild, saveSelectedChild, clearSelectedChild } = useSelectedChild();
@@ -73,23 +73,44 @@ export default function AccessScreen() {
       Alert.alert('No child selected', 'Please select a child to proceed.');
       return;
     }
-
-    try {
-      await ChildService.removeChildOrAccess(selectedChild);
-      
-      const actionType = selectedChild.type === 'Parent' ? 'deleted' : 'removed';
-      Alert.alert('Success', `Child has been ${actionType} successfully.`);
-      
-      // Clear selected child after action
-      await clearSelectedChild();
-    } catch (error) {
-      console.error('Error performing action:', error);
-      Alert.alert('Error', 'There was an issue performing the requested action.');
-    }
+  
+    const actionType = selectedChild.type === 'Parent' ? 'delete' : 'remove';
+    const actionText = selectedChild.type === 'Parent' ? 'Delete Child' : 'Remove Access';
+    const confirmationMessage = selectedChild.type === 'Parent'
+      ? `Are you sure you want to delete ${selectedChild.first_name} ${selectedChild.last_name}?`
+      : `Are you sure you want to remove access for ${selectedChild.first_name} ${selectedChild.last_name}?`;
+  
+    // Show the confirmation alert
+    Alert.alert(
+      'Confirm Action',
+      confirmationMessage,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              await ChildService.removeChildOrAccess(selectedChild);
+              
+              Alert.alert('Success', `Child has been ${actionType}d successfully.`);
+              
+              // Clear selected child after action
+              await clearSelectedChild();
+            } catch (error) {
+              console.error('Error performing action:', error);
+              Alert.alert('Error', 'There was an issue performing the requested action.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Manage Access</Text>
       
       {/* Child Selection Button */}
@@ -116,8 +137,8 @@ export default function AccessScreen() {
       {selectedChild && (
         <CustomButton 
           title={selectedChild.type === 'Parent' ? 'Delete Child' : 'Remove Access'} 
-          onPress={handleRemovalButtonPress}
-          variant="danger" // Makes it 80% width like in original
+          onPress={handleRemovalButtonPress} // Now with confirmation pop-up
+          variant="danger" 
         />
       )}
 
@@ -172,56 +193,21 @@ export default function AccessScreen() {
       )}
 
       {/* Child Selection Modal */}
-        <CustomModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          title="Select a Child"
-        >
-          <TouchableOpacity
-            style={styles.addChildButton}
-            onPress={() => {
-              setModalVisible(false);
-              router.push('/addchild');
-            }}
-          >
-            <Text style={styles.addChildButtonText}>Add Child</Text>
-          </TouchableOpacity>
-          
-          {childrenList.length > 0 ? (
-            childrenList.map((child, index) => (
-              <RadioButton
-                key={index}
-                label={`${child.first_name} ${child.last_name} (${child.type})`}
-                selected={selectedChild?.id === child.id}
-                onPress={() => saveSelectedChild(child)}
-                labelPosition="left"
-              />
-            ))
-          ) : (
-            <Text>No children found</Text>
-          )}
-          
-          {childrenList.length > 0 && (
-            <CustomButton
-              title="Clear Selection"
-              onPress={clearSelectedChild}
-              variant="secondary"
-            />
-          )}
-          
-          <CustomButton
-            title="Close"
-            onPress={() => setModalVisible(false)}
-            variant="primary"
-          />
-        </CustomModal>
+      <ChildSelectionModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        childrenList={childrenList}
+        selectedChild={selectedChild}
+        onSelectChild={(child) => saveSelectedChild(child)}
+        onClearSelection={clearSelectedChild}
+      />
 
-        <CustomButton
-            title="Back"
-            onPress={() => router.back()}
-            variant="primary"
-        />
-    </View>
+      <CustomButton
+        title="Back"
+        onPress={() => router.back()}
+        variant="primary"
+      />
+    </SafeAreaView>
   );
 }
 
@@ -306,18 +292,5 @@ const styles = StyleSheet.create({
   addButton: {
     marginTop: 20,
     width: '100%',
-  },
-  addChildButton: {
-    backgroundColor: '#28A745',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 10,
-  },
-  addChildButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

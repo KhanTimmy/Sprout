@@ -7,34 +7,50 @@ interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'danger' | 'success';
   fullWidth?: boolean;
   style?: object;
+  disabled?: boolean;
 }
 
-export default function CustomButton({ title, onPress, variant = 'primary', fullWidth = true , style = {} }: ButtonProps) {
+export default function CustomButton({ 
+  title, 
+  onPress, 
+  variant = 'primary', 
+  fullWidth = true, 
+  style = {},
+  disabled = false 
+}: ButtonProps) {
   const buttonStyles = {
     primary: styles.primaryButton,
     secondary: styles.secondaryButton,
     danger: styles.dangerButton,
     success: styles.successButton,
   };
-
+  
   const textStyles = {
     primary: styles.primaryButtonText,
     secondary: styles.secondaryButtonText,
     danger: styles.dangerButtonText,
     success: styles.successButtonText,
   };
-
+  
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
-        styles.button, 
-        buttonStyles[variant], 
+        styles.button,
+        buttonStyles[variant],
         fullWidth ? styles.fullWidth : null,
+        disabled ? styles.disabledButton : null,
         style
-      ]} 
+      ]}
       onPress={onPress}
+      disabled={disabled}
     >
-      <Text style={[styles.buttonText, textStyles[variant]]}>{title}</Text>
+      <Text style={[
+        styles.buttonText, 
+        textStyles[variant],
+        disabled ? styles.disabledButtonText : null
+      ]}>
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -77,5 +93,12 @@ const styles = StyleSheet.create({
   },
   successButtonText: {
     color: '#fff',
+  },
+  disabledButton: {
+    backgroundColor: '#E9ECEF',
+    opacity: 0.6,
+  },
+  disabledButtonText: {
+    color: '#6C757D',
   },
 });

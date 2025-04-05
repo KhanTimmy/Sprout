@@ -1,122 +1,89 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, Alert, SafeAreaView } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { auth } from '@/FirebaseConfig';
 import CustomButton from '@/components/CustomButton';
-import CustomModal from '@/components/CustomModal';
-import RadioButton from '@/components/RadioButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, SleepData } from '@/services/ChildService';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import {SelectList} from 'react-native-dropdown-select-list'
+import { ChildService, ChildData, SleepData, FeedData } from '@/services/ChildService';
 
+// Import specialized modal components
+import ChildSelectionModal from '@/components/ChildSelectionModal';
+import ActivityModal from '@/components/ActivityModal';
+import SleepModal from '@/components/SleepModal';
+import FeedModal from '@/components/FeedModal';
 
 export default function Home() {
-
-  // sleep data
-  const [startDateTime, setStartDateTime] = useState(new Date);
-  const [endDateTime, setEndDateTime] = useState(new Date);
-  const [qualityInput, setQualityInput] = useState(0);
-
-  // date picker functions
-  const [isDatePickerVisible, setDatePickerVisibility] =useState(false);
-
-  // selection for quality selector
-  const [selected, setSelected] = React.useState(0);
-  const data = [
-    {key:'1', value:1},
-    {key:'2', value:2},
-    {key:'3', value:3},
-    {key:'4', value:4},
-    {key:'5', value:5},
-  ]
-
-  // modal functions
-  const [modalVisible, setModalVisible] = useState(false);
-  const [activityModalVisible, setActivityModalVisible] = useState(false);
-  const [sleepModalVisible, setSleepModalVisible] =useState(false);
-  
-  // child functions
+  // Child state
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
-  const { selectedChild, saveSelectedChild, clearSelectedChild } = useSelectedChild();
+  const { selectedChild, saveSelectedChild, clearSelectedChild, loading } = useSelectedChild();
 
-  // Ensure user is authenticated
-  getAuth().onAuthStateChanged((user) => {
-    if (!user) router.replace('/');
-  });
+  // Modal visibility states
+  const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
+  const [activityModalVisible, setActivityModalVisible] = useState(false);
+  const [sleepModalVisible, setSleepModalVisible] = useState(false);
+  const [feedModalVisible, setFeedModalVisible] = useState(false);
+  const [diaperModalVisible, setDiaperModalVisible] = useState(false);
 
-  // Fetch children and show modal
-  const checkChildren = async () => {
+  // Authentication check
+  useEffect(() => {
+    const unsubscribe = getAuth().onAuthStateChanged((user) => {
+      if (!user) router.replace('/');
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch children when modal opens
+  const openChildSelectionModal = async () => {
     try {
       const children = await ChildService.fetchUserChildren();
       setChildrenList(children);
-      setModalVisible(true);
+      setChildSelectionModalVisible(true);
     } catch (error) {
       console.error('Error fetching children:', error);
+      Alert.alert('Error', 'Could not fetch children list');
     }
   };
 
-  // show modal to select type of activity to be recorded
-  const activityModal = () => {
+  // Handle sleep data submission
+  const handleSaveSleep = async (sleepData: SleepData) => {
     try {
-      setActivityModalVisible(true);
-    } catch (error) {
-      console.error('Error activity modal:', error);
-    }
-  }
-
-  // show sleep modal to record sleep activity
-  const sleepActivityModal = () => {
-    try {
-      setSleepModalVisible(true);
-    } catch (error) {
-      console.error('Error activity modal:', error);
-    }
-  }
-
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
-
-
-  // sleep data function
-  const saveSleep = async () => {
-    try {
-      if (selectedChild == null) {
-        throw new Error('No child selected.')
-      }
-      const sleepData: SleepData = {
-        id: selectedChild.id,
-        start: startDateTime,
-        end: endDateTime,
-        quality: qualityInput,
-      };
-      const newSleepData = await ChildService.addSleep(sleepData);
+      await ChildService.addSleep(sleepData);
       Alert.alert('Success', 'Sleep data added!');
     } catch (error) {
       console.error('Error adding sleep:', error);
       Alert.alert('Error', 'Error adding sleep data. Please try again.');
+      throw error; // Propagate error to modal component
     }
-  }
+  };
+
+  const handleSaveFeed = async (feedData: FeedData) => {
+    try {
+      await ChildService.addFeed(feedData);
+      Alert.alert('Success', 'Feed data added!');
+    } catch (error) {
+      console.error('Error adding feed:', error);
+      Alert.alert('Error', 'Error adding feed data. Please try again.');
+      throw error;
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Home</Text>
 
-      {/* Select Child Button */}
       {/* Child Selection Button */}
       <CustomButton
         title={selectedChild ? "Change Child" : "Select Child"}
-        onPress={checkChildren}
+        onPress={openChildSelectionModal}
         variant="primary"
         style={styles.selectButton}
       />
 
-      {selectedChild ? (
+      {/* Display selected child or info message */}
+      {loading ? (
+        <Text style={styles.infoText}>Loading...</Text>
+      ) : selectedChild ? (
         <View style={styles.childInfoContainer}>
           <Text style={styles.childName}>
             {selectedChild.first_name} {selectedChild.last_name}
@@ -132,8 +99,9 @@ export default function Home() {
       {/* Record Activity Button */}
       <CustomButton
         title="New Activity"
-        onPress={activityModal}
+        onPress={() => setActivityModalVisible(true)}
         variant="primary"
+        disabled={!selectedChild}
       />
 
       {/* Sign Out Button */}
@@ -144,129 +112,42 @@ export default function Home() {
       />
 
       {/* Child Selection Modal */}
-      <CustomModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        title="Select a Child"
-      >
-        <TouchableOpacity
-          style={styles.addChildButton}
-          onPress={() => {
-            setModalVisible(false);
-            router.push('/addchild');
-          }}
-        >
-          <Text style={styles.addChildButtonText}>Add Child</Text>
-        </TouchableOpacity>
-        
-        {childrenList.length > 0 ? (
-          childrenList.map((child, index) => (
-            <RadioButton
-              key={index}
-              label={`${child.first_name} ${child.last_name} (${child.type})`}
-              selected={selectedChild?.id === child.id}
-              onPress={() => saveSelectedChild(child)}
-              labelPosition="left"
-            />
-          ))
-        ) : (
-          <Text>No children found</Text>
-        )}
-        
-        {childrenList.length > 0 && (
-          <CustomButton
-            title="Clear Selection"
-            onPress={clearSelectedChild}
-            variant="secondary"
-          />
-        )}
-        
-        <CustomButton
-          title="Close"
-          onPress={() => setModalVisible(false)}
-          variant="primary"
-        />
-      </CustomModal>
+      <ChildSelectionModal
+        visible={childSelectionModalVisible}
+        onClose={() => setChildSelectionModalVisible(false)}
+        childrenList={childrenList}
+        selectedChild={selectedChild}
+        onSelectChild={saveSelectedChild}
+        onClearSelection={clearSelectedChild}
+      />
 
-      { /* Select activity type modal */ }
-      <CustomModal
+      {/* Activity Selection Modal */}
+      <ActivityModal
         visible={activityModalVisible}
         onClose={() => setActivityModalVisible(false)}
-        title="Select Activity Type"
-        >
-          <CustomButton
-            title="Sleep"
-            onPress={() => {
-              setActivityModalVisible(false)
-              setSleepModalVisible(true)
-            }}
-            variant="primary"
-            />
-          <CustomButton
-            title="Feed"
-            onPress={() => setActivityModalVisible(false)}
-            variant="primary"
-            />
-          <CustomButton
-            title="Diaper Change"
-            onPress={() => setActivityModalVisible(false)}
-            variant="primary"
-            />
-          <CustomButton
-            title="Close"
-            onPress={() => setActivityModalVisible(false)}
-            variant="primary"
-            />
-        </CustomModal>
+        onSleepPress={() => setSleepModalVisible(true)}
+        onFeedPress={() => setFeedModalVisible(true)}
+        onDiaperPress={() => setDiaperModalVisible(true)}
+      />
 
-        {/* Sleep Modal */}
-        <CustomModal
-          visible={sleepModalVisible}
-          onClose={() => setSleepModalVisible(false)}
-          title="Input Sleep Data"
-          >
-            {startDateTime && (
-              <Text>{startDateTime.toTimeString()}</Text>
-            )}
-            <CustomButton title="Start Time" onPress={showDatePicker}/>
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="datetime"
-              onConfirm={setStartDateTime}
-              onCancel={hideDatePicker}
-              />
-            {endDateTime && (
-              <Text>{endDateTime.toTimeString()}</Text>
-            )}
-            <CustomButton title="End Time" onPress={showDatePicker}/>
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="datetime"
-              onConfirm={setEndDateTime}
-              onCancel={hideDatePicker}
-              />
-            <SelectList
-              setSelected={(val: any) => setSelected(val)}
-              data={data}
-              save="value"
-              placeholder='Sleep Quality (1-5)'
-              onSelect={ () => setQualityInput}
-            />
-            <CustomButton
-              title='Confirm'
-              onPress={saveSleep}
-              variant="success"
-            />
-            <CustomButton
-              title="Cancel"
-              onPress={() => setSleepModalVisible(false)}
-              variant='primary'
-            />
-          </CustomModal>
-        {/* Feeding Modal */}
+      {/* Sleep Data Modal */}
+      <SleepModal
+        visible={sleepModalVisible}
+        onClose={() => setSleepModalVisible(false)}
+        onSave={handleSaveSleep}
+        childId={selectedChild?.id}
+      />
 
-        {/* Diaper Change modal */}
-    </View>
+      <FeedModal
+        visible={feedModalVisible}
+        onClose={() => setFeedModalVisible(false)}
+        onSave={handleSaveFeed}
+        childId={selectedChild?.id}
+      />
+
+      {/* Add additional modals for milestone and diaper change as needed */}
+      {/* Future: MilestoneModal, DiaperChangeModal, etc. */}
+    </SafeAreaView>
   );
 }
 
@@ -286,19 +167,6 @@ const styles = StyleSheet.create({
   selectButton: {
     marginBottom: 20,
     width: '100%',
-  },
-  addChildButton: {
-    backgroundColor: '#28A745',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 10,
-  },
-  addChildButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   childInfoContainer: {
     width: '100%',

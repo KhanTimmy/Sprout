@@ -32,6 +32,17 @@ import {
     end: Date
     quality: number
   }
+
+  export interface FeedData {
+    id: string; // child ID
+    amount: number;
+    dateTime: Date; // Firebase will store it as a timestamp
+    description: string;
+    duration: number;
+    notes: string;
+    type: 'nursing' | 'bottle' | 'solid';
+    side?: 'left' | 'right'; // only used if type === 'nursing'
+  }
   
   export const ChildService = {
     // Fetch children associated with current user
@@ -140,6 +151,7 @@ import {
         throw error;
       }
     },
+
     async addSleep(sleepData: SleepData): Promise<SleepData> {
       const user = getAuth().currentUser;
       if (!user) {
@@ -159,6 +171,32 @@ import {
         }
       } catch (error) {
         console.error('Error adding sleep activity:', error);
+        throw error;
+      }
+    },
+
+    async addFeed(feedData: FeedData): Promise<FeedData> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to add a feed activity.');
+      }
+    
+      try {
+        const dataToStore = {
+          amount: feedData.amount,
+          dateTime: feedData.dateTime,
+          description: feedData.description,
+          duration: feedData.duration,
+          notes: feedData.notes,
+          type: feedData.type,
+          ...(feedData.type === 'nursing' && feedData.side ? { side: feedData.side } : {})
+        };
+    
+        await addDoc(collection(db, 'children', feedData.id, 'feed'), dataToStore);
+    
+        return feedData;
+      } catch (error) {
+        console.error('Error adding feed activity:', error);
         throw error;
       }
     }

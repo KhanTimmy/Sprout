@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, SafeAreaView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
 import RadioButton from '@/components/RadioButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, NewChildData } from '@/services/ChildService';
+import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import the date-time picker
 
 export default function AddChild() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState('');
   const [sex, setSex] = useState('');
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false); // State to control the modal visibility
   const { saveSelectedChild } = useSelectedChild();
 
   const validateDob = (dob: string) => {
-    const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dob) {
       return 'Date of Birth is required';
-    } else if (!dobRegex.test(dob)) {
-      return 'Date of Birth must be in the format YYYY-MM-DD';
     }
     return '';
   };
@@ -52,7 +51,7 @@ export default function AddChild() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Add Child</Text>
       
       <TextInput
@@ -67,13 +66,16 @@ export default function AddChild() {
         value={lastName}
         onChangeText={setLastName}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Date of Birth (YYYY-MM-DD)"
-        value={dob}
-        onChangeText={setDob}
-      />
       
+      {/* Date of Birth (DOB) Section */}
+      <CustomButton
+        title={dob ? `Date of Birth: ${dob}` : "Select Date of Birth"}
+        onPress={() => setDatePickerVisibility(true)} // Show the date picker
+        variant="secondary"
+        style={styles.input} // Use the same styling for consistency
+      />
+
+      {/* Sex Selection */}
       <Text style={styles.radioLabel}>Sex</Text>
       <View style={styles.radioGroup}>
         <RadioButton
@@ -82,7 +84,6 @@ export default function AddChild() {
           onPress={() => setSex('male')}
           labelPosition="right"
         />
-
         <RadioButton
           label="Female"
           selected={sex === 'female'}
@@ -102,7 +103,20 @@ export default function AddChild() {
         onPress={() => router.back()} 
         variant="danger"
       />
-    </View>
+
+      {/* Date Picker Modal */}
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={(date) => {
+          const formattedDate = new Date(date).toLocaleDateString('en-CA'); // Format the date as YYYY-MM-DD
+          setDob(formattedDate); // Set the date
+          setDatePickerVisibility(false); // Hide the date picker after selection
+        }}
+        onCancel={() => setDatePickerVisibility(false)} // Hide the date picker if canceled
+        maximumDate={new Date()} // Limit date selection to today or earlier
+      />
+    </SafeAreaView>
   );
 }
 

@@ -25,12 +25,12 @@ const index = () => {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>SPROUT</Text>
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
           <Image
             style={styles.image}
             source={require('../assets/images/logo.png')}
           />
-        </View>
+        </SafeAreaView>
 
         <TextInput
           style={styles.input}

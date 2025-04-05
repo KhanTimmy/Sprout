@@ -1,14 +1,23 @@
-import React from 'react';
-import { Modal, TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import React, { ReactNode } from 'react';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 
 interface CustomModalProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
+  showCloseButton?: boolean;
+  closeOnOutsideClick?: boolean;
 }
 
-export default function CustomModal({ visible, onClose, title, children }: CustomModalProps) {
+const CustomModal = ({
+  visible,
+  onClose,
+  title,
+  children,
+  showCloseButton = true,
+  closeOnOutsideClick = false,
+}: CustomModalProps) => {
   return (
     <Modal
       animationType="slide"
@@ -17,41 +26,87 @@ export default function CustomModal({ visible, onClose, title, children }: Custo
       onRequestClose={onClose}
     >
       <TouchableOpacity
-        style={styles.modalContainer}
+        style={styles.centeredView}
         activeOpacity={1}
-        onPressOut={onClose}
+        onPress={() => {
+          if (closeOnOutsideClick) onClose();
+        }}
       >
-        <View 
-          style={styles.modalContent} 
+        <SafeAreaView 
+          style={styles.modalView}
           onStartShouldSetResponder={() => true}
+          onTouchEnd={(e) => e.stopPropagation()}
         >
-          <Text style={styles.modalTitle}>{title}</Text>
-          {children}
-        </View>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{title}</Text>
+          </View>
+          
+          <View style={styles.modalContent}>
+            {children}
+          </View>
+          
+          {showCloseButton && (
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          )}
+        </SafeAreaView>
       </TouchableOpacity>
     </Modal>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: '85%',
+    backgroundColor: 'white',
+    borderRadius: 15,
     padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalHeader: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
+    width: '100%',
+  },
+  closeButton: {
+    backgroundColor: '#6c757d',
+    borderRadius: 8,
+    padding: 10,
+    elevation: 2,
+    marginTop: 15,
     width: '100%',
     alignItems: 'center',
   },
-  modalTitle: {
-    fontSize: 18,
+  closeButtonText: {
+    color: 'white',
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
+    textAlign: 'center',
   },
 });
+
+export default CustomModal;
