@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView,
+import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView,
   Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator
  } from "react-native"
 import React, { useState } from "react"
@@ -40,14 +40,16 @@ const index = () => {
    };
 
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>  
         <SafeAreaView style={styles.container}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1, width: '100%'}}
             >
-  
-
+              <ScrollView //allows for a bit of scrolling and moved around stuff for it to work appropiately across the screen
+                contentContainerStyle={styles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+              >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.inner}>
             <Text style={styles.title}>SPROUT</Text>
             <Image
@@ -111,9 +113,10 @@ const index = () => {
             variant="primary"
         />
         </View>
+        </TouchableWithoutFeedback>
+        </ScrollView>
         </KeyboardAvoidingView>
         </SafeAreaView>
-        </TouchableWithoutFeedback>    
     );
 };
 
@@ -121,6 +124,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollContainer: {  //added
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   inner: {
     flex: 1,
