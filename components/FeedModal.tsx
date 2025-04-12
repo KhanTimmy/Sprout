@@ -177,6 +177,7 @@ const FeedModal = ({
               placeholder='Select side'
               boxStyles={styles.selectBox}
               dropdownStyles={styles.dropdown}
+              search={false}
             />
           </View>
         )}
