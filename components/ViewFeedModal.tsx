@@ -50,7 +50,7 @@ const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalPro
             <FlatList
               data={feedings}
               renderItem={renderFeedItem}
-              keyExtractor={(item: FeedData) => `${item.id}-${item.dateTime.getTime()}`}
+              keyExtractor={(_, index) => `feed-${index}`}
               contentContainerStyle={styles.listContent}
             />
           </View>

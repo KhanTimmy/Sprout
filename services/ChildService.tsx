@@ -302,7 +302,11 @@ import {
       try {
         const sleepCollection = collection(db, 'children', childId, 'sleep');
         const snapshot = await getDocs(sleepCollection);
-        return snapshot.docs.map((doc) => doc.data() as SleepData);
+        return snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          start: doc.data().start.toDate(),
+          end: doc.data().end.toDate()
+        })) as SleepData[];
       } catch (error) {
         console.error('Error getting sleep activities:', error);
         throw error;

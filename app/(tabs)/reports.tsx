@@ -2,7 +2,7 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { Text, View } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData} from '@/services/ChildService';
+import { ChildService, ChildData, FeedData, SleepData } from '@/services/ChildService';
 import { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
@@ -11,6 +11,7 @@ import { Alert } from 'react-native';
 // import specialized modal components
 import ChildSelectionModal from '@/components/ChildSelectionModal';
 import ViewFeedModal from '@/components/ViewFeedModal';
+import ViewSleepModal from '@/components/ViewSleepModal';
 
 export default function Reports() {
   // Child state
@@ -20,8 +21,11 @@ export default function Reports() {
   // modal visibility states
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
   const [feedingsModalVisible, setFeedingsModalVisible] = useState(false);
+  const [sleepsModalVisible, setSleepsModalVisible] = useState(false);
   const [feedings, setFeedings] = useState<FeedData[]>([]);
+  const [sleeps, setSleeps] = useState<SleepData[]>([]);
   const [loadingFeedings, setLoadingFeedings] = useState(false);
+  const [loadingSleeps, setLoadingSleeps] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -57,6 +61,23 @@ export default function Reports() {
       Alert.alert('Error', 'Could not fetch feeding data');
     } finally {
       setLoadingFeedings(false);
+    }
+  };
+
+  // Fetch sleeps when modal opens
+  const openSleepsModal = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingSleeps(true);
+    try {
+      const sleepsData = await ChildService.getSleep(selectedChild.id);
+      setSleeps(sleepsData);
+      setSleepsModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching sleep data:', error);
+      Alert.alert('Error', 'Could not fetch sleep data');
+    } finally {
+      setLoadingSleeps(false);
     }
   };
 
@@ -97,7 +118,7 @@ export default function Reports() {
       {/* View Sleep Button */}
       <CustomButton
         title="View Sleep"
-        onPress={() => {}}
+        onPress={openSleepsModal}
         variant="primary"
         disabled={!selectedChild}
       />
@@ -118,6 +139,14 @@ export default function Reports() {
         onClose={() => setFeedingsModalVisible(false)}
         feedings={feedings}
         loading={loadingFeedings}
+      />
+
+      {/* Sleep Modal */}
+      <ViewSleepModal
+        visible={sleepsModalVisible}
+        onClose={() => setSleepsModalVisible(false)}
+        sleeps={sleeps}
+        loading={loadingSleeps}
       />
     </SafeAreaView>
   );
