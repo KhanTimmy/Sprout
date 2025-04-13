@@ -2,7 +2,7 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { Text, View } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData, SleepData } from '@/services/ChildService';
+import { ChildService, ChildData, FeedData, SleepData, DiaperData } from '@/services/ChildService';
 import { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
@@ -12,6 +12,9 @@ import { Alert } from 'react-native';
 import ChildSelectionModal from '@/components/ChildSelectionModal';
 import ViewFeedModal from '@/components/ViewFeedModal';
 import ViewSleepModal from '@/components/ViewSleepModal';
+import ViewDiaperModal from '@/components/ViewDiaperModal';
+import ViewHistoryModal from '@/components/ViewHistoryModal';
+import AtAGlanceSection from '@/components/AtAGlanceSection';
 
 export default function Reports() {
   // Child state
@@ -20,12 +23,21 @@ export default function Reports() {
 
   // modal visibility states
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
   const [feedingsModalVisible, setFeedingsModalVisible] = useState(false);
   const [sleepsModalVisible, setSleepsModalVisible] = useState(false);
+  const [diapersModalVisible, setDiapersModalVisible] = useState(false);
+  
+  // data states
   const [feedings, setFeedings] = useState<FeedData[]>([]);
   const [sleeps, setSleeps] = useState<SleepData[]>([]);
+  const [diapers, setDiapers] = useState<DiaperData[]>([]);
+  
+  // loading states
   const [loadingFeedings, setLoadingFeedings] = useState(false);
   const [loadingSleeps, setLoadingSleeps] = useState(false);
+  const [loadingDiapers, setLoadingDiapers] = useState(false);
+  const [loadingSummary, setLoadingSummary] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -34,6 +46,60 @@ export default function Reports() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Fetch all data when child is selected
+  useEffect(() => {
+    if (selectedChild) {
+      fetchAllData();
+    }
+  }, [selectedChild]);
+
+  const fetchAllData = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingSummary(true);
+    try {
+      await Promise.all([
+        fetchSleepData(),
+        fetchDiaperData(),
+      ]);
+    } catch (error) {
+      console.error('Error fetching summary data:', error);
+      Alert.alert('Error', 'Could not fetch summary data');
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const fetchSleepData = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingSleeps(true);
+    try {
+      const sleepsData = await ChildService.getSleep(selectedChild.id);
+      setSleeps(sleepsData);
+    } catch (error) {
+      console.error('Error fetching sleep data:', error);
+      Alert.alert('Error', 'Could not fetch sleep data');
+    } finally {
+      setLoadingSleeps(false);
+    }
+  };
+
+  const fetchDiaperData = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingDiapers(true);
+    try {
+      const diapersData = await ChildService.getDiaper(selectedChild.id);
+      setDiapers(diapersData);
+    } catch (error) {
+      console.error('Error fetching diaper data:', error);
+      Alert.alert('Error', 'Could not fetch diaper data');
+    } finally {
+      setLoadingDiapers(false);
+    }
+  };
 
   // Fetch children when modal opens
   const openChildSelectionModal = async () => {
@@ -67,18 +133,13 @@ export default function Reports() {
   // Fetch sleeps when modal opens
   const openSleepsModal = async () => {
     if (!selectedChild) return;
-    
-    setLoadingSleeps(true);
-    try {
-      const sleepsData = await ChildService.getSleep(selectedChild.id);
-      setSleeps(sleepsData);
-      setSleepsModalVisible(true);
-    } catch (error) {
-      console.error('Error fetching sleep data:', error);
-      Alert.alert('Error', 'Could not fetch sleep data');
-    } finally {
-      setLoadingSleeps(false);
-    }
+    setSleepsModalVisible(true);
+  };
+
+  // Fetch diapers when modal opens
+  const openDiapersModal = async () => {
+    if (!selectedChild) return;
+    setDiapersModalVisible(true);
   };
 
   return (
@@ -107,20 +168,22 @@ export default function Reports() {
         <Text style={styles.infoText}>No child selected. Please select a child first.</Text>
       )}
 
-      {/* View Feedings Button */}
-      <CustomButton
-        title="View Feedings"
-        onPress={openFeedingsModal}
-        variant="primary"
-        disabled={!selectedChild}
-      />
+      {/* At a Glance Section */}
+      {selectedChild && (
+        <AtAGlanceSection
+          sleeps={sleeps}
+          diapers={diapers}
+          loading={loadingSummary}
+        />
+      )}
 
-      {/* View Sleep Button */}
+      {/* View History Button */}
       <CustomButton
-        title="View Sleep"
-        onPress={openSleepsModal}
+        title="View History"
+        onPress={() => setHistoryModalVisible(true)}
         variant="primary"
         disabled={!selectedChild}
+        style={styles.historyButton}
       />
 
       {/* Child Selection Modal */}
@@ -131,6 +194,15 @@ export default function Reports() {
         selectedChild={selectedChild}
         onSelectChild={saveSelectedChild}
         onClearSelection={clearSelectedChild}
+      />
+
+      {/* History Modal */}
+      <ViewHistoryModal
+        visible={historyModalVisible}
+        onClose={() => setHistoryModalVisible(false)}
+        onViewSleep={openSleepsModal}
+        onViewFeedings={openFeedingsModal}
+        onViewDiapers={openDiapersModal}
       />
 
       {/* Feedings Modal */}
@@ -147,6 +219,14 @@ export default function Reports() {
         onClose={() => setSleepsModalVisible(false)}
         sleeps={sleeps}
         loading={loadingSleeps}
+      />
+
+      {/* Diaper Modal */}
+      <ViewDiaperModal
+        visible={diapersModalVisible}
+        onClose={() => setDiapersModalVisible(false)}
+        diapers={diapers}
+        loading={loadingDiapers}
       />
     </SafeAreaView>
   );
@@ -168,6 +248,10 @@ const styles = StyleSheet.create({
   selectButton: {
     marginBottom: 20,
     width: '100%',
+  },
+  historyButton: {
+    width: '100%',
+    marginTop: 20,
   },
   childInfoContainer: {
     width: '100%',

@@ -329,6 +329,25 @@ import {
         console.error('Error getting feed activities:', error);
         throw error;
       }
+    },
+
+    async getDiaper(childId: string): Promise<DiaperData[]> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to get diaper activities.');
+      }
+      try {
+        const diaperCollection = collection(db, 'children', childId, 'diaper');
+        const snapshot = await getDocs(diaperCollection);
+        return snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          dateTime: doc.data().dateTime.toDate()
+        })) as DiaperData[];
+      } catch (error) {
+        console.error('Error getting diaper activities:', error);
+        throw error;
+      }
     }
+    
   };
 
