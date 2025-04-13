@@ -294,4 +294,34 @@ import {
       }
     },
 
+    async getSleep(childId: string): Promise<SleepData[]> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to get sleep activities.');
+      }
+      try {
+        const sleepCollection = collection(db, 'children', childId, 'sleep');
+        const snapshot = await getDocs(sleepCollection);
+        return snapshot.docs.map((doc) => doc.data() as SleepData);
+      } catch (error) {
+        console.error('Error getting sleep activities:', error);
+        throw error;
+      }
+      },
+
+    async getFeed(childId: string): Promise<FeedData[]> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to get feed activities.');
+      }
+      try {
+        const feedCollection = collection(db, 'children', childId, 'feed');
+        const snapshot = await getDocs(feedCollection);
+        return snapshot.docs.map((doc) => doc.data() as FeedData);
+      } catch (error) {
+        console.error('Error getting feed activities:', error);
+        throw error;
+      }
+    }
   };
+
