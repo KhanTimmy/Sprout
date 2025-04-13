@@ -5,13 +5,16 @@ import { router } from 'expo-router';
 import { auth } from '@/FirebaseConfig';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, SleepData, FeedData } from '@/services/ChildService';
+import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
 
 // Import specialized modal components
 import ChildSelectionModal from '@/components/ChildSelectionModal';
-import ActivityModal from '@/components/ActivityModal';
+import AddActionModal from '@/components/AddActionModal';
 import SleepModal from '@/components/SleepModal';
 import FeedModal from '@/components/FeedModal';
+import DiaperModal from '@/components/DiaperModal';
+import ActivityModal from '@/components/ActivityModal';
+import MilestoneModal from '@/components/MilestoneModal';
 
 export default function Home() {
   // Child state
@@ -20,10 +23,12 @@ export default function Home() {
 
   // Modal visibility states
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
-  const [activityModalVisible, setActivityModalVisible] = useState(false);
+  const [addActionModalVisible, setAddActionModalVisible] = useState(false);
   const [sleepModalVisible, setSleepModalVisible] = useState(false);
   const [feedModalVisible, setFeedModalVisible] = useState(false);
   const [diaperModalVisible, setDiaperModalVisible] = useState(false);
+  const [activityModalVisible, setActivityModalVisible] = useState(false);
+  const [milestoneModalVisible, setMilestoneModalVisible] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -68,6 +73,39 @@ export default function Home() {
     }
   };
 
+  const handleSaveDiaper = async (diaperData: DiaperData) => {
+    try {
+      await ChildService.addDiaper(diaperData);
+      Alert.alert('Success', 'Diaper data added!');
+    } catch (error) {
+      console.error('Error adding diaper:', error);
+      Alert.alert('Error', 'Error adding feed data. Please try again.');
+      throw error;
+    }
+  };
+
+  const handleSaveActivity = async (activityData: ActivityData) => {
+    try {
+      await ChildService.addActivity(activityData);
+      Alert.alert('Success', 'Activity data added!');
+    } catch (error) {
+      console.error('Error adding activity:', error);
+      Alert.alert('Error', 'Error adding activity data. Please try again.');
+      throw error;
+    }
+  };
+
+  const handleSaveMilestone = async (milestoneData: MilestoneData) => {
+    try {
+      await ChildService.addMilestone(milestoneData);
+      Alert.alert('Success', 'Milestone data added!');
+    } catch (error) {
+      console.error('Error adding milestone:', error);
+      Alert.alert('Error', 'Error adding milestone data. Please try again.');
+      throw error;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Home</Text>
@@ -98,8 +136,8 @@ export default function Home() {
 
       {/* Record Activity Button */}
       <CustomButton
-        title="New Activity"
-        onPress={() => setActivityModalVisible(true)}
+        title="Add Action"
+        onPress={() => setAddActionModalVisible(true)}
         variant="primary"
         disabled={!selectedChild}
       />
@@ -121,13 +159,15 @@ export default function Home() {
         onClearSelection={clearSelectedChild}
       />
 
-      {/* Activity Selection Modal */}
-      <ActivityModal
-        visible={activityModalVisible}
-        onClose={() => setActivityModalVisible(false)}
+      {/* Add Action Modal */}
+      <AddActionModal
+        visible={addActionModalVisible}
+        onClose={() => setAddActionModalVisible(false)}
         onSleepPress={() => setSleepModalVisible(true)}
         onFeedPress={() => setFeedModalVisible(true)}
         onDiaperPress={() => setDiaperModalVisible(true)}
+        onActivityPress={() => setActivityModalVisible(true)}
+        onMilestonePress={() => setMilestoneModalVisible(true)}
       />
 
       {/* Sleep Data Modal */}
@@ -137,7 +177,8 @@ export default function Home() {
         onSave={handleSaveSleep}
         childId={selectedChild?.id}
       />
-
+      
+      {/* Feed Data Modal */}
       <FeedModal
         visible={feedModalVisible}
         onClose={() => setFeedModalVisible(false)}
@@ -145,8 +186,30 @@ export default function Home() {
         childId={selectedChild?.id}
       />
 
-      {/* Add additional modals for milestone and diaper change as needed */}
-      {/* Future: MilestoneModal, DiaperChangeModal, etc. */}
+      {/* Diaper Data Modal */}
+      <DiaperModal
+        visible={diaperModalVisible}
+        onClose={() => setDiaperModalVisible(false)}
+        onSave={handleSaveDiaper}
+        childId={selectedChild?.id}
+      />
+
+      {/* Activity Data Modal */}
+      <ActivityModal
+        visible={activityModalVisible}
+        onClose={() => setActivityModalVisible(false)}
+        onSave={handleSaveActivity}
+        childId={selectedChild?.id}
+      />
+
+      {/* Milestone Data Modal */}
+      <MilestoneModal
+        visible={milestoneModalVisible}
+        onClose={() => setMilestoneModalVisible(false)}
+        onSave={handleSaveMilestone}
+        childId={selectedChild?.id}
+      />
+
     </SafeAreaView>
   );
 }

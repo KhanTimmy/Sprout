@@ -4,32 +4,32 @@ import CustomModal from './CustomModal';
 import CustomButton from './CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { SelectList } from 'react-native-dropdown-select-list';
-import { ActivityData } from '@/services/ChildService';
+import { MilestoneData } from '@/services/ChildService';
 
-interface ActivityModalProps {
+interface MilestoneModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (activityData: ActivityData) => Promise<void>;
+  onSave: (milestoneData: MilestoneData) => Promise<void>;
   childId: string | undefined; 
 }
 
-const ActivityModal = ({
+const MilestoneModal = ({
   visible,
   onClose,
   onSave,
   childId,
-}: ActivityModalProps) => {
+}: MilestoneModalProps) => {
   const [dateTime, setDateTime] = useState(new Date());
   const [type, setType] = useState('');
   
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
   const data = [
-    {key:'1', value:'bath'},
-    {key:'2', value:'tummy time'},
-    {key:'3', value:'story time'},
-    {key:'4', value:'skin to skin'},
-    {key:'5', value:'brush teeth'},
+    {key:'1', value:'smiling'},
+    {key:'2', value:'rolling over'},
+    {key:'3', value:'sitting up'},
+    {key:'4', value:'crawling'},
+    {key:'5', value:'walking'},
   ];
 
   const handleSave = async () => {
@@ -39,23 +39,23 @@ const ActivityModal = ({
     }
 
     if (!type) {
-      Alert.alert('Error', 'Please select activity type');
+      Alert.alert('Error', 'Please select milestone type');
       return;
     }
 
     try {
-      const activityData: ActivityData = {
+      const milestoneData: MilestoneData = {
         id: childId,
         dateTime: dateTime,
         type: type,
       };
       
-      await onSave(activityData);
+      await onSave(milestoneData);
       resetForm();
       onClose();
     } catch (error) {
-      console.error('Error saving activity data:', error);
-      Alert.alert('Error', 'Could not save activity data');
+      console.error('Error saving milestone data:', error);
+      Alert.alert('Error', 'Could not save milestone data');
     }
   };
 
@@ -71,7 +71,7 @@ const ActivityModal = ({
         resetForm();
         onClose();
       }}
-      title="Input Activity Data"
+      title="Input Milestone Data"
       showCloseButton={false}
     >
       <View style={styles.container}>
@@ -98,12 +98,12 @@ const ActivityModal = ({
         />
 
         <View style={styles.typeSection}>
-          <Text style={styles.label}>Activity Type:</Text>
+          <Text style={styles.label}>Milestone Type:</Text>
             <SelectList
             setSelected={(val: any) => setType(val)}
             data={data}
             save="value"
-            placeholder='Select activity type'
+            placeholder='Select milestone type'
             boxStyles={styles.selectBox}
             dropdownStyles={styles.dropdown}
             search={false}
@@ -173,4 +173,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ActivityModal;
+export default MilestoneModal;

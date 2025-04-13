@@ -4,17 +4,7 @@ import CustomModal from './CustomModal';
 import CustomButton from './CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { SelectList } from 'react-native-dropdown-select-list';
-
-interface FeedData {
-  id: string;
-  amount: number;
-  dateTime: Date;
-  description: string;
-  duration: number;
-  notes: string;
-  type: 'nursing' | 'bottle' | 'solid';
-  side?: 'left' | 'right'; // Only for nursing
-}
+import { FeedData } from '@/services/ChildService';
 
 interface FeedModalProps {
   visible: boolean;

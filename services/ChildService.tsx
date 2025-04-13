@@ -27,10 +27,10 @@ import {
   }
 
   export interface SleepData {
-    id: string
-    start: Date
-    end: Date
-    quality: number
+    id: string;
+    start: Date;
+    end: Date;
+    quality: number;
   }
 
   export interface FeedData {
@@ -44,6 +44,24 @@ import {
     side?: 'left' | 'right'; // only used if type === 'nursing'
   }
   
+  export interface DiaperData {
+    id: string;
+    dateTime: Date;
+    type: 'pee' | 'poo' | 'mixed' | 'dry';
+  }
+
+  export interface ActivityData {
+    id: string;
+    dateTime: Date;
+    type: 'bath' | 'tummy time' | 'story time' | 'skin to skin' | 'brush teeth';
+  }
+
+  export interface MilestoneData {
+    id: string;
+    dateTime: Date;
+    type: 'smiling' | 'rolling over' | 'sitting up' | 'crawling' | 'walking';
+  }
+
   export const ChildService = {
     // Fetch children associated with current user
     async fetchUserChildren(): Promise<ChildData[]> {
@@ -180,9 +198,8 @@ import {
       if (!user) {
         throw new Error('User must be logged in to add a feed activity.');
       }
-    
       try {
-        const dataToStore = {
+        const docRef = await addDoc(collection(db, 'children', feedData.id, 'feed'), {
           amount: feedData.amount,
           dateTime: feedData.dateTime,
           description: feedData.description,
@@ -190,14 +207,91 @@ import {
           notes: feedData.notes,
           type: feedData.type,
           ...(feedData.type === 'nursing' && feedData.side ? { side: feedData.side } : {})
+        });
+    
+        return {
+          id: feedData.id,
+          amount: feedData.amount,
+          dateTime: feedData.dateTime,
+          description: feedData.description,
+          duration: feedData.duration,
+          notes: feedData.notes,
+          type: feedData.type,
+          ...(feedData.type === 'nursing' && feedData.side ? { side: feedData.side } : {}),
         };
-    
-        await addDoc(collection(db, 'children', feedData.id, 'feed'), dataToStore);
-    
-        return feedData;
       } catch (error) {
         console.error('Error adding feed activity:', error);
         throw error;
       }
-    }
+    },
+
+    async addDiaper(diaperData: DiaperData): Promise<DiaperData> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to add a diaper activity.');
+      }
+    
+      try {
+        const docRef = await addDoc(collection(db, 'children', diaperData.id, 'diaper'), {
+          dateTime: diaperData.dateTime,
+          type: diaperData.type
+        });
+    
+        return {
+          id: diaperData.id,
+          dateTime: diaperData.dateTime,
+          type: diaperData.type,
+        };
+      } catch (error) {
+        console.error('Error adding diaper activity:', error);
+        throw error;
+      }
+    },
+
+    async addActivity(activityData: ActivityData): Promise<ActivityData> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to add a activity activity.');
+      }
+    
+      try {
+        const docRef = await addDoc(collection(db, 'children', activityData.id, 'activity'), {
+          dateTime: activityData.dateTime,
+          type: activityData.type
+        });
+    
+        return {
+          id: activityData.id,
+          dateTime: activityData.dateTime,
+          type: activityData.type,
+        };
+      } catch (error) {
+        console.error('Error adding activity activity:', error);
+        throw error;
+      }
+    },
+
+    async addMilestone(milestoneData: MilestoneData): Promise<MilestoneData> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        throw new Error('User must be logged in to add a milestone activity.');
+      }
+    
+      try {
+        const docRef = await addDoc(collection(db, 'children', milestoneData.id, 'milestone'), {
+          dateTime: milestoneData.dateTime,
+          type: milestoneData.type
+        });
+    
+        return {
+          id: milestoneData.id,
+          dateTime: milestoneData.dateTime,
+          type: milestoneData.type,
+        };
+      } catch (error) {
+        console.error('Error adding milestone activity:', error);
+        throw error;
+      }
+    },
+
   };
