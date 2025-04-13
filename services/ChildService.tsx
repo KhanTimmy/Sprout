@@ -307,7 +307,7 @@ import {
         console.error('Error getting sleep activities:', error);
         throw error;
       }
-      },
+    },
 
     async getFeed(childId: string): Promise<FeedData[]> {
       const user = getAuth().currentUser;
@@ -317,7 +317,10 @@ import {
       try {
         const feedCollection = collection(db, 'children', childId, 'feed');
         const snapshot = await getDocs(feedCollection);
-        return snapshot.docs.map((doc) => doc.data() as FeedData);
+        return snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          dateTime: doc.data().dateTime.toDate()
+        })) as FeedData[];
       } catch (error) {
         console.error('Error getting feed activities:', error);
         throw error;

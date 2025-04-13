@@ -1,8 +1,8 @@
 import { SafeAreaView, StyleSheet } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { Text, View } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, SleepData, FeedData} from '@/services/ChildService';
+import { ChildService, ChildData, FeedData} from '@/services/ChildService';
 import { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
@@ -10,7 +10,7 @@ import { Alert } from 'react-native';
 
 // import specialized modal components
 import ChildSelectionModal from '@/components/ChildSelectionModal';
-
+import ViewFeedModal from '@/components/ViewFeedModal';
 
 export default function Reports() {
   // Child state
@@ -19,6 +19,9 @@ export default function Reports() {
 
   // modal visibility states
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
+  const [feedingsModalVisible, setFeedingsModalVisible] = useState(false);
+  const [feedings, setFeedings] = useState<FeedData[]>([]);
+  const [loadingFeedings, setLoadingFeedings] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -37,6 +40,23 @@ export default function Reports() {
     } catch (error) {
       console.error('Error fetching children:', error);
       Alert.alert('Error', 'Could not fetch children list');
+    }
+  };
+
+  // Fetch feedings when modal opens
+  const openFeedingsModal = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingFeedings(true);
+    try {
+      const feedingsData = await ChildService.getFeed(selectedChild.id);
+      setFeedings(feedingsData);
+      setFeedingsModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching feedings:', error);
+      Alert.alert('Error', 'Could not fetch feeding data');
+    } finally {
+      setLoadingFeedings(false);
     }
   };
 
@@ -66,7 +86,39 @@ export default function Reports() {
         <Text style={styles.infoText}>No child selected. Please select a child first.</Text>
       )}
 
+      {/* View Feedings Button */}
+      <CustomButton
+        title="View Feedings"
+        onPress={openFeedingsModal}
+        variant="primary"
+        disabled={!selectedChild}
+      />
 
+      {/* View Sleep Button */}
+      <CustomButton
+        title="View Sleep"
+        onPress={() => {}}
+        variant="primary"
+        disabled={!selectedChild}
+      />
+
+      {/* Child Selection Modal */}
+      <ChildSelectionModal
+        visible={childSelectionModalVisible}
+        onClose={() => setChildSelectionModalVisible(false)}
+        childrenList={childrenList}
+        selectedChild={selectedChild}
+        onSelectChild={saveSelectedChild}
+        onClearSelection={clearSelectedChild}
+      />
+
+      {/* Feedings Modal */}
+      <ViewFeedModal
+        visible={feedingsModalVisible}
+        onClose={() => setFeedingsModalVisible(false)}
+        feedings={feedings}
+        loading={loadingFeedings}
+      />
     </SafeAreaView>
   );
 }
