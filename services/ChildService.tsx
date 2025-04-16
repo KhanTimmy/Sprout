@@ -48,6 +48,11 @@ import {
     id: string;
     dateTime: Date;
     type: 'pee' | 'poo' | 'mixed' | 'dry';
+    peeAmount?: 'little' | 'medium' | 'big';
+    pooAmount?: 'little' | 'medium' | 'big';
+    pooColor?: 'yellow' | 'brown' | 'black' | 'green' | 'red';
+    pooConsistency?: 'solid' | 'loose' | 'runny' | 'mucousy' | 'hard' | 'pebbles' | 'diarrhea';
+    hasRash: boolean;
   }
 
   export interface ActivityData {
@@ -234,13 +239,27 @@ import {
       try {
         const docRef = await addDoc(collection(db, 'children', diaperData.id, 'diaper'), {
           dateTime: diaperData.dateTime,
-          type: diaperData.type
+          type: diaperData.type,
+          hasRash: diaperData.hasRash,
+          ...(diaperData.type === 'mixed' || diaperData.type === 'pee' && diaperData.peeAmount ? {peeAmount: diaperData.peeAmount } : {}),
+          ...(diaperData.type === 'mixed' || diaperData.type === 'poo' && diaperData.pooAmount ? {pooAmount: diaperData.pooAmount } : {}),
+          ...(diaperData.type === 'mixed' || diaperData.type === 'poo' && diaperData.pooColor ? {pooColor: diaperData.pooColor } : {}),
+          ...(diaperData.type === 'mixed' || diaperData.type === 'poo' && diaperData.pooConsistency ? {pooConsistency: diaperData.pooConsistency } : {})
+         // peeAmount: diaperData.peeAmount,
+         // pooAmount: diaperData.pooAmount,
+         // pooColor: diaperData.pooColor,
+         // pooConsistency: diaperData.pooConsistency,
         });
     
         return {
           id: diaperData.id,
           dateTime: diaperData.dateTime,
           type: diaperData.type,
+          peeAmount: diaperData.peeAmount,
+          pooAmount: diaperData.pooAmount,
+          pooColor: diaperData.pooColor,
+          pooConsistency: diaperData.pooConsistency,
+          hasRash: diaperData.hasRash
         };
       } catch (error) {
         console.error('Error adding diaper activity:', error);
