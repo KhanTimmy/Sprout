@@ -131,6 +131,7 @@ const FeedModal = ({
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
           mode="datetime"
+          date={new Date()}
           onConfirm={(date) => {
             setDateTime(date);
             setDatePickerVisibility(false);

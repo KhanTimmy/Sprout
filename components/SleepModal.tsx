@@ -99,6 +99,7 @@ const SleepModal = ({
         <DateTimePickerModal
           isVisible={isStartPickerVisible}
           mode="datetime"
+          date={new Date()}
           onConfirm={(date) => {
             setStartDateTime(date);
             setStartPickerVisibility(false);
@@ -121,6 +122,7 @@ const SleepModal = ({
         <DateTimePickerModal
           isVisible={isEndPickerVisible}
           mode="datetime"
+          date={new Date()}
           onConfirm={(date) => {
             setEndDateTime(date);
             setEndPickerVisibility(false);
