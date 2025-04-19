@@ -21,14 +21,16 @@ export default function Home() {
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const { selectedChild, saveSelectedChild, clearSelectedChild, loading } = useSelectedChild();
 
-  // Modal visibility states
-  const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
-  const [addActionModalVisible, setAddActionModalVisible] = useState(false);
-  const [sleepModalVisible, setSleepModalVisible] = useState(false);
-  const [feedModalVisible, setFeedModalVisible] = useState(false);
-  const [diaperModalVisible, setDiaperModalVisible] = useState(false);
-  const [activityModalVisible, setActivityModalVisible] = useState(false);
-  const [milestoneModalVisible, setMilestoneModalVisible] = useState(false);
+  // Modal visibility state consolidated
+  const [modalVisibility, setModalVisibility] = useState({
+    childSelection: false,
+    addAction: false,
+    sleep: false,
+    feed: false,
+    diaper: false,
+    activity: false,
+    milestone: false,
+  });
 
   // Authentication check
   useEffect(() => {
@@ -40,68 +42,27 @@ export default function Home() {
 
   // Fetch children when modal opens
   const openChildSelectionModal = async () => {
+    console.log('CustomButton called openChildSelectionModal');
     try {
+      console.log('[home] openChildSelectionModal called [ChildService]fetchUserChildren');
       const children = await ChildService.fetchUserChildren();
       setChildrenList(children);
-      setChildSelectionModalVisible(true);
+      setModalVisibility(prev => ({ ...prev, childSelection: true }));
+      console.log('[Components] ChildSelectionModal set to visible');
     } catch (error) {
       console.error('Error fetching children:', error);
       Alert.alert('Error', 'Could not fetch children list');
     }
   };
 
-  // Handle sleep data submission
-  const handleSaveSleep = async (sleepData: SleepData) => {
+  // Generalized save function for all types of data (sleep, feed, diaper, activity, milestone)
+  const handleSave = async (data: SleepData | FeedData | DiaperData | ActivityData | MilestoneData, saveFunction: Function, successMessage: string, errorMessage: string) => {
     try {
-      await ChildService.addSleep(sleepData);
-      Alert.alert('Success', 'Sleep data added!');
+      await saveFunction(data);
+      Alert.alert('Success', successMessage);
     } catch (error) {
-      console.error('Error adding sleep:', error);
-      Alert.alert('Error', 'Error adding sleep data. Please try again.');
-      throw error; // Propagate error to modal component
-    }
-  };
-
-  const handleSaveFeed = async (feedData: FeedData) => {
-    try {
-      await ChildService.addFeed(feedData);
-      Alert.alert('Success', 'Feed data added!');
-    } catch (error) {
-      console.error('Error adding feed:', error);
-      Alert.alert('Error', 'Error adding feed data. Please try again.');
-      throw error;
-    }
-  };
-
-  const handleSaveDiaper = async (diaperData: DiaperData) => {
-    try {
-      await ChildService.addDiaper(diaperData);
-      Alert.alert('Success', 'Diaper data added!');
-    } catch (error) {
-      console.error('Error adding diaper:', error);
-      Alert.alert('Error', 'Error adding feed data. Please try again.');
-      throw error;
-    }
-  };
-
-  const handleSaveActivity = async (activityData: ActivityData) => {
-    try {
-      await ChildService.addActivity(activityData);
-      Alert.alert('Success', 'Activity data added!');
-    } catch (error) {
-      console.error('Error adding activity:', error);
-      Alert.alert('Error', 'Error adding activity data. Please try again.');
-      throw error;
-    }
-  };
-
-  const handleSaveMilestone = async (milestoneData: MilestoneData) => {
-    try {
-      await ChildService.addMilestone(milestoneData);
-      Alert.alert('Success', 'Milestone data added!');
-    } catch (error) {
-      console.error('Error adding milestone:', error);
-      Alert.alert('Error', 'Error adding milestone data. Please try again.');
+      console.error(`${errorMessage}:`, error);
+      Alert.alert('Error', errorMessage);
       throw error;
     }
   };
@@ -137,7 +98,10 @@ export default function Home() {
       {/* Record Activity Button */}
       <CustomButton
         title="Add Action"
-        onPress={() => setAddActionModalVisible(true)}
+        onPress={() => {
+          setModalVisibility(prev => ({ ...prev, addAction: true }));
+          console.log('[Components] AddActionModal set to visible');
+        }}
         variant="primary"
         disabled={!selectedChild}
       />
@@ -151,8 +115,8 @@ export default function Home() {
 
       {/* Child Selection Modal */}
       <ChildSelectionModal
-        visible={childSelectionModalVisible}
-        onClose={() => setChildSelectionModalVisible(false)}
+        visible={modalVisibility.childSelection}
+        onClose={() => setModalVisibility(prev => ({ ...prev, childSelection: false }))}
         childrenList={childrenList}
         selectedChild={selectedChild}
         onSelectChild={saveSelectedChild}
@@ -161,52 +125,52 @@ export default function Home() {
 
       {/* Add Action Modal */}
       <AddActionModal
-        visible={addActionModalVisible}
-        onClose={() => setAddActionModalVisible(false)}
-        onSleepPress={() => setSleepModalVisible(true)}
-        onFeedPress={() => setFeedModalVisible(true)}
-        onDiaperPress={() => setDiaperModalVisible(true)}
-        onActivityPress={() => setActivityModalVisible(true)}
-        onMilestonePress={() => setMilestoneModalVisible(true)}
+        visible={modalVisibility.addAction}
+        onClose={() => setModalVisibility(prev => ({ ...prev, addAction: false }))}
+        onSleepPress={() => setModalVisibility(prev => ({ ...prev, sleep: true }))}
+        onFeedPress={() => setModalVisibility(prev => ({ ...prev, feed: true }))}
+        onDiaperPress={() => setModalVisibility(prev => ({ ...prev, diaper: true }))}
+        onActivityPress={() => setModalVisibility(prev => ({ ...prev, activity: true }))}
+        onMilestonePress={() => setModalVisibility(prev => ({ ...prev, milestone: true }))}
       />
 
       {/* Sleep Data Modal */}
       <SleepModal
-        visible={sleepModalVisible}
-        onClose={() => setSleepModalVisible(false)}
-        onSave={handleSaveSleep}
+        visible={modalVisibility.sleep}
+        onClose={() => setModalVisibility(prev => ({ ...prev, sleep: false }))}
+        onSave={(data) => handleSave(data, ChildService.addSleep, 'Sleep data added!', 'Error adding sleep data. Please try again.')}
         childId={selectedChild?.id}
       />
       
       {/* Feed Data Modal */}
       <FeedModal
-        visible={feedModalVisible}
-        onClose={() => setFeedModalVisible(false)}
-        onSave={handleSaveFeed}
+        visible={modalVisibility.feed}
+        onClose={() => setModalVisibility(prev => ({ ...prev, feed: false }))}
+        onSave={(data) => handleSave(data, ChildService.addFeed, 'Feed data added!', 'Error adding feed data. Please try again.')}
         childId={selectedChild?.id}
       />
 
       {/* Diaper Data Modal */}
       <DiaperModal
-        visible={diaperModalVisible}
-        onClose={() => setDiaperModalVisible(false)}
-        onSave={handleSaveDiaper}
+        visible={modalVisibility.diaper}
+        onClose={() => setModalVisibility(prev => ({ ...prev, diaper: false }))}
+        onSave={(data) => handleSave(data, ChildService.addDiaper, 'Diaper data added!', 'Error adding diaper data. Please try again.')}
         childId={selectedChild?.id}
       />
 
       {/* Activity Data Modal */}
       <ActivityModal
-        visible={activityModalVisible}
-        onClose={() => setActivityModalVisible(false)}
-        onSave={handleSaveActivity}
+        visible={modalVisibility.activity}
+        onClose={() => setModalVisibility(prev => ({ ...prev, activity: false }))}
+        onSave={(data) => handleSave(data, ChildService.addActivity, 'Activity data added!', 'Error adding activity data. Please try again.')}
         childId={selectedChild?.id}
       />
 
       {/* Milestone Data Modal */}
       <MilestoneModal
-        visible={milestoneModalVisible}
-        onClose={() => setMilestoneModalVisible(false)}
-        onSave={handleSaveMilestone}
+        visible={modalVisibility.milestone}
+        onClose={() => setModalVisibility(prev => ({ ...prev, milestone: false }))}
+        onSave={(data) => handleSave(data, ChildService.addMilestone, 'Milestone data added!', 'Error adding milestone data. Please try again.')}
         childId={selectedChild?.id}
       />
 

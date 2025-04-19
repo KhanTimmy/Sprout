@@ -27,6 +27,7 @@ export interface ChildData {
 }
 
 export function useSelectedChild() {
+  console.log('[Hooks]useSelectedChild executing');
   const [selectedChild, setSelectedChild] = useState<ChildData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,24 +35,27 @@ export function useSelectedChild() {
   useFocusEffect(
     React.useCallback(() => {
       const fetchSelectedChild = async () => {
+        console.log('[Hooks]fetchSelectedChild executing');
         setLoading(true);
         try {
           const savedChild = await AsyncStorage.getItem('selectedChild');
           if (savedChild) {
             const childData: ChildData = JSON.parse(savedChild);
-            console.log('Fetched selected child:', childData);
+            console.log('...[fetchSelectedChild] selectedChild fetched from AsyncStorage');
 
             // Check if the child exists in the database
             const childExists = await checkIfChildExistsInDatabase(childData.id);
             if (childExists) {
               setSelectedChild(childData);
             } else {
-              console.log('Child does not exist in the database, clearing selected child');
+              console.log('...[fetchSelectedChild] selectedChild DNE in FirestoreDB');
               await AsyncStorage.removeItem('selectedChild');
+              console.log('...[fetchSelectedChild] selectedChild removed from AsyncStorage');
               setSelectedChild(null); // Explicitly reset the selected child state
+              console.log('...[fetchSelectedChild] selectedChild removed from useState');
             }
           } else {
-            console.log('No selected child found in AsyncStorage');
+            console.log('...[fetchSelectedChild] selectedChild not found in AsyncStorage');
             setSelectedChild(null);
           }
         } catch (error) {
@@ -60,23 +64,27 @@ export function useSelectedChild() {
         } finally {
           setLoading(false);
         }
+        console.log('[Hooks]fetchSelectedChild completed');
       };
-
+      console.log('[Hooks]useSelectedChild called [Hooks] fetchSelectedChild');
       fetchSelectedChild();
     }, [])
   );
 
   // Save selected child to AsyncStorage
   const saveSelectedChild = async (child: ChildData | null) => {
+    console.log('[Hooks]saveSelectedChild executing');
     try {
       if (child) {
-        console.log('Saving selected child:', child);
+        console.log('...[saveSelectedChild] selected child saved to AsyncStorage');
         await AsyncStorage.setItem('selectedChild', JSON.stringify(child));
       } else {
         await AsyncStorage.removeItem('selectedChild');
-        console.log('Cleared selected child');
+        console.log('...[saveSelectedChild] selected child cleared from AsyncStorage');
       }
       setSelectedChild(child);
+      console.log('...[saveSelectedChild] selected child set to useState');
+      console.log('[Hooks]saveSelectedChild completed');
     } catch (error) {
       console.error('Error saving selected child:', error);
     }

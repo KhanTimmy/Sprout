@@ -72,11 +72,12 @@ import {
     async fetchUserChildren(): Promise<ChildData[]> {
       const user = getAuth().currentUser;
       if (!user || !user.email) return [];
-      
-      console.log('Fetching children for user email:', user.email);
+      console.log('[ChildService]fetchUserChildren executing');
+      console.log('...[fetchUserChildren] fetching children for user email:', user.email);
       
       try {
         const childrenCollection = collection(db, 'children');
+        console.log('...[fetchUserChildren] accessing "children" collection from Firestore');
       
         // Queries for children (authorized and parent relationships)
         const authorizedQuery = query(childrenCollection, where('authorized_uid', 'array-contains', user.email));
@@ -88,6 +89,7 @@ import {
         let childrenFound: ChildData[] = [];
       
         // Process parent matches
+        console.log('...[fetchUserChildren] processing parent_uid documents');
         parentSnapshot.forEach((doc) => {
           const parentChildData = doc.data();
           if (parentChildData.parent_uid) {
@@ -101,6 +103,7 @@ import {
         });
       
         // Process authorized matches
+        console.log('...[fetchUserChildren] processing authorized_uid documents');
         authorizedSnapshot.forEach((doc) => {
           const authChildData = doc.data();
           if (authChildData.authorized_uid) {
@@ -112,19 +115,21 @@ import {
             });
           }
         });
-      
+        console.log('[ChildService]fetchUserChildren completed');
         return childrenFound;
       } catch (error) {
-        console.error('Error fetching children:', error);
+        console.error('[ChildService]fetchUserChildren error occurred:', error);
         throw error;
       }
     },
   
     // Add a new child
     async addChild(childData: NewChildData): Promise<ChildData> {
+      console.log('[ChildService]addChild executing');
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to add a child');
+        console.error('[ChildService]addChild failed: user not authenticated');
+        throw new Error('User must be logged in to add child');
       }
   
       try {
@@ -136,7 +141,7 @@ import {
           parent_uid: user.email,
           authorized_uid: [],
         });
-  
+        console.log(`...[addChild] child created: ${docRef.id}`);
         // Return the new child with the correct format
         return {
           first_name: childData.first_name,
@@ -145,7 +150,7 @@ import {
           id: docRef.id,
         };
       } catch (error) {
-        console.error('Error adding child:', error);
+        console.error('[ChildService]addChild error occurred:', error);
         throw error;
       }
     },
@@ -154,7 +159,8 @@ import {
     async removeChildOrAccess(child: ChildData): Promise<void> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in');
+        console.error('[ChildService]removeChildOrAccess failed: user not authenticated');
+        throw new Error('User must be logged in to remove child or access');
       }
   
       try {
@@ -162,15 +168,17 @@ import {
           // Parent: Delete the entire document
           const childDocRef = doc(db, 'children', child.id);
           await deleteDoc(childDocRef);
+          console.log(`...[removeChildOrAccess] child removed: ${child.id}`);
         } else if (child.type === 'Authorized') {
           // Authorized: Remove user's UID from authorized_uid array
           const childDocRef = doc(db, 'children', child.id);
           await updateDoc(childDocRef, {
             authorized_uid: arrayRemove(user.email),
           });
+          console.log(`...[removeChildOrAccess] access removed: ${child.id}`);
         }
       } catch (error) {
-        console.error('Error performing action:', error);
+        console.error('[ChildService]removeChildOrAccess error occurred:', error);
         throw error;
       }
     },
@@ -178,7 +186,8 @@ import {
     async addSleep(sleepData: SleepData): Promise<SleepData> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to add a sleep activity.');
+        console.error('[ChildService]addSleep failed: user not authenticated');
+        throw new Error('User must be logged in to add sleep data');
       }
       try {
         const docRef = await addDoc(collection(db, 'children', sleepData.id, 'sleep'), {
@@ -186,6 +195,7 @@ import {
           end: sleepData.end,
           quality: sleepData.quality
         });
+        console.log(`...[addSleep] data created: ${sleepData.id}`);
         return {
           id: sleepData.id,
           start: sleepData.start,
@@ -193,7 +203,7 @@ import {
           quality: sleepData.quality,
         }
       } catch (error) {
-        console.error('Error adding sleep activity:', error);
+        console.error('[ChildService]addSleep error occurred:', error);
         throw error;
       }
     },
@@ -201,7 +211,8 @@ import {
     async addFeed(feedData: FeedData): Promise<FeedData> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to add a feed activity.');
+        console.error('[ChildService]addFeed failed: user not authenticated');
+        throw new Error('User must be logged in to add feed data');
       }
       try {
         const docRef = await addDoc(collection(db, 'children', feedData.id, 'feed'), {
@@ -213,7 +224,7 @@ import {
           type: feedData.type,
           ...(feedData.type === 'nursing' && feedData.side ? { side: feedData.side } : {})
         });
-    
+        console.log(`...[addFeed] data created: ${feedData.id}`);
         return {
           id: feedData.id,
           amount: feedData.amount,
@@ -225,7 +236,7 @@ import {
           ...(feedData.type === 'nursing' && feedData.side ? { side: feedData.side } : {}),
         };
       } catch (error) {
-        console.error('Error adding feed activity:', error);
+        console.error('[ChildService]addFeed error occurred:', error);
         throw error;
       }
     },
@@ -233,7 +244,8 @@ import {
     async addDiaper(diaperData: DiaperData): Promise<DiaperData> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to add a diaper activity.');
+        console.error('[ChildService]addDiaper failed: user not authenticated');
+        throw new Error('User must be logged in to add diaper data');
       }
     
       try {
@@ -250,7 +262,7 @@ import {
          // pooColor: diaperData.pooColor,
          // pooConsistency: diaperData.pooConsistency,
         });
-    
+        console.log(`...[addDiaper] data created: ${diaperData.id}`);
         return {
           id: diaperData.id,
           dateTime: diaperData.dateTime,
@@ -262,7 +274,7 @@ import {
           hasRash: diaperData.hasRash
         };
       } catch (error) {
-        console.error('Error adding diaper activity:', error);
+        console.error('[ChildService]addDiaper error occurred:', error);
         throw error;
       }
     },
@@ -270,7 +282,8 @@ import {
     async addActivity(activityData: ActivityData): Promise<ActivityData> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to add a activity activity.');
+        console.error('[ChildService]addActivity failed: user not authenticated');
+        throw new Error('User must be logged in to add activity data');
       }
     
       try {
@@ -278,14 +291,14 @@ import {
           dateTime: activityData.dateTime,
           type: activityData.type
         });
-    
+        console.log(`...[addActivity] data created: ${activityData.id}`);
         return {
           id: activityData.id,
           dateTime: activityData.dateTime,
           type: activityData.type,
         };
       } catch (error) {
-        console.error('Error adding activity activity:', error);
+        console.error('[ChildService]addActivity error occurred:', error);
         throw error;
       }
     },
@@ -293,7 +306,8 @@ import {
     async addMilestone(milestoneData: MilestoneData): Promise<MilestoneData> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to add a milestone activity.');
+        console.error('[ChildService]addMilestone failed: user not authenticated');
+        throw new Error('User must be logged in to add milestone data');
       }
     
       try {
@@ -301,14 +315,14 @@ import {
           dateTime: milestoneData.dateTime,
           type: milestoneData.type
         });
-    
+        console.log(`...[addMilestone] data created: ${milestoneData.id}`);
         return {
           id: milestoneData.id,
           dateTime: milestoneData.dateTime,
           type: milestoneData.type,
         };
       } catch (error) {
-        console.error('Error adding milestone activity:', error);
+        console.error('[ChildService]addMilestone error occurred:', error);
         throw error;
       }
     },
@@ -316,18 +330,20 @@ import {
     async getSleep(childId: string): Promise<SleepData[]> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to get sleep activities.');
+        console.error('[ChildService]getSleep failed: user not authenticated');
+        throw new Error('User must be logged in to get sleep data');
       }
       try {
         const sleepCollection = collection(db, 'children', childId, 'sleep');
         const snapshot = await getDocs(sleepCollection);
+        console.log(`...[getSleep] sleep data returned`);
         return snapshot.docs.map((doc) => ({
           ...doc.data(),
           start: doc.data().start.toDate(),
           end: doc.data().end.toDate()
         })) as SleepData[];
       } catch (error) {
-        console.error('Error getting sleep activities:', error);
+        console.error('[ChildService]getSleep error occurred:', error);
         throw error;
       }
     },
@@ -335,17 +351,19 @@ import {
     async getFeed(childId: string): Promise<FeedData[]> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to get feed activities.');
+        console.error('[ChildService]getFeed failed: user not authenticated');
+        throw new Error('User must be logged in to get feed data');
       }
       try {
         const feedCollection = collection(db, 'children', childId, 'feed');
         const snapshot = await getDocs(feedCollection);
+        console.log(`...[getFeed] feed data returned`);
         return snapshot.docs.map((doc) => ({
           ...doc.data(),
           dateTime: doc.data().dateTime.toDate()
         })) as FeedData[];
       } catch (error) {
-        console.error('Error getting feed activities:', error);
+        console.error('[ChildService]getFeed error occurred:', error);
         throw error;
       }
     },
@@ -353,20 +371,21 @@ import {
     async getDiaper(childId: string): Promise<DiaperData[]> {
       const user = getAuth().currentUser;
       if (!user) {
-        throw new Error('User must be logged in to get diaper activities.');
+        console.error('[ChildService]getDiaper failed: user not authenticated');
+        throw new Error('User must be logged in to get diaper data');
       }
       try {
         const diaperCollection = collection(db, 'children', childId, 'diaper');
         const snapshot = await getDocs(diaperCollection);
+        console.log(`...[getDiaper] diaper data returned`);
         return snapshot.docs.map((doc) => ({
           ...doc.data(),
           dateTime: doc.data().dateTime.toDate()
         })) as DiaperData[];
       } catch (error) {
-        console.error('Error getting diaper activities:', error);
+        console.error('[ChildService]getDiaper error occurred:', error);
         throw error;
       }
-    }
-    
+    }    
   };
 
