@@ -11,6 +11,9 @@ interface ViewFeedModalProps {
 }
 
 const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalProps) => {
+  // Sort feedings by date in descending order (most recent first)
+  const sortedFeedings = [...feedings].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
+
   // Render item for FlatList
   const renderFeedItem = ({ item }: { item: FeedData }) => (
     <View style={styles.feedItem}>
@@ -43,12 +46,12 @@ const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalPro
         
         {loading ? (
           <Text style={styles.loadingText}>Loading feedings...</Text>
-        ) : feedings.length === 0 ? (
+        ) : sortedFeedings.length === 0 ? (
           <Text style={styles.noDataText}>No feeding data available</Text>
         ) : (
           <View style={styles.listContainer}>
             <FlatList
-              data={feedings}
+              data={sortedFeedings}
               renderItem={renderFeedItem}
               keyExtractor={(_, index) => `feed-${index}`}
               contentContainerStyle={styles.listContent}

@@ -11,11 +11,19 @@ interface ViewDiaperModalProps {
 }
 
 const ViewDiaperModal = ({ visible, onClose, diapers, loading }: ViewDiaperModalProps) => {
+  // Sort diapers by date in descending order (most recent first)
+  const sortedDiapers = [...diapers].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
+
   // Render item for FlatList
   const renderDiaperItem = ({ item }: { item: DiaperData }) => (
     <View style={styles.diaperItem}>
       <Text style={styles.diaperDateTime}>{item.dateTime.toLocaleString()}</Text>
       <Text style={styles.diaperType}>Type: {item.type}</Text>
+      {item.peeAmount && <Text style={styles.diaperDetail}>Pee Amount: {item.peeAmount}</Text>}
+      {item.pooAmount && <Text style={styles.diaperDetail}>Poo Amount: {item.pooAmount}</Text>}
+      {item.pooColor && <Text style={styles.diaperDetail}>Poo Color: {item.pooColor}</Text>}
+      {item.pooConsistency && <Text style={styles.diaperDetail}>Poo Consistency: {item.pooConsistency}</Text>}
+      <Text style={styles.diaperDetail}>Rash: {item.hasRash ? 'Yes' : 'No'}</Text>
     </View>
   );
 
@@ -38,12 +46,12 @@ const ViewDiaperModal = ({ visible, onClose, diapers, loading }: ViewDiaperModal
 
         {loading ? (
           <Text style={styles.loadingText}>Loading diaper changes...</Text>
-        ) : diapers.length === 0 ? (
+        ) : sortedDiapers.length === 0 ? (
           <Text style={styles.noDataText}>No diaper change data available</Text>
         ) : (
           <View style={styles.listContainer}>
             <FlatList
-              data={diapers}
+              data={sortedDiapers}
               renderItem={renderDiaperItem}
               keyExtractor={(_, index) => `diaper-${index}`}
               contentContainerStyle={styles.listContent}
@@ -92,6 +100,12 @@ const styles = StyleSheet.create({
   diaperType: {
     fontSize: 16,
     color: '#666',
+    marginBottom: 5,
+  },
+  diaperDetail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 3,
   },
   loadingText: {
     textAlign: 'center',

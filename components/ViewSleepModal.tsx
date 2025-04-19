@@ -11,6 +11,9 @@ interface ViewSleepModalProps {
 }
 
 const ViewSleepModal = ({ visible, onClose, sleeps, loading }: ViewSleepModalProps) => {
+    // Sort sleeps by start time in descending order (most recent first)
+    const sortedSleeps = [...sleeps].sort((a, b) => b.start.getTime() - a.start.getTime());
+
     // Render item for FlatList
     const renderSleepItem = ({ item }: { item: SleepData }) => {
         // Calculate duration in hours and minutes
@@ -52,12 +55,12 @@ const ViewSleepModal = ({ visible, onClose, sleeps, loading }: ViewSleepModalPro
 
                 {loading ? (
                     <Text style={styles.loadingText}>Loading sleep data...</Text>
-                ) : sleeps.length === 0 ? (
+                ) : sortedSleeps.length === 0 ? (
                     <Text style={styles.noDataText}>No sleep data available</Text>
                 ) : (
                     <View style={styles.listContainer}>
                         <FlatList
-                            data={sleeps}
+                            data={sortedSleeps}
                             renderItem={renderSleepItem}
                             keyExtractor={(_, index) => `sleep-${index}`}
                             contentContainerStyle={styles.listContent}
