@@ -386,6 +386,46 @@ import {
         console.error('[ChildService]getDiaper error occurred:', error);
         throw error;
       }
+    },
+
+    async getActivity(childId: string): Promise<ActivityData[]> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        console.error('[ChildService]getActivity failed: user not authenticated');
+        throw new Error('User must be logged in to get activity data');
+      }
+      try {
+        const activityCollection = collection(db, 'children', childId, 'activity');
+        const snapshot = await getDocs(activityCollection);
+        console.log(`...[getActivity] activity data returned`);
+        return snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          dateTime: doc.data().dateTime.toDate()
+        })) as ActivityData[];
+      } catch (error) {
+        console.error('[ChildService]getActivity error occurred:', error);
+        throw error;
+      }
+    },
+
+    async getMilestone(childId: string): Promise<MilestoneData[]> {
+      const user = getAuth().currentUser;
+      if (!user) {
+        console.error('[ChildService]getMilestone failed: user not authenticated');
+        throw new Error('User must be logged in to get activity data');
+      }
+      try {
+        const milestoneCollection = collection(db, 'children', childId, 'milestone');
+        const snapshot = await getDocs(milestoneCollection);
+        console.log(`...[getMilestone] milestone data returned`);
+        return snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          dateTime: doc.data().dateTime.toDate()
+        })) as MilestoneData[];
+      } catch (error) {
+        console.error('[ChildService]getMilestone error occurred:', error);
+        throw error;
+      }
     }    
   };
 

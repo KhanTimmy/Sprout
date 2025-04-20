@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StyleProp, ViewStyle, DimensionValue } from 'react-native';
 
 interface CustomModalProps {
   visible: boolean;
@@ -8,6 +8,7 @@ interface CustomModalProps {
   children: ReactNode;
   showCloseButton?: boolean;
   closeOnOutsideClick?: boolean;
+  maxHeight?: DimensionValue;
 }
 
 const CustomModal = ({
@@ -17,7 +18,14 @@ const CustomModal = ({
   children,
   showCloseButton = true,
   closeOnOutsideClick = false,
+  maxHeight = '100%', // Default max height for the content area
 }: CustomModalProps) => {
+  // Create a dynamic style with the maxHeight
+  const scrollViewStyle: StyleProp<ViewStyle> = {
+    width: '100%',
+    maxHeight: maxHeight as DimensionValue,
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -32,7 +40,7 @@ const CustomModal = ({
           if (closeOnOutsideClick) onClose();
         }}
       >
-        <SafeAreaView 
+        <SafeAreaView
           style={styles.modalView}
           onStartShouldSetResponder={() => true}
           onTouchEnd={(e) => e.stopPropagation()}
@@ -40,11 +48,17 @@ const CustomModal = ({
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{title}</Text>
           </View>
-          
-          <View style={styles.modalContent}>
-            {children}
-          </View>
-          
+         
+          <ScrollView 
+            style={scrollViewStyle}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={true}
+          >
+            <View style={styles.modalContent}>
+              {children}
+            </View>
+          </ScrollView>
+         
           {showCloseButton && (
             <TouchableOpacity
               style={styles.closeButton}
@@ -89,6 +103,9 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   modalContent: {
     width: '100%',

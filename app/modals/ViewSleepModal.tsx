@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, SafeAreaView, FlatList } from 'react-native';
-import CustomButton from './CustomButton';
+import CustomButton from '@/components/CustomButton';
 import { SleepData } from '@/services/ChildService';
 
 interface ViewSleepModalProps {

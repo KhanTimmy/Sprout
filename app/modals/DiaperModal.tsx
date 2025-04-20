@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import CustomModal from './CustomModal';
-import CustomButton from './CustomButton';
+import CustomModal from '@/components/CustomModal';
+import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { SelectList } from 'react-native-dropdown-select-list';
 import { DiaperData } from '@/services/ChildService';
@@ -134,6 +134,7 @@ const DiaperModal = ({
       }}
       title="Input Diaper Data"
       showCloseButton={false}
+      maxHeight="100%"
     >
       <View style={styles.container}>
         <View style={styles.dateTimeSection}>

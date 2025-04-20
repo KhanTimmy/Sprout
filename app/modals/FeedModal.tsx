@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, TextInput } from 'react-native';
-import CustomModal from './CustomModal';
-import CustomButton from './CustomButton';
+import CustomModal from '@/components/CustomModal';
+import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { SelectList } from 'react-native-dropdown-select-list';
 import { FeedData } from '@/services/ChildService';
@@ -114,6 +114,7 @@ const FeedModal = ({
       }}
       title="Input Feeding Data"
       showCloseButton={false}
+      maxHeight="100%"
     >
       <View style={styles.container}>
         <View style={styles.timeSection}>

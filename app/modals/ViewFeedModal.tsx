@@ -1,29 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, SafeAreaView, FlatList } from 'react-native';
-import CustomButton from './CustomButton';
-import { DiaperData } from '@/services/ChildService';
+import CustomButton from '@/components/CustomButton';
+import { FeedData } from '@/services/ChildService';
 
-interface ViewDiaperModalProps {
+interface ViewFeedModalProps {
   visible: boolean;
   onClose: () => void;
-  diapers: DiaperData[];
+  feedings: FeedData[];
   loading: boolean;
 }
 
-const ViewDiaperModal = ({ visible, onClose, diapers, loading }: ViewDiaperModalProps) => {
-  // Sort diapers by date in descending order (most recent first)
-  const sortedDiapers = [...diapers].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
+const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalProps) => {
+  // Sort feedings by date in descending order (most recent first)
+  const sortedFeedings = [...feedings].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
 
   // Render item for FlatList
-  const renderDiaperItem = ({ item }: { item: DiaperData }) => (
-    <View style={styles.diaperItem}>
-      <Text style={styles.diaperDateTime}>{item.dateTime.toLocaleString()}</Text>
-      <Text style={styles.diaperType}>Type: {item.type}</Text>
-      {item.peeAmount && <Text style={styles.diaperDetail}>Pee Amount: {item.peeAmount}</Text>}
-      {item.pooAmount && <Text style={styles.diaperDetail}>Poo Amount: {item.pooAmount}</Text>}
-      {item.pooColor && <Text style={styles.diaperDetail}>Poo Color: {item.pooColor}</Text>}
-      {item.pooConsistency && <Text style={styles.diaperDetail}>Poo Consistency: {item.pooConsistency}</Text>}
-      <Text style={styles.diaperDetail}>Rash: {item.hasRash ? 'Yes' : 'No'}</Text>
+  const renderFeedItem = ({ item }: { item: FeedData }) => (
+    <View style={styles.feedItem}>
+      <Text style={styles.feedType}>{item.type}</Text>
+      <Text style={styles.feedDateTime}>{item.dateTime.toLocaleString()}</Text>
+      <Text style={styles.feedAmount}>Amount: {item.amount} {item.type === 'nursing' ? 'minutes' : 'oz'}</Text>
+      {item.type === 'nursing' && item.side && (
+        <Text style={styles.feedSide}>Side: {item.side}</Text>
+      )}
+      {item.notes && <Text style={styles.feedNotes}>Notes: {item.notes}</Text>}
     </View>
   );
 
@@ -35,7 +35,7 @@ const ViewDiaperModal = ({ visible, onClose, diapers, loading }: ViewDiaperModal
     >
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Diaper Change History</Text>
+          <Text style={styles.modalTitle}>Feeding History</Text>
           <CustomButton
             title="Close"
             onPress={onClose}
@@ -43,17 +43,17 @@ const ViewDiaperModal = ({ visible, onClose, diapers, loading }: ViewDiaperModal
             style={styles.closeButton}
           />
         </View>
-
+        
         {loading ? (
-          <Text style={styles.loadingText}>Loading diaper changes...</Text>
-        ) : sortedDiapers.length === 0 ? (
-          <Text style={styles.noDataText}>No diaper change data available</Text>
+          <Text style={styles.loadingText}>Loading feedings...</Text>
+        ) : sortedFeedings.length === 0 ? (
+          <Text style={styles.noDataText}>No feeding data available</Text>
         ) : (
           <View style={styles.listContainer}>
             <FlatList
-              data={sortedDiapers}
-              renderItem={renderDiaperItem}
-              keyExtractor={(_, index) => `diaper-${index}`}
+              data={sortedFeedings}
+              renderItem={renderFeedItem}
+              keyExtractor={(_, index) => `feed-${index}`}
               contentContainerStyle={styles.listContent}
             />
           </View>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-  diaperItem: {
+  feedItem: {
     padding: 15,
     marginVertical: 8,
     backgroundColor: '#f8f9fa',
@@ -92,20 +92,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
-  diaperDateTime: {
-    fontSize: 16,
+  feedType: {
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  diaperType: {
-    fontSize: 16,
+  feedDateTime: {
+    fontSize: 14,
     color: '#666',
     marginBottom: 5,
   },
-  diaperDetail: {
+  feedAmount: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  feedNotes: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 3,
+    fontStyle: 'italic',
+  },
+  feedSide: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#666',
   },
   loadingText: {
     textAlign: 'center',
@@ -127,4 +136,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ViewDiaperModal; 
+export default ViewFeedModal;

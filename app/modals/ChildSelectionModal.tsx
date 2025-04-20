@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import CustomModal from './CustomModal';
-import CustomButton from './CustomButton';
+import CustomModal from '@/components/CustomModal';
+import CustomButton from '@/components/CustomButton';
 import { ChildData } from '@/services/ChildService';
 import { SelectList } from 'react-native-dropdown-select-list';
 
@@ -34,17 +34,18 @@ const ChildSelectionModal = ({
       onClose={onClose}
       title="Select a Child"
       showCloseButton={false}
+      maxHeight="100%"
     >
       <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.addChildButton}
+        <CustomButton
+          title="Add Child"
           onPress={() => {
-            onClose();
-            router.push('/addchild');
+              onClose();
+              router.push('/addchild');
           }}
-        >
-          <Text style={styles.addChildButtonText}>Add Child</Text>
-        </TouchableOpacity>
+          variant="primary"
+          style={styles.addChildButton}
+        />
 
         {childrenList.length > 0 ? (
           <SelectList
@@ -81,7 +82,7 @@ const ChildSelectionModal = ({
             />
           )}
           <CustomButton
-            title="Close"
+            title="Cancel"
             onPress={onClose}
             variant="primary"
             style={styles.button}

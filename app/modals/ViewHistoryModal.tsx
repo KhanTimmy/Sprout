@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import CustomModal from './CustomModal';
-import CustomButton from './CustomButton';
+import CustomModal from '@/components/CustomModal';
+import CustomButton from '@/components/CustomButton';
 
 interface ViewHistoryModalProps {
   visible: boolean;
@@ -9,6 +9,8 @@ interface ViewHistoryModalProps {
   onViewSleep: () => void;
   onViewFeedings: () => void;
   onViewDiapers: () => void;
+  onViewActivities: () => void;
+  onViewMilestones: () => void;
 }
 
 const ViewHistoryModal = ({
@@ -17,12 +19,16 @@ const ViewHistoryModal = ({
   onViewSleep,
   onViewFeedings,
   onViewDiapers,
+  onViewActivities,
+  onViewMilestones,
 }: ViewHistoryModalProps) => {
   return (
     <CustomModal
       visible={visible}
       onClose={onClose}
       title="View History"
+      showCloseButton={false}
+      maxHeight="100%"
     >
       <View style={styles.container}>
         <CustomButton
@@ -49,6 +55,28 @@ const ViewHistoryModal = ({
           }}
           variant="primary"
         />
+        <CustomButton
+          title="Activities History"
+          onPress={() => {
+            onClose();
+            onViewActivities();
+          }}
+          variant="primary"
+        />
+        <CustomButton
+          title="Milestone History"
+          onPress={() => {
+            onClose();
+            onViewMilestones();
+          }}
+          variant="primary"
+        />
+        <CustomButton
+          title="Cancel"
+          onPress={onClose}
+          variant="primary"
+          style={styles.closeButton}
+        />
       </View>
     </CustomModal>
   );
@@ -58,6 +86,9 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     gap: 10,
+  },
+  closeButton: {
+    marginTop: 15,
   },
 });
 

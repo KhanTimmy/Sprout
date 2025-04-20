@@ -1,29 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, SafeAreaView, FlatList } from 'react-native';
-import CustomButton from './CustomButton';
-import { FeedData } from '@/services/ChildService';
+import CustomButton from '@/components/CustomButton';
+import { MilestoneData } from '@/services/ChildService';
 
-interface ViewFeedModalProps {
+interface ViewMilestoneModalProps {
   visible: boolean;
   onClose: () => void;
-  feedings: FeedData[];
+  milestones: MilestoneData[];
   loading: boolean;
 }
 
-const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalProps) => {
-  // Sort feedings by date in descending order (most recent first)
-  const sortedFeedings = [...feedings].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
+const ViewMilestonesModal = ({ visible, onClose, milestones, loading }: ViewMilestoneModalProps) => {
+  // Sort activities by date in descending order (most recent first)
+  const sortedMilestones = [...milestones].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
 
   // Render item for FlatList
-  const renderFeedItem = ({ item }: { item: FeedData }) => (
-    <View style={styles.feedItem}>
-      <Text style={styles.feedType}>{item.type}</Text>
-      <Text style={styles.feedDateTime}>{item.dateTime.toLocaleString()}</Text>
-      <Text style={styles.feedAmount}>Amount: {item.amount} {item.type === 'nursing' ? 'minutes' : 'oz'}</Text>
-      {item.type === 'nursing' && item.side && (
-        <Text style={styles.feedSide}>Side: {item.side}</Text>
-      )}
-      {item.notes && <Text style={styles.feedNotes}>Notes: {item.notes}</Text>}
+  const renderMilestoneItem = ({ item }: { item: MilestoneData }) => (
+    <View style={styles.milestoneItem}>
+      <Text style={styles.milestoneDateTime}>{item.dateTime.toLocaleString()}</Text>
+      <Text style={styles.milestoneType}>Type: {item.type}</Text>
     </View>
   );
 
@@ -35,7 +30,7 @@ const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalPro
     >
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Feeding History</Text>
+          <Text style={styles.modalTitle}>Milestone History</Text>
           <CustomButton
             title="Close"
             onPress={onClose}
@@ -43,17 +38,17 @@ const ViewFeedModal = ({ visible, onClose, feedings, loading }: ViewFeedModalPro
             style={styles.closeButton}
           />
         </View>
-        
+
         {loading ? (
-          <Text style={styles.loadingText}>Loading feedings...</Text>
-        ) : sortedFeedings.length === 0 ? (
-          <Text style={styles.noDataText}>No feeding data available</Text>
+          <Text style={styles.loadingText}>Loading milestones...</Text>
+        ) : sortedMilestones.length === 0 ? (
+          <Text style={styles.noDataText}>No milestone data available</Text>
         ) : (
           <View style={styles.listContainer}>
             <FlatList
-              data={sortedFeedings}
-              renderItem={renderFeedItem}
-              keyExtractor={(_, index) => `feed-${index}`}
+              data={sortedMilestones}
+              renderItem={renderMilestoneItem}
+              keyExtractor={(_, index) => `milestone-${index}`}
               contentContainerStyle={styles.listContent}
             />
           </View>
@@ -84,7 +79,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-  feedItem: {
+  milestoneItem: {
     padding: 15,
     marginVertical: 8,
     backgroundColor: '#f8f9fa',
@@ -92,29 +87,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
-  feedType: {
-    fontSize: 18,
+  milestoneDateTime: {
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  feedDateTime: {
+  milestoneType: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 5,
+  },
+  milestoneDetail: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
-  },
-  feedAmount: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  feedNotes: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-  },
-  feedSide: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#666',
+    marginBottom: 3,
   },
   loadingText: {
     textAlign: 'center',
@@ -136,4 +122,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ViewFeedModal;
+export default ViewMilestonesModal; 

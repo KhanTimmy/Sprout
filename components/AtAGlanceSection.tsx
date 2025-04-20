@@ -1,14 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { SleepData, DiaperData } from '@/services/ChildService';
+import { SleepData, DiaperData, FeedData } from '@/services/ChildService';
 
 interface AtAGlanceSectionProps {
   sleeps: SleepData[];
   diapers: DiaperData[];
+  feeds: FeedData[];
   loading: boolean;
 }
 
-const AtAGlanceSection = ({ sleeps, diapers, loading }: AtAGlanceSectionProps) => {
+const AtAGlanceSection = ({ sleeps, diapers, feeds, loading }: AtAGlanceSectionProps) => {
   // Calculate total sleep hours for today
   const calculateTodaySleepHours = () => {
     const today = new Date();
@@ -41,6 +42,18 @@ const AtAGlanceSection = ({ sleeps, diapers, loading }: AtAGlanceSectionProps) =
     }).length;
   };
 
+  // Count feedings for today
+  const countTodayFeeds = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return feeds.filter(feeds => {
+      const feedsDate = new Date(feeds.dateTime);
+      feedsDate.setHours(0, 0, 0, 0);
+      return feedsDate.getTime() === today.getTime();
+    }).length;
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -60,6 +73,10 @@ const AtAGlanceSection = ({ sleeps, diapers, loading }: AtAGlanceSectionProps) =
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{countTodayDiaperChanges()}</Text>
           <Text style={styles.summaryLabel}>Diaper Changes Today</Text>
+        </View>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryValue}>{countTodayFeeds()}</Text>
+          <Text style={styles.summaryLabel}>Feeds Today</Text>
         </View>
       </View>
     </View>

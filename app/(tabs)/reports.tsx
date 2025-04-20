@@ -2,19 +2,22 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { Text, View } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData, SleepData, DiaperData } from '@/services/ChildService';
+import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
 import { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
 
 // import specialized modal components
-import ChildSelectionModal from '@/components/ChildSelectionModal';
-import ViewFeedModal from '@/components/ViewFeedModal';
-import ViewSleepModal from '@/components/ViewSleepModal';
-import ViewDiaperModal from '@/components/ViewDiaperModal';
-import ViewHistoryModal from '@/components/ViewHistoryModal';
+import ChildSelectionModal from '../modals/ChildSelectionModal';
+import ViewFeedModal from '../modals/ViewFeedModal';
+import ViewSleepModal from '../modals/ViewSleepModal';
+import ViewDiaperModal from '../modals/ViewDiaperModal';
+import ViewHistoryModal from '../modals/ViewHistoryModal';
+import ViewActivityModal from '../modals/ViewActivityModal';
+import ViewMilestoneModal from '../modals/ViewMilestoneModal';
 import AtAGlanceSection from '@/components/AtAGlanceSection';
+
 
 export default function Reports() {
   // Child state
@@ -27,16 +30,22 @@ export default function Reports() {
   const [feedingsModalVisible, setFeedingsModalVisible] = useState(false);
   const [sleepsModalVisible, setSleepsModalVisible] = useState(false);
   const [diapersModalVisible, setDiapersModalVisible] = useState(false);
+  const [activitiesModalVisible, setActivitiesModalVisible] = useState(false);
+  const [milestonesModalVisible, setMilestonesModalVisible] = useState(false);
   
   // data states
   const [feedings, setFeedings] = useState<FeedData[]>([]);
   const [sleeps, setSleeps] = useState<SleepData[]>([]);
   const [diapers, setDiapers] = useState<DiaperData[]>([]);
+  const [activities, setActivities] = useState<ActivityData[]>([]);
+  const [milestones, setMilestones] = useState<MilestoneData[]>([]);
   
   // loading states
   const [loadingFeedings, setLoadingFeedings] = useState(false);
   const [loadingSleeps, setLoadingSleeps] = useState(false);
   const [loadingDiapers, setLoadingDiapers] = useState(false);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  const [loadingMilestones, setLoadingMilestones] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
 
   // Authentication check
@@ -46,60 +55,6 @@ export default function Reports() {
     });
     return () => unsubscribe();
   }, []);
-
-  // Fetch all data when child is selected
-  useEffect(() => {
-    if (selectedChild) {
-      fetchAllData();
-    }
-  }, [selectedChild]);
-
-  const fetchAllData = async () => {
-    if (!selectedChild) return;
-    
-    setLoadingSummary(true);
-    try {
-      await Promise.all([
-        fetchSleepData(),
-        fetchDiaperData(),
-      ]);
-    } catch (error) {
-      console.error('Error fetching summary data:', error);
-      Alert.alert('Error', 'Could not fetch summary data');
-    } finally {
-      setLoadingSummary(false);
-    }
-  };
-
-  const fetchSleepData = async () => {
-    if (!selectedChild) return;
-    
-    setLoadingSleeps(true);
-    try {
-      const sleepsData = await ChildService.getSleep(selectedChild.id);
-      setSleeps(sleepsData);
-    } catch (error) {
-      console.error('Error fetching sleep data:', error);
-      Alert.alert('Error', 'Could not fetch sleep data');
-    } finally {
-      setLoadingSleeps(false);
-    }
-  };
-
-  const fetchDiaperData = async () => {
-    if (!selectedChild) return;
-    
-    setLoadingDiapers(true);
-    try {
-      const diapersData = await ChildService.getDiaper(selectedChild.id);
-      setDiapers(diapersData);
-    } catch (error) {
-      console.error('Error fetching diaper data:', error);
-      Alert.alert('Error', 'Could not fetch diaper data');
-    } finally {
-      setLoadingDiapers(false);
-    }
-  };
 
   // Fetch children when modal opens
   const openChildSelectionModal = async () => {
@@ -133,13 +88,69 @@ export default function Reports() {
   // Fetch sleeps when modal opens
   const openSleepsModal = async () => {
     if (!selectedChild) return;
-    setSleepsModalVisible(true);
+
+    setLoadingSleeps(true);
+    try {
+      const sleepsData = await ChildService.getSleep(selectedChild.id);
+      setSleeps(sleepsData);
+      setSleepsModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching sleep data:', error);
+      Alert.alert('Error', 'Could not fetch sleep data');
+    } finally {
+      setLoadingSleeps(false);
+    }
   };
 
   // Fetch diapers when modal opens
   const openDiapersModal = async () => {
     if (!selectedChild) return;
-    setDiapersModalVisible(true);
+
+    setLoadingDiapers(true);
+    try {
+      const diapersData = await ChildService.getDiaper(selectedChild.id);
+      setDiapers(diapersData);
+      setDiapersModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching diaper data:', error);
+      Alert.alert('Error', 'Could not fetch diaper data');
+    } finally {
+      setLoadingDiapers(false);
+    }
+  };
+
+  // Fetch activities when modal opens
+  const openActivitiesModal = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingActivities(true);
+    try {
+      const activitiesData = await ChildService.getActivity(selectedChild.id);
+      setActivities(activitiesData);
+      setActivitiesModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      Alert.alert('Error', 'Could not activity data');
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  // Fetch milestones when modal opens
+  const openMilestonesModal = async () => {
+    if (!selectedChild) return;
+    
+    setLoadingMilestones(true);
+    try {
+      const milestonesData = await ChildService.getMilestone(selectedChild.id);
+      setMilestones(milestonesData);
+      setMilestonesModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+      Alert.alert('Error', 'Could not milestone data');
+    } finally {
+      setLoadingMilestones(false);
+    }
   };
 
   return (
@@ -174,7 +185,7 @@ export default function Reports() {
           sleeps={sleeps}
           diapers={diapers}
           loading={loadingSummary}
-        />
+          feeds={feedings}        />
       )}
 
       {/* View History Button */}
@@ -203,6 +214,8 @@ export default function Reports() {
         onViewSleep={openSleepsModal}
         onViewFeedings={openFeedingsModal}
         onViewDiapers={openDiapersModal}
+        onViewActivities={openActivitiesModal}
+        onViewMilestones={openMilestonesModal}
       />
 
       {/* Feedings Modal */}
@@ -227,6 +240,22 @@ export default function Reports() {
         onClose={() => setDiapersModalVisible(false)}
         diapers={diapers}
         loading={loadingDiapers}
+      />
+
+      {/* Activity Modal */}
+      <ViewActivityModal
+        visible={activitiesModalVisible}
+        onClose={() => setActivitiesModalVisible(false)}
+        activities={activities}
+        loading={loadingActivities}
+      />
+
+      {/* Milestone Modal */}
+      <ViewMilestoneModal
+        visible={milestonesModalVisible}
+        onClose={() => setMilestonesModalVisible(false)}
+        milestones={milestones}
+        loading={loadingMilestones}
       />
     </SafeAreaView>
   );

@@ -8,13 +8,14 @@ import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
 
 // Import specialized modal components
-import ChildSelectionModal from '@/components/ChildSelectionModal';
-import AddActionModal from '@/components/AddActionModal';
-import SleepModal from '@/components/SleepModal';
-import FeedModal from '@/components/FeedModal';
-import DiaperModal from '@/components/DiaperModal';
-import ActivityModal from '@/components/ActivityModal';
-import MilestoneModal from '@/components/MilestoneModal';
+import ChildSelectionModal from '../modals/ChildSelectionModal';
+import AddActionModal from '../modals/AddActionModal';
+import SleepModal from '../modals/SleepModal';
+import FeedModal from '../modals/FeedModal';
+import DiaperModal from '../modals/DiaperModal';
+import ActivityModal from '../modals/ActivityModal';
+import MilestoneModal from '../modals/MilestoneModal';
+
 
 export default function Home() {
   // Child state

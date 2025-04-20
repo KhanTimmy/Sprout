@@ -7,9 +7,10 @@ import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '@/FirebaseConfig';
 import { router } from 'expo-router';
-import ChildSelectionModal from '@/components/ChildSelectionModal';
+import ChildSelectionModal from './modals/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 export default function AccessScreen() {
   const { selectedChild, saveSelectedChild, clearSelectedChild } = useSelectedChild();

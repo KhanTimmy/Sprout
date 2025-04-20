@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import CustomModal from './CustomModal';
-import CustomButton from './CustomButton';
+import CustomModal from '@/components/CustomModal';
+import CustomButton from '@/components/CustomButton';
 
 interface AddActionModalProps {
   visible: boolean;
@@ -27,6 +27,8 @@ const AddActionModal = ({
       visible={visible}
       onClose={onClose}
       title="Select Action Type"
+      showCloseButton={false}
+      maxHeight="100%"
     >
       <View style={styles.container}>
         <CustomButton
@@ -74,6 +76,12 @@ const AddActionModal = ({
           }}
           variant="primary"
         />
+        <CustomButton
+          title="Cancel"
+          onPress={onClose}
+          variant="primary"
+          style={styles.closeButton}
+        />
       </View>
     </CustomModal>
   );
@@ -83,6 +91,9 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     gap: 10,
+  },
+  closeButton: {
+    marginTop: 15,
   },
 });
 
