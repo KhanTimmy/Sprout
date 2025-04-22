@@ -100,9 +100,10 @@ const SleepModal = ({
         <DateTimePickerModal
           isVisible={isStartPickerVisible}
           mode="datetime"
-          date={new Date()}
+          date={startDateTime}  // Use previously selected start time
           onConfirm={(date) => {
             setStartDateTime(date);
+            setEndDateTime(date); // Reset end time when start time changes
             setStartPickerVisibility(false);
           }}
           onCancel={() => setStartPickerVisibility(false)}
@@ -123,9 +124,14 @@ const SleepModal = ({
         <DateTimePickerModal
           isVisible={isEndPickerVisible}
           mode="datetime"
-          date={new Date()}
+          date={startDateTime}  // Use previously selected end time
+          minimumDate={startDateTime}  // Disable selecting end time before start time
           onConfirm={(date) => {
-            setEndDateTime(date);
+            if (date >= startDateTime) {
+              setEndDateTime(date);
+            } else {
+              Alert.alert('Error', 'End time cannot be before start time');
+            }
             setEndPickerVisibility(false);
           }}
           onCancel={() => setEndPickerVisibility(false)}
