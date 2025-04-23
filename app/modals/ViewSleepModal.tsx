@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, Modal, SafeAreaView, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Modal, SafeAreaView, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { SleepData } from '@/services/ChildService';
+import SleepGraph from '@/components/SleepGraph';
 
 interface ViewSleepModalProps {
     visible: boolean;
@@ -10,10 +11,28 @@ interface ViewSleepModalProps {
     loading: boolean;
 }
 
-const ViewSleepModal = ({ visible, onClose, sleeps, loading }: ViewSleepModalProps) => {
-    // Sort sleeps by start time in descending order (most recent first)
-    const sortedSleeps = [...sleeps].sort((a, b) => b.start.getTime() - a.start.getTime());
+const timeRanges = [
+    { label: '7D', days: 7 },
+    { label: '30D', days: 30 },
+    { label: '60D', days: 60 },
+    { label: '90D', days: 90 }
+];
 
+const ViewSleepModal = ({ visible, onClose, sleeps = [], loading }: ViewSleepModalProps) => {
+    const [selectedRange, setSelectedRange] = useState(7);
+
+    const filterDataByRange = (days: number) => {
+        const now = new Date();
+        const startDate = new Date();
+        startDate.setDate(now.getDate() - days);
+
+        return sleeps
+            .filter(sleep => sleep.start >= startDate && sleep.start <= now)
+            .sort((a, b) => b.start.getTime() - a.start.getTime());
+    };
+
+    const filteredSleepData = filterDataByRange(selectedRange);
+    
     // Render item for FlatList
     const renderSleepItem = ({ item }: { item: SleepData }) => {
         // Calculate duration in hours and minutes
@@ -51,21 +70,48 @@ const ViewSleepModal = ({ visible, onClose, sleeps, loading }: ViewSleepModalPro
                         variant="primary"
                         style={styles.closeButton}
                     />
-                </View> 
-
+                </View>
+    
+                {/* Keep SleepGraph static */}
+                <View style={styles.graphContainer}>
+                    <SleepGraph data={filteredSleepData} rangeDays={selectedRange} />
+                </View>
+    
+                <View style={styles.rangeSelector}>
+                    {timeRanges.map(range => (
+                        <TouchableOpacity
+                            key={range.label}
+                            onPress={() => setSelectedRange(range.days)}
+                            style={[
+                                styles.rangeButton,
+                                selectedRange === range.days && styles.activeRangeButton
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    styles.rangeText,
+                                    selectedRange === range.days && styles.activeRangeText
+                                ]}
+                            >
+                                {range.label}
+                            </Text>
+                            </TouchableOpacity>
+                    ))}
+                </View>
+    
+                {/* Use FlatList directly without ScrollView */}
                 {loading ? (
                     <Text style={styles.loadingText}>Loading sleep data...</Text>
-                ) : sortedSleeps.length === 0 ? (
-                    <Text style={styles.noDataText}>No sleep data available</Text>
+                ) : filteredSleepData.length === 0 ? (
+                    <Text style={styles.noDataText}>No sleep data available for this time range</Text>
                 ) : (
-                    <View style={styles.listContainer}>
-                        <FlatList
-                            data={sortedSleeps}
-                            renderItem={renderSleepItem}
-                            keyExtractor={(_, index) => `sleep-${index}`}
-                            contentContainerStyle={styles.listContent}
-                        />
-                    </View>
+                    <FlatList
+                        data={filteredSleepData}
+                        renderItem={renderSleepItem}
+                        keyExtractor={(item, index) => item.id || `sleep-${index}`}
+                        contentContainerStyle={styles.listContent}
+                        style={{ flex: 1 }} // Ensures it takes full space
+                    />
                 )}
             </SafeAreaView>
         </Modal>
@@ -90,28 +136,27 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     listContainer: {
-        flex: 1,
-        padding: 10,
+        flexGrow: 1,
     },
     sleepItem: {
-        padding: 15,
-        marginVertical: 8,
+        padding: 10,
+        marginVertical: 4,
         backgroundColor: '#f8f9fa',
-        borderRadius: 8,
+        borderRadius: 4,
         borderWidth: 1,
         borderColor: '#e9ecef',
     },
     sleepTime: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         marginBottom: 5,
     },
     sleepDuration: {
-        fontSize: 16,
+        fontSize: 14,
         marginBottom: 5,
-    },  
+    },
     sleepQuality: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#666',
     },
     loadingText: {
@@ -132,8 +177,28 @@ const styles = StyleSheet.create({
     closeButton: {
         width: 100,
     },
+    rangeSelector: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginVertical: 10,
+    },
+    rangeButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        marginHorizontal: 6,
+        borderRadius: 20,
+        backgroundColor: '#f0f0f0',
+    },
+    activeRangeButton: {
+        backgroundColor: '#00c896',
+    },
+    rangeText: {
+        color: '#333',
+    },
+    activeRangeText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
 });
 
 export default ViewSleepModal;
-
-
