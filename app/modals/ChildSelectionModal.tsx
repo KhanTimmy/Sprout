@@ -82,7 +82,7 @@ const ChildSelectionModal = ({
             />
           )}
           <CustomButton
-            title="Cancel"
+            title="Close"
             onPress={onClose}
             variant="primary"
             style={styles.button}
