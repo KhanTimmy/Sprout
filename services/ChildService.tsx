@@ -11,12 +11,93 @@ import {
   } from 'firebase/firestore';
   import { getAuth } from 'firebase/auth';
   import { db } from '@/FirebaseConfig';
+  import AsyncStorage from '@react-native-async-storage/async-storage';
+
+  let queryCounter = 0;
+  let currentChildID: string | null = null;
+
+  const CACHE_KEYS = {
+    FEED: 'childData_feed',
+    SLEEP: 'childData_sleep',
+    DIAPER: 'childData_diaper',
+    ACTIVITY: 'childData_activity',
+    MILESTONE: 'childData_milestone',
+    LAST_FETCH: 'childData_lastFetch',
+  }
+
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  const isCacheValid = async (childId: string): Promise<boolean> => {
+    try {
+      const lastFetch = await AsyncStorage.getItem(CACHE_KEYS.LAST_FETCH + childId);
+      if (!lastFetch) return false;
+
+      const lastFetchTime = parseInt(lastFetch);
+      const now = Date.now();
+      return (now - lastFetchTime) < CACHE_DURATION;
+    } catch (error) {
+      console.error('[Cache] Error checking cache valididty:', error);
+      return false;
+    }
+  };
+
+  const updateCacheTimestamp = async (childId: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(CACHE_KEYS.LAST_FETCH + childId, Date.now().toString());
+    } catch (error) {
+      console.error('[Cache] Error updating cache timestamp:', error);
+    }
+  };
+
+  const clearChildCache = async (childId: string): Promise<void> => {
+    try {
+      const keys = [
+        CACHE_KEYS.FEED + childId,
+        CACHE_KEYS.SLEEP + childId,
+        CACHE_KEYS.DIAPER + childId,
+        CACHE_KEYS.ACTIVITY + childId,
+        CACHE_KEYS.MILESTONE + childId,
+        CACHE_KEYS.LAST_FETCH + childId
+      ];
+      await AsyncStorage.multiRemove(keys);
+      console.log(`[Cache] Cleared cache for child: ${childId}`);
+    } catch (error) {
+      console.error('[Cache] Error clearing cache:', error);
+    }
+  };
+
+  const resetQueryCounter = (childId: string | null) => {
+    if (currentChildID !== childId) {
+      if (currentChildID !== null) {
+        console.log(`[QueryCounter] Child changed from ${currentChildID} to ${childId || 'none'}. Resetting counter.`);
+      }
+      queryCounter = 0;
+      currentChildID = childId;
+      if (childId) {
+        console.log(`[QueryCounter] New child selected: ${childId}. Counter reset to 0.`);
+      } else {
+        console.log(`[QueryCounter] No child selected. Counter reset to 0.`);
+      }
+    }
+  };
+
+  const incrementQueryCounter = (operation: string, childId?: string) => {
+    if (childId) {
+      resetQueryCounter(childId);
+    }
+    queryCounter++;
+    console.log(`[QueryCounter] ${operation} - Total queries for current child: ${queryCounter}`);
+  };
+
+  export { resetQueryCounter, clearChildCache };  
   
   export interface ChildData {
     id: string;
     first_name: string;
     last_name: string;
     type: string;
+    dob: string;
+    sex: 'male' | 'female';
   }
   
   export interface NewChildData {
@@ -36,12 +117,12 @@ import {
   export interface FeedData {
     id: string; // child ID
     amount: number;
-    dateTime: Date; // Firebase will store it as a timestamp
+    dateTime: Date;
     description: string;
     duration: number;
     notes: string;
     type: 'nursing' | 'bottle' | 'solid';
-    side?: 'left' | 'right'; // only used if type === 'nursing'
+    side?: 'left' | 'right';
   }
   
   export interface DiaperData {
@@ -68,7 +149,6 @@ import {
   }
 
   export const ChildService = {
-    // Fetch children associated with current user
     async fetchUserChildren(): Promise<ChildData[]> {
       const user = getAuth().currentUser;
       if (!user || !user.email) return [];
@@ -78,8 +158,7 @@ import {
       try {
         const childrenCollection = collection(db, 'children');
         console.log('...[fetchUserChildren] accessing "children" collection from Firestore');
-      
-        // Queries for children (authorized and parent relationships)
+
         const authorizedQuery = query(childrenCollection, where('authorized_uid', 'array-contains', user.email));
         const parentQuery = query(childrenCollection, where('parent_uid', '==', user.email));
       
@@ -87,31 +166,31 @@ import {
         const parentSnapshot = await getDocs(parentQuery);
       
         let childrenFound: ChildData[] = [];
-      
-        // Process parent matches
-        console.log('...[fetchUserChildren] processing parent_uid documents');
+
         parentSnapshot.forEach((doc) => {
           const parentChildData = doc.data();
           if (parentChildData.parent_uid) {
             childrenFound.push({
+              id: doc.id,
               first_name: parentChildData.first_name,
               last_name: parentChildData.last_name,
               type: 'Parent',
-              id: doc.id,
+              dob: parentChildData.dob,
+              sex: parentChildData.sex,
             });
           }
         });
-      
-        // Process authorized matches
-        console.log('...[fetchUserChildren] processing authorized_uid documents');
+
         authorizedSnapshot.forEach((doc) => {
           const authChildData = doc.data();
           if (authChildData.authorized_uid) {
             childrenFound.push({
+              id: doc.id,
               first_name: authChildData.first_name,
               last_name: authChildData.last_name,
               type: 'Authorized',
-              id: doc.id,
+              dob: authChildData.dob,
+              sex: authChildData.sex,
             });
           }
         });
@@ -123,7 +202,6 @@ import {
       }
     },
   
-    // Add a new child
     async addChild(childData: NewChildData): Promise<ChildData> {
       console.log('[ChildService]addChild executing');
       const user = getAuth().currentUser;
@@ -142,20 +220,20 @@ import {
           authorized_uid: [],
         });
         console.log(`...[addChild] child created: ${docRef.id}`);
-        // Return the new child with the correct format
         return {
           first_name: childData.first_name,
           last_name: childData.last_name,
           type: 'Parent',
           id: docRef.id,
+          dob: childData.dob,
+          sex: childData.sex as "male" | "female",
         };
       } catch (error) {
         console.error('[ChildService]addChild error occurred:', error);
         throw error;
       }
     },
-  
-    // Delete a child or remove access
+
     async removeChildOrAccess(child: ChildData): Promise<void> {
       const user = getAuth().currentUser;
       if (!user) {
@@ -165,12 +243,10 @@ import {
   
       try {
         if (child.type === 'Parent') {
-          // Parent: Delete the entire document
           const childDocRef = doc(db, 'children', child.id);
           await deleteDoc(childDocRef);
           console.log(`...[removeChildOrAccess] child removed: ${child.id}`);
         } else if (child.type === 'Authorized') {
-          // Authorized: Remove user's UID from authorized_uid array
           const childDocRef = doc(db, 'children', child.id);
           await updateDoc(childDocRef, {
             authorized_uid: arrayRemove(user.email),
@@ -196,6 +272,9 @@ import {
           quality: sleepData.quality
         });
         console.log(`...[addSleep] data created: ${sleepData.id}`);
+
+        await clearChildCache(sleepData.id);
+        
         return {
           id: sleepData.id,
           start: sleepData.start,
@@ -225,6 +304,9 @@ import {
           ...(feedData.type === 'nursing' && feedData.side ? { side: feedData.side } : {})
         });
         console.log(`...[addFeed] data created: ${feedData.id}`);
+        
+        await clearChildCache(feedData.id);
+        
         return {
           id: feedData.id,
           amount: feedData.amount,
@@ -257,12 +339,11 @@ import {
           ...(diaperData.type === 'mixed' || diaperData.type === 'poo' && diaperData.pooAmount ? {pooAmount: diaperData.pooAmount } : {}),
           ...(diaperData.type === 'mixed' || diaperData.type === 'poo' && diaperData.pooColor ? {pooColor: diaperData.pooColor } : {}),
           ...(diaperData.type === 'mixed' || diaperData.type === 'poo' && diaperData.pooConsistency ? {pooConsistency: diaperData.pooConsistency } : {})
-         // peeAmount: diaperData.peeAmount,
-         // pooAmount: diaperData.pooAmount,
-         // pooColor: diaperData.pooColor,
-         // pooConsistency: diaperData.pooConsistency,
         });
         console.log(`...[addDiaper] data created: ${diaperData.id}`);
+
+        await clearChildCache(diaperData.id);
+        
         return {
           id: diaperData.id,
           dateTime: diaperData.dateTime,
@@ -292,6 +373,9 @@ import {
           type: activityData.type
         });
         console.log(`...[addActivity] data created: ${activityData.id}`);
+  
+        await clearChildCache(activityData.id);
+        
         return {
           id: activityData.id,
           dateTime: activityData.dateTime,
@@ -316,6 +400,9 @@ import {
           type: milestoneData.type
         });
         console.log(`...[addMilestone] data created: ${milestoneData.id}`);
+
+        await clearChildCache(milestoneData.id);
+        
         return {
           id: milestoneData.id,
           dateTime: milestoneData.dateTime,
@@ -334,14 +421,37 @@ import {
         throw new Error('User must be logged in to get sleep data');
       }
       try {
+        console.log('[ChildService]getSleep executing for childId:', childId);
+
+        if (await isCacheValid(childId)) {
+          const cachedData = await AsyncStorage.getItem(CACHE_KEYS.SLEEP + childId);
+          if (cachedData) {
+            console.log('[Cache] Returning cached sleep data');
+            const parsedData = JSON.parse(cachedData);
+            return parsedData.map((sleep: any) => ({
+              ...sleep,
+              start: new Date(sleep.start),
+              end: new Date(sleep.end)
+            }));
+          }
+        }
+
+        incrementQueryCounter('getSleep', childId);
         const sleepCollection = collection(db, 'children', childId, 'sleep');
         const snapshot = await getDocs(sleepCollection);
-        console.log(`...[getSleep] sleep data returned`);
-        return snapshot.docs.map((doc) => ({
+        console.log(`...[getSleep] sleep data returned with ${snapshot.docs.length} entries`);
+        
+        const data = snapshot.docs.map((doc) => ({
           ...doc.data(),
           start: doc.data().start.toDate(),
           end: doc.data().end.toDate()
         })) as SleepData[];
+
+        await AsyncStorage.setItem(CACHE_KEYS.SLEEP + childId, JSON.stringify(data));
+        await updateCacheTimestamp(childId);
+        console.log('[Cache] Cached sleep data');
+        
+        return data;
       } catch (error) {
         console.error('[ChildService]getSleep error occurred:', error);
         throw error;
@@ -355,13 +465,35 @@ import {
         throw new Error('User must be logged in to get feed data');
       }
       try {
+        console.log('[ChildService]getFeed executing for childId:', childId);
+
+        if (await isCacheValid(childId)) {
+          const cachedData = await AsyncStorage.getItem(CACHE_KEYS.FEED + childId);
+          if (cachedData) {
+            console.log('[Cache] Returning cached feed data');
+            const parsedData = JSON.parse(cachedData);
+            return parsedData.map((feed: any) => ({
+              ...feed,
+              dateTime: new Date(feed.dateTime)
+            }));
+          }
+        }
+
+        incrementQueryCounter('getFeed', childId);
         const feedCollection = collection(db, 'children', childId, 'feed');
         const snapshot = await getDocs(feedCollection);
-        console.log(`...[getFeed] feed data returned`);
-        return snapshot.docs.map((doc) => ({
+        console.log(`...[getFeed] feed data returned with ${snapshot.docs.length} entries`);
+        
+        const data = snapshot.docs.map((doc) => ({
           ...doc.data(),
           dateTime: doc.data().dateTime.toDate()
         })) as FeedData[];
+
+        await AsyncStorage.setItem(CACHE_KEYS.FEED + childId, JSON.stringify(data));
+        await updateCacheTimestamp(childId);
+        console.log('[Cache] Cached feed data');
+        
+        return data;
       } catch (error) {
         console.error('[ChildService]getFeed error occurred:', error);
         throw error;
@@ -375,13 +507,35 @@ import {
         throw new Error('User must be logged in to get diaper data');
       }
       try {
+        console.log('[ChildService]getDiaper executing for childId:', childId);
+
+        if (await isCacheValid(childId)) {
+          const cachedData = await AsyncStorage.getItem(CACHE_KEYS.DIAPER + childId);
+          if (cachedData) {
+            console.log('[Cache] Returning cached diaper data');
+            const parsedData = JSON.parse(cachedData);
+            return parsedData.map((diaper: any) => ({
+              ...diaper,
+              dateTime: new Date(diaper.dateTime)
+            }));
+          }
+        }
+
+        incrementQueryCounter('getDiaper', childId);
         const diaperCollection = collection(db, 'children', childId, 'diaper');
         const snapshot = await getDocs(diaperCollection);
-        console.log(`...[getDiaper] diaper data returned`);
-        return snapshot.docs.map((doc) => ({
+        console.log(`...[getDiaper] diaper data returned with ${snapshot.docs.length} entries`);
+        
+        const data = snapshot.docs.map((doc) => ({
           ...doc.data(),
           dateTime: doc.data().dateTime.toDate()
         })) as DiaperData[];
+
+        await AsyncStorage.setItem(CACHE_KEYS.DIAPER + childId, JSON.stringify(data));
+        await updateCacheTimestamp(childId);
+        console.log('[Cache] Cached diaper data');
+        
+        return data;
       } catch (error) {
         console.error('[ChildService]getDiaper error occurred:', error);
         throw error;
@@ -395,13 +549,35 @@ import {
         throw new Error('User must be logged in to get activity data');
       }
       try {
+        console.log('[ChildService]getActivity executing for childId:', childId);
+
+        if (await isCacheValid(childId)) {
+          const cachedData = await AsyncStorage.getItem(CACHE_KEYS.ACTIVITY + childId);
+          if (cachedData) {
+            console.log('[Cache] Returning cached activity data');
+            const parsedData = JSON.parse(cachedData);
+            return parsedData.map((activity: any) => ({
+              ...activity,
+              dateTime: new Date(activity.dateTime)
+            }));
+          }
+        }
+
+        incrementQueryCounter('getActivity', childId);
         const activityCollection = collection(db, 'children', childId, 'activity');
         const snapshot = await getDocs(activityCollection);
-        console.log(`...[getActivity] activity data returned`);
-        return snapshot.docs.map((doc) => ({
+        console.log(`...[getActivity] activity data returned with ${snapshot.docs.length} entries`);
+        
+        const data = snapshot.docs.map((doc) => ({
           ...doc.data(),
           dateTime: doc.data().dateTime.toDate()
         })) as ActivityData[];
+
+        await AsyncStorage.setItem(CACHE_KEYS.ACTIVITY + childId, JSON.stringify(data));
+        await updateCacheTimestamp(childId);
+        console.log('[Cache] Cached activity data');
+        
+        return data;
       } catch (error) {
         console.error('[ChildService]getActivity error occurred:', error);
         throw error;
@@ -415,17 +591,38 @@ import {
         throw new Error('User must be logged in to get activity data');
       }
       try {
+        console.log('[ChildService]getMilestone executing for childId:', childId);
+
+        if (await isCacheValid(childId)) {
+          const cachedData = await AsyncStorage.getItem(CACHE_KEYS.MILESTONE + childId);
+          if (cachedData) {
+            console.log('[Cache] Returning cached milestone data');
+            const parsedData = JSON.parse(cachedData);
+            return parsedData.map((milestone: any) => ({
+              ...milestone,
+              dateTime: new Date(milestone.dateTime)
+            }));
+          }
+        }
+
+        incrementQueryCounter('getMilestone', childId);
         const milestoneCollection = collection(db, 'children', childId, 'milestone');
         const snapshot = await getDocs(milestoneCollection);
-        console.log(`...[getMilestone] milestone data returned`);
-        return snapshot.docs.map((doc) => ({
+        console.log(`...[getMilestone] milestone data returned with ${snapshot.docs.length} entries`);
+        
+        const data = snapshot.docs.map((doc) => ({
           ...doc.data(),
           dateTime: doc.data().dateTime.toDate()
         })) as MilestoneData[];
+  
+        await AsyncStorage.setItem(CACHE_KEYS.MILESTONE + childId, JSON.stringify(data));
+        await updateCacheTimestamp(childId);
+        console.log('[Cache] Cached milestone data');
+        
+        return data;
       } catch (error) {
         console.error('[ChildService]getMilestone error occurred:', error);
         throw error;
       }
-    }    
+    }
   };
-
