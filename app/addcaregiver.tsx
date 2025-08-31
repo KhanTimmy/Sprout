@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, StyleSheet, View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../FirebaseConfig';
+import { db } from '../firebase.config';
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
 

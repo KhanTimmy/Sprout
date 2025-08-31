@@ -2,7 +2,7 @@ import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity, Keyb
   Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator
  } from "react-native"
 import React, { useState } from "react"
-import { auth } from "../FirebaseConfig"
+import { auth } from "../firebase.config"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { router } from "expo-router"
 import { Image } from 'expo-image';

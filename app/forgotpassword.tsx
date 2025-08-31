@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity } from "react-native"
 import React, { useState } from "react"
-import { auth } from "../FirebaseConfig"
+import { auth } from "../firebase.config"
 import { sendPasswordResetEmail } from "firebase/auth"
 import { router } from "expo-router"
 import CustomButton from "@/components/CustomButton";

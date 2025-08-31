@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Alert, SafeAreaView } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
-import { auth } from '@/FirebaseConfig';
+import { auth } from '@/firebase.config';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';

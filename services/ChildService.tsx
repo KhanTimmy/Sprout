@@ -10,7 +10,7 @@ import {
     doc 
   } from 'firebase/firestore';
   import { getAuth } from 'firebase/auth';
-  import { db } from '@/FirebaseConfig';
+  import { db } from '@/firebase.config';
   import AsyncStorage from '@react-native-async-storage/async-storage';
 
   let queryCounter = 0;

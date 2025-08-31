@@ -3,13 +3,16 @@
 # dependencies
 node_modules/
 
-# Expo
+# expo
 .expo/
+.expo-shared/
+.expo-dev-cache/
+.expo-web-cache/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# native
 *.orig.*
 *.jks
 *.p8
@@ -17,20 +20,51 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Metro
+# metro
 .metro-health-check*
+.expo/.cache/
+.cache/
 
 # debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+pnpm-debug.*
+
+# editor settings
+.vscode/
+.idea/
+*.swp
 
 # macOS
 .DS_Store
 *.pem
+.AppleDouble
+.LSOverride
+
+# windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# linux
+*~
+.nfs*
 
 # local env files
 .env*.local
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# build artifacts
+build/
+dist/
+coverage/
+tmp/
+temp/
 
 # typescript
 *.tsbuildinfo

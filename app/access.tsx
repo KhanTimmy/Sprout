@@ -5,7 +5,7 @@ import CustomButton from '@/components/CustomButton';
 import { ChildService, ChildData } from '@/services/ChildService';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
-import { db } from '@/FirebaseConfig';
+import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import ChildSelectionModal from './modals/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
