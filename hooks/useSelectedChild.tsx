@@ -3,18 +3,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { ChildService } from '@/services/ChildService';
+import { ChildService, resetQueryCounter, clearChildCache } from '@/services/ChildService';
 
 const checkIfChildExistsInDatabase = async (childId: string): Promise<boolean> => {
   try {
-    // Fetch all children associated with the current user
     const children = await ChildService.fetchUserChildren();
-    
-    // Check if any child matches the provided childId
+
     return children.some(child => child.id === childId);
   } catch (error) {
     console.error('Error checking if child exists in the database:', error);
-    return false; // Return false if an error occurs or if no child exists
+    return false;
   }
 };
 
@@ -23,7 +21,8 @@ export interface ChildData {
   first_name: string;
   last_name: string;
   type: string;
-  authorized_uid?: string[];
+  dob: string;
+  sex: 'male' | 'female';
 }
 
 export function useSelectedChild() {
@@ -31,7 +30,6 @@ export function useSelectedChild() {
   const [selectedChild, setSelectedChild] = useState<ChildData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the selected child whenever the screen gains focus
   useFocusEffect(
     React.useCallback(() => {
       const fetchSelectedChild = async () => {
@@ -43,7 +41,6 @@ export function useSelectedChild() {
             const childData: ChildData = JSON.parse(savedChild);
             console.log('...[fetchSelectedChild] selectedChild fetched from AsyncStorage');
 
-            // Check if the child exists in the database
             const childExists = await checkIfChildExistsInDatabase(childData.id);
             if (childExists) {
               setSelectedChild(childData);
@@ -51,7 +48,7 @@ export function useSelectedChild() {
               console.log('...[fetchSelectedChild] selectedChild DNE in FirestoreDB');
               await AsyncStorage.removeItem('selectedChild');
               console.log('...[fetchSelectedChild] selectedChild removed from AsyncStorage');
-              setSelectedChild(null); // Explicitly reset the selected child state
+              setSelectedChild(null);
               console.log('...[fetchSelectedChild] selectedChild removed from useState');
             }
           } else {
@@ -71,33 +68,44 @@ export function useSelectedChild() {
     }, [])
   );
 
-  // Save selected child to AsyncStorage
   const saveSelectedChild = async (child: ChildData | null) => {
     console.log('[Hooks]saveSelectedChild executing');
     try {
       if (child) {
-        console.log('...[saveSelectedChild] selected child saved to AsyncStorage');
+        console.log('...[saveSelectedChild] saving child:', child.first_name, child.last_name);
         await AsyncStorage.setItem('selectedChild', JSON.stringify(child));
       } else {
+        console.log('...[saveSelectedChild] clearing selected child');
         await AsyncStorage.removeItem('selectedChild');
-        console.log('...[saveSelectedChild] selected child cleared from AsyncStorage');
       }
+
+      if (selectedChild && (!child || child.id !== selectedChild.id)) {
+        await clearChildCache(selectedChild.id);
+      }
+      
       setSelectedChild(child);
-      console.log('...[saveSelectedChild] selected child set to useState');
+      resetQueryCounter(child?.id || null);
+      console.log('...[saveSelectedChild] state updated');
       console.log('[Hooks]saveSelectedChild completed');
     } catch (error) {
-      console.error('Error saving selected child:', error);
+      console.error('[Hooks]saveSelectedChild error occurred:', error);
     }
   };
 
-  // Clear selected child
   const clearSelectedChild = async () => {
+    console.log('[Hooks]clearSelectedChild executing');
     try {
+      if (selectedChild) {
+        await clearChildCache(selectedChild.id);
+      }
+      
       await AsyncStorage.removeItem('selectedChild');
       setSelectedChild(null);
-      console.log('Cleared selected child');
+      resetQueryCounter(null);
+      console.log('...[clearSelectedChild] child cleared from storage and state');
+      console.log('[Hooks]clearSelectedChild completed');
     } catch (error) {
-      console.error('Error clearing selected child:', error);
+      console.error('[Hooks]clearSelectedChild error occurred:', error);
     }
   };
 

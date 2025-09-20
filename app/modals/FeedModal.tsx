@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput, useColorScheme } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { SelectList } from 'react-native-dropdown-select-list';
 import { FeedData } from '@/services/ChildService';
+import Colors from "@/constants/Colors";
+import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface FeedModalProps {
   visible: boolean;
@@ -19,13 +20,16 @@ const FeedModal = ({
   onSave,
   childId,
 }: FeedModalProps) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  
   const [amount, setAmount] = useState('');
   const [dateTime, setDateTime] = useState(new Date());
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
   const [feedType, setFeedType] = useState('');
-  const [side, setSide] = useState('');
+  const [side, setSide] = useState<'left' | 'right' | ''>('');
   
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -63,7 +67,6 @@ const FeedModal = ({
       return;
     }
 
-    // Validate duration is a number
     const durationNumber = parseInt(duration);
     if (isNaN(durationNumber) || durationNumber <= 0) {
       Alert.alert('Error', 'Please enter a valid duration');
@@ -79,12 +82,10 @@ const FeedModal = ({
         duration: durationNumber,
         notes: notes,
         type: feedType as 'nursing' | 'bottle' | 'solid',
-        ...(feedType === 'nursing' ? { side } : {})
       };
-      
-      // Only add side if feed type is nursing
+
       if (feedType === 'nursing') {
-        feedData.side = side;
+        feedData.side = side || undefined;
       }
       
       await onSave(feedData);
@@ -114,19 +115,20 @@ const FeedModal = ({
       }}
       title="Input Feeding Data"
       showCloseButton={false}
-      maxHeight="100%"
+      maxHeight="85%"
     >
       <View style={styles.container}>
-        <View style={styles.timeSection}>
-          <Text style={styles.label}>Date and Time:</Text>
-          <Text style={styles.timeDisplay}>
+        <View>
+          <Text style={[styles.label, { color: theme.text }]}>Date and Time:</Text>
+          <Text 
+            style={[styles.timeDisplay, { 
+              color: theme.secondaryText,
+              borderColor: theme.placeholder
+            }]}
+            onPress={() => setDatePickerVisibility(true)}
+          >
             {dateTime.toLocaleString()}
           </Text>
-          <CustomButton 
-            title="Select Date and Time" 
-            onPress={() => setDatePickerVisibility(true)}
-            variant="secondary"
-          />
         </View>
 
         <DateTimePickerModal
@@ -141,80 +143,94 @@ const FeedModal = ({
         />
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Feed Type:</Text>
-          <SelectList
-            setSelected={(val: string) => {
-              setFeedType(val);
-              // Reset side if not nursing
-              if (val !== 'nursing') {
+          <Text style={[styles.label, { color: theme.text }]}>Feed Type:</Text>
+          <ThemedDropdown
+            data={feedTypeData.map(item => ({ label: item.value, value: item.value }))}
+            value={feedType}
+            onValueChange={(val: string | number) => {
+              const stringVal = String(val);
+              setFeedType(stringVal);
+              if (stringVal !== 'nursing') {
                 setSide('');
               }
             }}
-            data={feedTypeData}
-            save="value"
             placeholder='Select feed type'
-            boxStyles={styles.selectBox}
-            dropdownStyles={styles.dropdown}
-            search={false}
           />
         </View>
 
         {feedType === 'nursing' && (
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Side:</Text>
-            <SelectList
-              setSelected={(val: string) => setSide(val)}
-              data={sideData}
-              save="value"
+            <Text style={[styles.label, { color: theme.text }]}>Side:</Text>
+            <ThemedDropdown
+              data={sideData.map(item => ({ label: item.value, value: item.value }))}
+              value={side}
+              onValueChange={(val: string | number) => setSide(String(val) as 'left' | 'right' | '')}
               placeholder='Select side'
-              boxStyles={styles.selectBox}
-              dropdownStyles={styles.dropdown}
-              search={false}
             />
           </View>
         )}
 
         {(feedType === 'bottle' || feedType === 'solid') && (
         <View style={styles.inputSection}>
-            <Text style={styles.label}>Amount (oz or g):</Text>
+            <Text style={[styles.label, { color: theme.text }]}>Amount (oz or g):</Text>
             <TextInput
-            style={styles.input}
+            style={[styles.input, { 
+              backgroundColor: theme.secondaryBackground,
+              borderColor: theme.placeholder,
+              color: theme.text
+            }]}
             value={amount}
             onChangeText={setAmount}
             placeholder="Enter amount"
+            placeholderTextColor={theme.placeholder}
             keyboardType="numeric"
             />
         </View>
         )}
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Duration (minutes):</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Duration (minutes):</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { 
+              backgroundColor: theme.secondaryBackground,
+              borderColor: theme.placeholder,
+              color: theme.text
+            }]}
             value={duration}
             onChangeText={setDuration}
             placeholder="Enter duration in minutes"
+            placeholderTextColor={theme.placeholder}
             keyboardType="numeric"
           />
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Description:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Description:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { 
+              backgroundColor: theme.secondaryBackground,
+              borderColor: theme.placeholder,
+              color: theme.text
+            }]}
             value={description}
             onChangeText={setDescription}
             placeholder="Enter description"
+            placeholderTextColor={theme.placeholder}
           />
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Notes:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Notes:</Text>
           <TextInput
-            style={[styles.input, styles.notesInput]}
+            style={[styles.input, styles.notesInput, { 
+              backgroundColor: theme.secondaryBackground,
+              borderColor: theme.placeholder,
+              color: theme.text
+            }]}
             value={notes}
             onChangeText={setNotes}
             placeholder="Enter additional notes"
+            placeholderTextColor={theme.placeholder}
             multiline={true}
             numberOfLines={3}
           />
@@ -227,15 +243,6 @@ const FeedModal = ({
             variant="success"
             style={styles.button}
           />
-          <CustomButton
-            title="Cancel"
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
-            variant='primary'
-            style={styles.button}
-          />
         </View>
       </View>
     </CustomModal>
@@ -245,13 +252,10 @@ const FeedModal = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    gap: 10,
-  },
-  timeSection: {
-    marginBottom: 10,
+    gap: 15,
   },
   inputSection: {
-    marginBottom: 10,
+    marginBottom: 15,
   },
   label: {
     fontSize: 16,
@@ -260,16 +264,18 @@ const styles = StyleSheet.create({
   },
   timeDisplay: {
     fontSize: 16,
-    marginBottom: 10,
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
+    marginBottom: 15,
+    padding: 12,
+    borderRadius: 8,
+    fontStyle: 'italic',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#cccccc',
-    borderRadius: 5,
-    padding: 10,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
   },
   notesInput: {
@@ -277,11 +283,16 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   selectBox: {
-    borderColor: '#cccccc',
-    marginTop: 5,
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
   },
   dropdown: {
-    borderColor: '#cccccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: 2,
   },
   buttonContainer: {
     flexDirection: 'row',

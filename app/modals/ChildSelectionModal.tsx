@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 import { router } from 'expo-router';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import { ChildData } from '@/services/ChildService';
-import { SelectList } from 'react-native-dropdown-select-list';
+import Colors from '@/constants/Colors';
+import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface ChildSelectionModalProps {
   visible: boolean;
@@ -24,9 +25,12 @@ const ChildSelectionModal = ({
   onClearSelection,
 }: ChildSelectionModalProps) => {
   const dropdownData = childrenList.map((child) => ({
-    key: child.id,
-    value: `${child.first_name} ${child.last_name} (${child.type})`,
+    label: `${child.first_name} ${child.last_name} (${child.type})`,
+    value: child.id,
   }));
+
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   return (
     <CustomModal
@@ -34,7 +38,7 @@ const ChildSelectionModal = ({
       onClose={onClose}
       title="Select a Child"
       showCloseButton={false}
-      maxHeight="100%"
+      maxHeight="75%"
     >
       <View style={styles.container}>
         <CustomButton
@@ -44,36 +48,26 @@ const ChildSelectionModal = ({
               router.push('/addchild');
           }}
           variant="primary"
-          style={styles.addChildButton}
         />
 
         {childrenList.length > 0 ? (
-          <SelectList
-            setSelected={(id: string) => {
-              const selected = childrenList.find((child) => child.id === id);
+          <ThemedDropdown
+            data={dropdownData}
+            value={selectedChild?.id || null}
+            onValueChange={(val: string | number) => {
+              const selected = childrenList.find((child) => child.id === String(val));
               if (selected) onSelectChild(selected);
             }}
-            data={dropdownData}
-            save="key"
             placeholder="Select a child"
-            search={false}
-            boxStyles={styles.selectBox}
-            dropdownStyles={styles.dropdown}
-            defaultOption={
-              selectedChild
-                ? {
-                    key: selectedChild.id,
-                    value: `${selectedChild.first_name} ${selectedChild.last_name} (${selectedChild.type})`,
-                  }
-                : undefined
-            }
           />
         ) : (
-          <Text style={styles.noChildrenText}>No children found</Text>
+          <Text style={[styles.noChildrenText, { color: theme.text }]}>
+            No children found. Add a child to get started.
+          </Text>
         )}
 
         <View style={styles.buttonContainer}>
-          {childrenList.length > 0 && (
+          {childrenList.length > 0 && selectedChild && (
             <CustomButton
               title="Clear Selection"
               onPress={onClearSelection}
@@ -96,45 +90,20 @@ const ChildSelectionModal = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-  },
-  addChildButton: {
-    backgroundColor: '#28A745',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 15,
-  },
-  addChildButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    gap: 20,
   },
   noChildrenText: {
     fontSize: 16,
     textAlign: 'center',
-    marginVertical: 15,
-    color: '#666',
-  },
-  selectBox: {
-    borderColor: '#ccc',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  dropdown: {
-    borderColor: '#ccc',
-    borderRadius: 10,
+    fontStyle: 'italic',
+    marginVertical: 20,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
+    marginTop: 10,
+    gap: 10,
   },
   button: {
-    flex: 1,
-    marginHorizontal: 5,
+    width: '100%',
   },
 });
 

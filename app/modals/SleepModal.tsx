@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, useColorScheme, TouchableOpacity } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { SelectList } from 'react-native-dropdown-select-list';
 import { SleepData } from '@/services/ChildService';
+import Colors from "@/constants/Colors";
 
 interface SleepModalProps {
   visible: boolean;
@@ -19,6 +19,9 @@ const SleepModal = ({
   onSave,
   childId,
 }: SleepModalProps) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  
   const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(new Date());
   const [quality, setQuality] = useState<number>(0);
@@ -26,12 +29,12 @@ const SleepModal = ({
   const [isStartPickerVisible, setStartPickerVisibility] = useState(false);
   const [isEndPickerVisible, setEndPickerVisibility] = useState(false);
 
-  const data = [
-    {key:'1', value:1},
-    {key:'2', value:2},
-    {key:'3', value:3},
-    {key:'4', value:4},
-    {key:'5', value:5},
+  const qualityLabels = [
+    'Poor',
+    'Fair', 
+    'Good',
+    'Very Good',
+    'Excellent'
   ];
 
   const handleSave = async () => {
@@ -82,88 +85,87 @@ const SleepModal = ({
       }}
       title="Input Sleep Data"
       showCloseButton={false}
-      maxHeight="100%"
+      maxHeight="75%"
     >
       <View style={styles.container}>
-        <View style={styles.timeSection}>
-          <Text style={styles.label}>Start Time:</Text>
-          <Text style={styles.timeDisplay}>
+        <View>
+          <Text style={[styles.label, { color: theme.text }]}>Start Time:</Text>
+          <Text 
+            style={[styles.timeDisplay, { 
+              color: theme.secondaryText,
+              borderColor: theme.placeholder
+            }]}
+            onPress={() => setStartPickerVisibility(true)}
+          >
             {startDateTime.toLocaleString()}
           </Text>
-          <CustomButton 
-            title="Select Start Time" 
-            onPress={() => setStartPickerVisibility(true)}
-            variant="secondary"
-          />
         </View>
 
         <DateTimePickerModal
           isVisible={isStartPickerVisible}
           mode="datetime"
-          date={startDateTime}  // Use previously selected start time
+          date={new Date()}
           onConfirm={(date) => {
             setStartDateTime(date);
-            setEndDateTime(date); // Reset end time when start time changes
             setStartPickerVisibility(false);
           }}
           onCancel={() => setStartPickerVisibility(false)}
         />
 
-        <View style={styles.timeSection}>
-          <Text style={styles.label}>End Time:</Text>
-          <Text style={styles.timeDisplay}>
+        <View>
+          <Text style={[styles.label, { color: theme.text }]}>End Time:</Text>
+          <Text 
+            style={[styles.timeDisplay, { 
+              color: theme.secondaryText,
+              borderColor: theme.placeholder
+            }]}
+            onPress={() => setEndPickerVisibility(true)}
+          >
             {endDateTime.toLocaleString()}
           </Text>
-          <CustomButton 
-            title="Select End Time" 
-            onPress={() => setEndPickerVisibility(true)}
-            variant="secondary"
-          />
         </View>
 
         <DateTimePickerModal
           isVisible={isEndPickerVisible}
           mode="datetime"
-          date={startDateTime}  // Use previously selected end time
-          minimumDate={startDateTime}  // Disable selecting end time before start time
+          date={new Date()}
           onConfirm={(date) => {
-            if (date >= startDateTime) {
-              setEndDateTime(date);
-            } else {
-              Alert.alert('Error', 'End time cannot be before start time');
-            }
+            setEndDateTime(date);
             setEndPickerVisibility(false);
           }}
           onCancel={() => setEndPickerVisibility(false)}
         />
 
-        <View style={styles.qualitySection}>
-          <Text style={styles.label}>Sleep Quality:</Text>
-          <SelectList
-            setSelected={(val: any) => setQuality(val)}
-            data={data}
-            save="value"
-            placeholder='Sleep Quality (1-5)'
-            boxStyles={styles.selectBox}
-            dropdownStyles={styles.dropdown}
-            search={false}
-          />
+        <View>
+          <Text style={[styles.label, { color: theme.text }]}>Sleep Quality:</Text>
+          <View style={styles.starContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity
+                key={star}
+                onPress={() => setQuality(star)}
+                style={styles.starButton}
+              >
+                <Text style={[
+                  styles.star,
+                  { color: star <= quality ? theme.tint : theme.placeholder }
+                ]}>
+                  ★
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {quality > 0 && (
+            <Text style={[styles.qualityLabel, { color: theme.secondaryText }]}>
+              {qualityLabels[quality - 1]}
+            </Text>
+          )}
         </View>
 
         <View style={styles.buttonContainer}>
           <CustomButton
-            title='Save'
+            title="Save"
             onPress={handleSave}
             variant="success"
-            style={styles.button}
-          />
-          <CustomButton
-            title="Cancel"
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
-            variant='primary'
             style={styles.button}
           />
         </View>
@@ -177,39 +179,57 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 15,
   },
-  timeSection: {
-    marginBottom: 10,
-  },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '600',
+    marginBottom: 10,
   },
   timeDisplay: {
     fontSize: 16,
-    marginBottom: 10,
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-  },
-  qualitySection: {
-    marginVertical: 10,
+    marginBottom: 15,
+    padding: 12,
+    borderRadius: 8,
+    fontStyle: 'italic',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   selectBox: {
-    borderColor: '#cccccc',
-    marginTop: 5,
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
   },
   dropdown: {
-    borderColor: '#cccccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: 2,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 15,
   },
   button: {
-    flex: 1,
-    marginHorizontal: 5,
+    width: '100%',
+  },
+  starContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  starButton: {
+    padding: 8,
+    marginHorizontal: 4,
+  },
+  star: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  qualityLabel: {
+    fontSize: 16,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 

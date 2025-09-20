@@ -1,5 +1,7 @@
 import React, { ReactNode } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StyleProp, ViewStyle, DimensionValue } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, useColorScheme, DimensionValue } from 'react-native';
+import Colors from "@/constants/Colors";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface CustomModalProps {
   visible: boolean;
@@ -18,13 +20,10 @@ const CustomModal = ({
   children,
   showCloseButton = true,
   closeOnOutsideClick = false,
-  maxHeight = '100%', // Default max height for the content area
+  maxHeight = '80%',
 }: CustomModalProps) => {
-  // Create a dynamic style with the maxHeight
-  const scrollViewStyle: StyleProp<ViewStyle> = {
-    width: '100%',
-    maxHeight: maxHeight as DimensionValue,
-  };
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   return (
     <Modal
@@ -40,34 +39,47 @@ const CustomModal = ({
           if (closeOnOutsideClick) onClose();
         }}
       >
-        <SafeAreaView
-          style={styles.modalView}
-          onStartShouldSetResponder={() => true}
-          onTouchEnd={(e) => e.stopPropagation()}
+        <View
+          style={[
+            styles.modalView, 
+            { 
+              backgroundColor: theme.secondaryBackground,
+              maxHeight: maxHeight,
+            }
+          ]}
         >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{title}</Text>
+            <TouchableOpacity
+              style={styles.closeIconButton}
+              onPress={onClose}
+            >
+              <MaterialCommunityIcons 
+                name="close" 
+                size={24} 
+                color={theme.text} 
+              />
+            </TouchableOpacity>
           </View>
          
           <ScrollView 
-            style={scrollViewStyle}
-            contentContainerStyle={styles.scrollViewContent}
+            style={styles.contentContainer}
+            contentContainerStyle={{ flexGrow: 1 }}
             showsVerticalScrollIndicator={true}
+            bounces={false}
           >
-            <View style={styles.modalContent}>
-              {children}
-            </View>
+            {children}
           </ScrollView>
          
           {showCloseButton && (
             <TouchableOpacity
-              style={styles.closeButton}
+              style={[styles.closeButton, { backgroundColor: theme.tint }]}
               onPress={onClose}
             >
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text style={[styles.closeButtonText, { color: theme.text }]}>Close</Text>
             </TouchableOpacity>
           )}
-        </SafeAreaView>
+        </View>
       </TouchableOpacity>
     </Modal>
   );
@@ -81,48 +93,62 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: '85%',
+    width: '90%',
     backgroundColor: 'white',
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 20,
-    alignItems: 'center',
-    elevation: 5,
+    minHeight: 550,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
     shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowRadius: 20,
+    elevation: 15,
   },
   modalHeader: {
     width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
   },
-  scrollViewContent: {
-    flexGrow: 1,
+  closeIconButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
-  modalContent: {
+  contentContainer: {
+    flex: 1,
     width: '100%',
   },
   closeButton: {
-    backgroundColor: '#6c757d',
-    borderRadius: 8,
-    padding: 10,
-    elevation: 2,
+    borderRadius: 12,
+    padding: 15,
+    elevation: 3,
     marginTop: 15,
     width: '100%',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   closeButtonText: {
-    color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
+    fontSize: 16,
   },
 });
 

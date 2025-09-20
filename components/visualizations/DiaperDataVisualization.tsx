@@ -4,10 +4,9 @@ import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer }
 import { DiaperData } from '@/services/ChildService';
 import Colors from '@/constants/Colors';
 
-const MAX_DIAPER_COUNT = 12; // Maximum number of diaper changes per day
+const MAX_DIAPER_COUNT = 12;
 const screenWidth = Dimensions.get('window').width;
 
-// Interfaces
 export interface DiaperSession {
   dateTime: Date;
   type: string;
@@ -64,14 +63,13 @@ interface DiaperVisualizationProps {
   rangeDays: number;
 }
 
-// Utility Functions
 export const getTypeColor = (type: string) => {
   switch (type) {
-    case 'pee': return '#4287f5'; // blue
-    case 'poo': return '#ff9900'; // orange
-    case 'mixed': return '#00c896'; // green
-    case 'dry': return '#ff4d4d'; // red
-    default: return '#ccc';   // fallback
+    case 'pee': return '#4287f5';
+    case 'poo': return '#ff9900';
+    case 'mixed': return '#00c896';
+    case 'dry': return '#ff4d4d';
+    default: return '#ccc';
   }
 };
 
@@ -90,7 +88,6 @@ export const formatDate = (date: Date) => {
   });
 };
 
-// Components
 export const DiaperEntry = ({ diaper }: { diaper: DiaperData }) => {
   const backgroundColor = getTypeColor(diaper.type);
   const colorScheme = useColorScheme();
@@ -180,7 +177,7 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
       case 'black': return '#000000';
       case 'green': return '#228b22';
       case 'red': return '#ff0000';
-      default: return '#ff9900'; // default orange for poo
+      default: return '#ff9900';
     }
   };
 
@@ -337,7 +334,6 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   );
 };
 
-// Main functions for processing and rendering diaper data
 export const filteredDiaperData = (rawDiaperData: DiaperData[], rangeDays: number) => {
   const now = new Date();
   const startDate = new Date(`${new Date().toISOString().split('T')[0]}T12:00:00`);
@@ -356,14 +352,12 @@ export const processDiaperData = (rawDiaperData: DiaperData[], rangeDays: number
   startDate.setDate(now.getDate() - rangeDays + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  // Create array of all dates in range
   const allDates = Array.from({ length: rangeDays }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     return date.toISOString().split('T')[0];
   });
 
-  // Process diaper data for each date
   return allDates.map(dateStr => {
     const currentDate = new Date(dateStr);
     const nextDate = new Date(currentDate);
@@ -384,10 +378,9 @@ export const processDiaperData = (rawDiaperData: DiaperData[], rangeDays: number
       hasRash: diaper.hasRash
     }));
 
-    // Create stacked data for each day
     const stackedData = diaperSessions.map((session, index) => ({
       x: dateStr,
-      y: 1, // Each diaper change counts as 1
+      y: 1,
       type: session.type,
       sessionIndex: index,
       dateTime: session.dateTime,
@@ -408,7 +401,6 @@ export const processDiaperData = (rawDiaperData: DiaperData[], rangeDays: number
   });
 };
 
-// Add a simple skeleton component for the graph
 const GraphSkeleton = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -431,8 +423,7 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
   const [processedData, setProcessedData] = useState<ReturnType<typeof processDiaperData>>([]);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
-  
-  // Process data when component mounts or data/range changes
+
   useEffect(() => {
     console.log('[DiaperVisualization] Processing diaper data...');
     console.log('...[DiaperVisualization] Raw data entries:', rawDiaperData?.length || 0);
@@ -446,8 +437,7 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
     
     setIsLoading(true);
     console.log('[DiaperVisualization] Starting data processing...');
-    
-    // Process data with a small delay to allow UI to show loading state
+
     const timer = setTimeout(() => {
       const data = processDiaperData(rawDiaperData, rangeDays);
       console.log('[DiaperVisualization] Data processing completed');
@@ -460,18 +450,15 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
     return () => clearTimeout(timer);
   }, [rawDiaperData, rangeDays]);
 
-  // Effect to scroll to current date once data is loaded
   useEffect(() => {
     if (!isLoading && scrollViewRef.current) {
       console.log('[DiaperVisualization] Scrolling to current date...');
-      // Use a longer duration for the animation so users can see dates flying by
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [isLoading]);
 
-  // Check for empty data after hooks
   if (!rawDiaperData || rawDiaperData.length === 0) {
     console.log('[DiaperVisualization] Rendering empty state - no diaper data available');
     return (
@@ -523,7 +510,6 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
 
     return (
       <View style={styles.graphWrapper}>
-        {/* Fixed Y-Axis */}
         <View style={[styles.yAxisContainer, { marginLeft: -8, backgroundColor: theme.secondaryBackground }]}>
           <VictoryAxis
             dependentAxis
@@ -542,7 +528,6 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
           />
         </View>
 
-        {/* Scrollable Chart Area */}
         <TouchableWithoutFeedback onPress={handleBackgroundPress}>
           <ScrollView
             ref={scrollViewRef}
@@ -561,7 +546,6 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
                 background: { fill: theme.secondaryBackground }
               }}
             >
-              {/* Add horizontal gridlines */}
               <VictoryAxis
                 dependentAxis
                 style={{
@@ -614,7 +598,6 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
                       />
                     ))
                   ) : (
-                    // Add empty bar to maintain spacing
                     <VictoryBar
                       key={`${dayData.date}-empty`}
                       data={[{
@@ -660,13 +643,11 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
     );
   };
 
-  // The main component's return
   return (
     <View style={[styles.diaperContainer, { backgroundColor: theme.background }]}>
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Diaper Data</Text>
       {renderDiaperGraph()}
-      
-      {/* Diaper Entries List */}
+
       <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Diaper Entries</Text>
         {isLoading ? (
@@ -688,7 +669,6 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   diaperContainer: {
     flex: 1,

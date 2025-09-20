@@ -9,7 +9,6 @@ export default {
     icon: "./assets/images/icon.png",
     scheme: "myapp",
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
     splash: {
       image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
@@ -35,10 +34,6 @@ export default {
     experiments: {
       typedRoutes: true
     },
-    platforms: [
-      "ios",
-      "android"
-    ],
     performance: {
       enablePerformanceMonitoring: true,
     },
@@ -56,6 +51,6 @@ export default {
       AI_API_KEY: process.env.AI_API_KEY,
       AI_API_ENDPOINT: process.env.AI_API_ENDPOINT,
       AI_MODEL: process.env.AI_MODEL,
-    }
-  }
+    },
+  },
 };

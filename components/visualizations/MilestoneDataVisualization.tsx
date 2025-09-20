@@ -7,7 +7,6 @@ import Colors from '@/constants/Colors';
 const MAX_MILESTONES_PER_DAY = 5;
 const screenWidth = Dimensions.get('window').width;
 
-// Interfaces
 export interface MilestoneSession {
   dateTime: Date;
   type: string;
@@ -51,15 +50,14 @@ interface MilestoneVisualizationProps {
   rangeDays: number;
 }
 
-// Utility Functions
 export const getTypeColor = (type: string) => {
   switch (type) {
-    case 'smiling': return '#ff9900'; // orange
-    case 'rolling over': return '#ff4d4d'; // red
-    case 'sitting up': return '#00c896'; // green
-    case 'crawling': return '#4287f5'; // blue
-    case 'walking': return '#9c27b0'; // purple
-    default: return '#ccc'; // fallback
+    case 'smiling': return '#ff9900';
+    case 'rolling over': return '#ff4d4d';
+    case 'sitting up': return '#00c896'; 
+    case 'crawling': return '#4287f5';
+    case 'walking': return '#9c27b0';
+    default: return '#ccc';
   }
 };
 
@@ -78,7 +76,6 @@ export const formatDate = (date: Date) => {
   });
 };
 
-// Components
 export const MilestoneEntry = ({ milestone }: { milestone: MilestoneData }) => {
   const backgroundColor = getTypeColor(milestone.type);
   const colorScheme = useColorScheme();
@@ -229,7 +226,6 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   );
 };
 
-// Main functions for processing and rendering milestone data
 export const filteredMilestoneData = (rawMilestoneData: MilestoneData[], rangeDays: number) => {
   const now = new Date();
   const startDate = new Date(`${new Date().toISOString().split('T')[0]}T12:00:00`);
@@ -248,14 +244,12 @@ export const processMilestoneData = (rawMilestoneData: MilestoneData[], rangeDay
   startDate.setDate(now.getDate() - rangeDays + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  // Create array of all dates in range
   const allDates = Array.from({ length: rangeDays }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     return date.toISOString().split('T')[0];
   });
 
-  // Process milestone data for each date
   return allDates.map(dateStr => {
     const currentDate = new Date(dateStr);
     const nextDate = new Date(currentDate);
@@ -271,10 +265,9 @@ export const processMilestoneData = (rawMilestoneData: MilestoneData[], rangeDay
       type: milestone.type
     }));
 
-    // Create stacked data for each day
     const stackedData = milestoneSessions.map((session, index) => ({
       x: dateStr,
-      y: 1, // Each milestone has equal height
+      y: 1,
       type: session.type,
       sessionIndex: index,
       dateTime: session.dateTime
@@ -289,7 +282,6 @@ export const processMilestoneData = (rawMilestoneData: MilestoneData[], rangeDay
   });
 };
 
-// Add a simple skeleton component for the graph
 const GraphSkeleton = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -312,8 +304,7 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
   const [processedData, setProcessedData] = useState<ReturnType<typeof processMilestoneData>>([]);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
-  
-  // Process data when component mounts or data/range changes
+
   useEffect(() => {
     console.log('[MilestoneVisualization] Processing milestone data...');
     console.log('...[MilestoneVisualization] Raw data entries:', rawMilestoneData?.length || 0);
@@ -327,8 +318,7 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
     
     setIsLoading(true);
     console.log('[MilestoneVisualization] Starting data processing...');
-    
-    // Process data with a small delay to allow UI to show loading state
+
     const timer = setTimeout(() => {
       const data = processMilestoneData(rawMilestoneData, rangeDays);
       console.log('[MilestoneVisualization] Data processing completed');
@@ -341,18 +331,15 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
     return () => clearTimeout(timer);
   }, [rawMilestoneData, rangeDays]);
 
-  // Effect to scroll to current date once data is loaded
   useEffect(() => {
     if (!isLoading && scrollViewRef.current) {
       console.log('[MilestoneVisualization] Scrolling to current date...');
-      // Use a longer duration for the animation so users can see dates flying by
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [isLoading]);
 
-  // Check for empty data after hooks
   if (!rawMilestoneData || rawMilestoneData.length === 0) {
     console.log('[MilestoneVisualization] Rendering empty state - no milestone data available');
     return (
@@ -404,7 +391,6 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
 
     return (
       <View style={styles.graphWrapper}>
-        {/* Fixed Y-Axis */}
         <View style={[styles.yAxisContainer, { marginLeft: -8, backgroundColor: theme.secondaryBackground }]}>
           <VictoryAxis
             dependentAxis
@@ -423,7 +409,6 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
           />
         </View>
 
-        {/* Scrollable Chart Area */}
         <TouchableWithoutFeedback onPress={handleBackgroundPress}>
           <ScrollView
             ref={scrollViewRef}
@@ -442,7 +427,6 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
                 background: { fill: theme.secondaryBackground }
               }}
             >
-              {/* Add horizontal gridlines */}
               <VictoryAxis
                 dependentAxis
                 style={{
@@ -493,7 +477,6 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
                       />
                     ))
                   ) : (
-                    // Add empty bar to maintain spacing
                     <VictoryBar
                       key={`${dayData.date}-empty`}
                       data={[{
@@ -538,13 +521,11 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
     );
   };
 
-  // The main component's return
   return (
     <View style={[styles.milestoneContainer, { backgroundColor: theme.background }]}>
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Milestone Data</Text>
       {renderMilestoneGraph()}
-      
-      {/* Milestone Entries List */}
+
       <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Milestone Entries</Text>
         {isLoading ? (
@@ -566,7 +547,6 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   milestoneContainer: {
     flex: 1,

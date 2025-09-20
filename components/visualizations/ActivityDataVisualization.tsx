@@ -4,10 +4,9 @@ import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer }
 import { ActivityData } from '@/services/ChildService';
 import Colors from '@/constants/Colors';
 
-const MAX_ACTIVITY_COUNT = 10; // Maximum activities per day
+const MAX_ACTIVITY_COUNT = 10;
 const screenWidth = Dimensions.get('window').width;
 
-// Interfaces
 export interface ActivitySession {
   dateTime: Date;
   type: string;
@@ -54,15 +53,14 @@ interface ActivityVisualizationProps {
   rangeDays: number;
 }
 
-// Utility Functions
 export const getTypeColor = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'bath': return '#4287f5'; // blue
-    case 'tummy time': return '#00c896'; // green
-    case 'story time': return '#ff9900'; // orange
-    case 'skin to skin': return '#ff4d4d'; // red
-    case 'brush teeth': return '#9c27b0'; // purple
-    default: return '#ccc';   // fallback
+    case 'bath': return '#4287f5';
+    case 'tummy time': return '#00c896';
+    case 'story time': return '#ff9900';
+    case 'skin to skin': return '#ff4d4d';
+    case 'brush teeth': return '#9c27b0';
+    default: return '#ccc';
   }
 };
 
@@ -81,7 +79,6 @@ export const formatDate = (date: Date) => {
   });
 };
 
-// Components
 export const ActivityEntry = ({ activity }: { activity: ActivityData }) => {
   const backgroundColor = getTypeColor(activity.type);
   const colorScheme = useColorScheme();
@@ -89,8 +86,8 @@ export const ActivityEntry = ({ activity }: { activity: ActivityData }) => {
 
   return (
     <View style={[
-      styles.activityEntry,
-      {
+      styles.activityEntry, 
+      { 
         borderLeftColor: backgroundColor,
         backgroundColor: theme.secondaryBackground,
         borderBottomColor: theme.tint
@@ -112,8 +109,8 @@ export const ActivityEntry = ({ activity }: { activity: ActivityData }) => {
 const ActivitySessionsList: React.FC<ActivitySessionsListProps> = ({ sessions }) => (
   <View style={styles.sessionsList}>
     {sessions.map((session, index) => (
-      <View
-        key={index}
+      <View 
+        key={index} 
         style={[
           styles.sessionItem,
           { borderLeftColor: getTypeColor(session.type) }
@@ -122,7 +119,7 @@ const ActivitySessionsList: React.FC<ActivitySessionsListProps> = ({ sessions })
         <Text style={styles.sessionTime}>
           {formatTime(session.dateTime)}
         </Text>
-        <View
+        <View 
           style={[
             styles.barTypeIndicator,
             { backgroundColor: getTypeColor(session.type) }
@@ -151,12 +148,12 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
       onPanResponderMove: (_, gestureState) => {
         const dx = gestureState.dx - lastGestureState.current.dx;
         const dy = gestureState.dy - lastGestureState.current.dy;
-
+        
         setPopoutPosition(prev => ({
           x: prev.x + dx,
           y: prev.y + dy
         }));
-
+        
         lastGestureState.current = {
           dx: gestureState.dx,
           dy: gestureState.dy
@@ -169,7 +166,7 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   ).current;
 
   return (
-    <View
+    <View 
       style={[
         styles.popout,
         {
@@ -188,8 +185,8 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
       ]}
       {...panResponder.panHandlers}
     >
-      <View
-        style={[styles.popoutHandle, { backgroundColor: theme.tint }]}
+      <View 
+        style={[styles.popoutHandle, { backgroundColor: theme.tint}]} 
         {...panResponder.panHandlers}
       />
       <View style={styles.popoutContent}>
@@ -199,11 +196,11 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
         </Text>
         <View style={styles.sessionsList}>
           {data.activitySessions.map((session, index) => (
-            <View
-              key={index}
+            <View 
+              key={index} 
               style={[
                 styles.popoutSessionItem,
-                {
+                { 
                   borderLeftColor: getTypeColor(session.type),
                   backgroundColor: theme.secondaryBackground,
                 }
@@ -230,7 +227,6 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   );
 };
 
-// Main functions for processing and rendering activity data
 export const filteredActivityData = (rawActivityData: ActivityData[], rangeDays: number) => {
   const now = new Date();
   const startDate = new Date(`${new Date().toISOString().split('T')[0]}T12:00:00`);
@@ -249,14 +245,12 @@ export const processActivityData = (rawActivityData: ActivityData[], rangeDays: 
   startDate.setDate(now.getDate() - rangeDays + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  // Create array of all dates in range
   const allDates = Array.from({ length: rangeDays }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     return date.toISOString().split('T')[0];
   });
 
-  // Process activity data for each date
   return allDates.map(dateStr => {
     const currentDate = new Date(dateStr);
     const nextDate = new Date(currentDate);
@@ -272,10 +266,9 @@ export const processActivityData = (rawActivityData: ActivityData[], rangeDays: 
       type: activity.type
     }));
 
-    // Create stacked data for each day
     const stackedData = activitySessions.map((session, index) => ({
       x: dateStr,
-      y: 1, // Each activity counts as 1
+      y: 1,
       type: session.type,
       sessionIndex: index,
       dateTime: session.dateTime
@@ -291,11 +284,10 @@ export const processActivityData = (rawActivityData: ActivityData[], rangeDays: 
   });
 };
 
-// Add a simple skeleton component for the graph
 const GraphSkeleton = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
-
+  
   return (
     <View style={[styles.skeletonContainer, { backgroundColor: theme.secondaryBackground }]}>
       <View style={styles.skeletonChart}>
@@ -315,22 +307,20 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
 
-  // Process data when component mounts or data/range changes
   useEffect(() => {
     console.log('[ActivityVisualization] Processing activity data...');
     console.log('...[ActivityVisualization] Raw data entries:', rawActivityData?.length || 0);
     console.log('...[ActivityVisualization] Range days:', rangeDays);
-
+    
     if (!rawActivityData || rawActivityData.length === 0) {
       console.log('[ActivityVisualization] No activity data available, setting loading to false');
       setIsLoading(false);
       return;
     }
-
+    
     setIsLoading(true);
     console.log('[ActivityVisualization] Starting data processing...');
 
-    // Process data with a small delay to allow UI to show loading state
     const timer = setTimeout(() => {
       const data = processActivityData(rawActivityData, rangeDays);
       console.log('[ActivityVisualization] Data processing completed');
@@ -339,22 +329,19 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
       setProcessedData(data);
       setIsLoading(false);
     }, 300);
-
+    
     return () => clearTimeout(timer);
   }, [rawActivityData, rangeDays]);
 
-  // Effect to scroll to current date once data is loaded
   useEffect(() => {
     if (!isLoading && scrollViewRef.current) {
       console.log('[ActivityVisualization] Scrolling to current date...');
-      // Use a longer duration for the animation so users can see dates flying by
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [isLoading]);
 
-  // Check for empty data after hooks
   if (!rawActivityData || rawActivityData.length === 0) {
     console.log('[ActivityVisualization] Rendering empty state - no activity data available');
     return (
@@ -406,7 +393,6 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
 
     return (
       <View style={styles.graphWrapper}>
-        {/* Fixed Y-Axis */}
         <View style={[styles.yAxisContainer, { marginLeft: -8, backgroundColor: theme.secondaryBackground }]}>
           <VictoryAxis
             dependentAxis
@@ -425,7 +411,6 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
           />
         </View>
 
-        {/* Scrollable Chart Area */}
         <TouchableWithoutFeedback onPress={handleBackgroundPress}>
           <ScrollView
             ref={scrollViewRef}
@@ -444,7 +429,6 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
                 background: { fill: theme.secondaryBackground }
               }}
             >
-              {/* Add horizontal gridlines */}
               <VictoryAxis
                 dependentAxis
                 style={{
@@ -470,7 +454,7 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
                           activityCount: dayData.sessions.length,
                           activitySessions: dayData.activitySessions
                         }]}
-                        cornerRadius={{ top: 5, bottom: 5 }}
+                        cornerRadius={{top: 5, bottom: 5}}
                         style={{
                           data: {
                             fill: getTypeColor(session.type),
@@ -497,7 +481,6 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
                       />
                     ))
                   ) : (
-                    // Add empty bar to maintain spacing
                     <VictoryBar
                       key={`${dayData.date}-empty`}
                       data={[{
@@ -517,7 +500,7 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
                     />
                   )}
                 </VictoryStack>
-              ))}
+              ))}                
 
               <VictoryAxis
                 tickFormat={(date) => {
@@ -543,13 +526,11 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
     );
   };
 
-  // The main component's return
   return (
     <View style={[styles.activityContainer, { backgroundColor: theme.background }]}>
-      <Text style={[styles.graphTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Activity Data</Text>
+      <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Activity Data</Text>
       {renderActivityGraph()}
 
-      {/* Activity Entries List */}
       <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Activity Entries</Text>
         {isLoading ? (
@@ -571,7 +552,6 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   activityContainer: {
     flex: 1,

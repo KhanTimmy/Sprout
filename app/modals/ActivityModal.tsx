@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, useColorScheme, TextInput } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { SelectList } from 'react-native-dropdown-select-list';
 import { ActivityData } from '@/services/ChildService';
+import Colors from "@/constants/Colors";
+import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface ActivityModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (activityData: ActivityData) => Promise<void>;
-  childId: string | undefined; 
+  childId: string | undefined;
 }
 
 const ActivityModal = ({
@@ -19,12 +20,15 @@ const ActivityModal = ({
   onSave,
   childId,
 }: ActivityModalProps) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  
   const [dateTime, setDateTime] = useState(new Date());
   const [type, setType] = useState('');
   
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
-  const data = [
+  const activityTypeData = [
     {key:'1', value:'bath'},
     {key:'2', value:'tummy time'},
     {key:'3', value:'story time'},
@@ -47,7 +51,7 @@ const ActivityModal = ({
       const activityData: ActivityData = {
         id: childId,
         dateTime: dateTime,
-        type: type,
+        type: type as 'bath' | 'tummy time' | 'story time' | 'skin to skin' | 'brush teeth',
       };
       
       await onSave(activityData);
@@ -73,19 +77,20 @@ const ActivityModal = ({
       }}
       title="Input Activity Data"
       showCloseButton={false}
-      maxHeight="100%"
+      maxHeight="80%"
     >
       <View style={styles.container}>
-        <View style={styles.dateTimeSection}>
-          <Text style={styles.label}>Date & Time:</Text>
-          <Text style={styles.timeDisplay}>
+        <View>
+          <Text style={[styles.label, { color: theme.text }]}>Date and Time:</Text>
+          <Text 
+            style={[styles.timeDisplay, { 
+              color: theme.secondaryText,
+              borderColor: theme.placeholder
+            }]}
+            onPress={() => setDatePickerVisibility(true)}
+          >
             {dateTime.toLocaleString()}
           </Text>
-          <CustomButton 
-            title="Select Date & Time" 
-            onPress={() => setDatePickerVisibility(true)}
-            variant="secondary"
-          />
         </View>
 
         <DateTimePickerModal
@@ -99,33 +104,23 @@ const ActivityModal = ({
           onCancel={() => setDatePickerVisibility(false)}
         />
 
-        <View style={styles.typeSection}>
-          <Text style={styles.label}>Activity Type:</Text>
-            <SelectList
-            setSelected={(val: any) => setType(val)}
-            data={data}
-            save="value"
-            placeholder='Select activity type'
-            boxStyles={styles.selectBox}
-            dropdownStyles={styles.dropdown}
-            search={false}
-            />
+        <View style={styles.inputSection}>
+          <Text style={[styles.label, { color: theme.text }]}>Activity Type:</Text>
+          <ThemedDropdown
+            data={activityTypeData.map(item => ({ label: item.value, value: item.value }))}
+            value={type}
+            onValueChange={(val: string | number) => setType(String(val))}
+            placeholder="Select activity type"
+          />
         </View>
+
+
 
         <View style={styles.buttonContainer}>
           <CustomButton
             title="Save"
             onPress={handleSave}
             variant="success"
-            style={styles.button}
-          />
-          <CustomButton
-            title="Cancel"
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
-            variant="primary"
             style={styles.button}
           />
         </View>
@@ -139,39 +134,51 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 15,
   },
-  dateTimeSection: {
-    marginBottom: 10,
+  inputSection: {
+    marginBottom: 15,
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '600',
+    marginBottom: 10,
   },
   timeDisplay: {
     fontSize: 16,
-    marginBottom: 10,
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
+    marginBottom: 15,
+    padding: 12,
+    borderRadius: 8,
+    fontStyle: 'italic',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
-  typeSection: {
-    marginVertical: 10,
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  notesInput: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   selectBox: {
-    borderColor: '#cccccc',
-    marginTop: 5,
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
   },
   dropdown: {
-    borderColor: '#cccccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: 2,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 15,
   },
   button: {
-    flex: 1,
-    marginHorizontal: 5,
+    width: '100%',
   },
 });
 

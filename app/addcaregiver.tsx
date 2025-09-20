@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, StyleSheet, View, Alert } from 'react-native';
+import { SafeAreaView, Text, TextInput, StyleSheet, View, Alert, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../firebase.config';
+import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
+import Colors from "@/constants/Colors";
+import { useColorScheme } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AddCaregiver() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   const handleAddCaregiver = async () => {
+    setError('');
+    
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Fetch currently selected child from AsyncStorage
       const savedChild = await AsyncStorage.getItem('selectedChild');
       if (!savedChild) {
-        Alert.alert('Error', 'No selected child found.');
+        setError('No selected child found.');
         setLoading(false);
         return;
       }
@@ -24,12 +37,11 @@ export default function AddCaregiver() {
       const childData = JSON.parse(savedChild);
 
       if (!childData.id) {
-        Alert.alert('Error', 'Selected child has no ID.');
+        setError('Selected child has no ID.');
         setLoading(false);
         return;
       }
 
-      // Update the authorized_uid array in Firestore
       const childDocRef = doc(db, 'children', childData.id);
       await updateDoc(childDocRef, {
         authorized_uid: arrayUnion(email.toLowerCase()),
@@ -39,7 +51,7 @@ export default function AddCaregiver() {
       router.back();
     } catch (error) {
       console.error('Error adding caregiver:', error);
-      Alert.alert('Error', 'Failed to add caregiver. Please try again.');
+      setError('Failed to add caregiver. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -48,29 +60,90 @@ export default function AddCaregiver() {
   const isInputValid = email.trim() !== '';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Add Caregiver</Text>
-      <View style={styles.content}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter caregiver's email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <CustomButton
-          title="Submit"
-          onPress={handleAddCaregiver}
-          variant={isInputValid ? "primary" : "secondary"} // Adjust variant dynamically based on validity
-          style={isInputValid ? {} : styles.disabledButton} // Additional styling for disabled state
-        />
-        <CustomButton
-          title="Cancel"
-          onPress={() => router.back()}
-          variant="danger"
-        />
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1, width: '100%' }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer} 
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.inner}>
+              <View style={styles.headerSection}>
+                <Text style={[styles.title, { color: theme.text }]}>Add Caregiver</Text>
+                <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
+                  Grant access to another caregiver to view and update your child's information
+                </Text>
+              </View>
+
+              <View style={styles.formSection}>
+                {error ? (
+                  <View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle" size={20} color="#DC3545" />
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.inputContainer}>
+                  <Text style={[styles.inputLabel, { color: theme.text }]}>Caregiver's Email</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: theme.secondaryBackground,
+                        borderColor: theme.tint,
+                        color: theme.text,
+                      }
+                    ]}
+                    placeholder="Enter caregiver's email address"
+                    placeholderTextColor={theme.placeholder}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                  />
+                </View>
+
+                <View style={[styles.infoContainer, { backgroundColor: 'rgba(92, 184, 228, 0.1)', borderColor: theme.tint }]}>
+                  <Ionicons name="information-circle" size={20} color={theme.tint} />
+                  <Text style={[styles.infoText, { color: theme.text }]}>
+                    The caregiver will receive access to view and update your child's information. They will need to create an account with the same email address.
+                  </Text>
+                </View>
+
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.tint} />
+                    <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
+                      Adding caregiver...
+                    </Text>
+                  </View>
+                ) : (
+                  <CustomButton
+                    title="Add Caregiver"
+                    onPress={handleAddCaregiver}
+                    variant={isInputValid ? "primary" : "secondary"}
+                    style={!isInputValid ? styles.disabledButton : undefined}
+                    disabled={!isInputValid}
+                  />
+                )}
+
+                <CustomButton
+                  title="Cancel"
+                  onPress={() => router.back()}
+                  variant="secondary"
+                  style={styles.cancelButton}
+                />
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -78,33 +151,107 @@ export default function AddCaregiver() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 20,
   },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    alignItems: 'center',
+  scrollContainer: {
+    flexGrow: 1,
+    paddingVertical: 20,
+    paddingTop: 60,
+  },
+  inner: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  headerSection: {
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  iconContainer: {
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 50,
+    backgroundColor: 'rgba(92, 184, 228, 0.1)',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: '800',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+    textAlign: 'left',
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 22,
+    textAlign: 'left',
+    paddingHorizontal: 0,
+  },
+  formSection: {
+    width: '100%',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
     marginBottom: 20,
-    alignSelf: 'flex-start',
+    borderLeftWidth: 4,
+    borderLeftColor: '#DC3545',
+  },
+  errorText: {
+    color: '#DC3545',
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   input: {
     width: '100%',
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 15,
+    height: 56,
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
+    fontWeight: '500',
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+  },
+  infoText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '400',
+    flex: 1,
+    lineHeight: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '500',
   },
   disabledButton: {
-    backgroundColor: '#A9A9A9',
+    opacity: 0.6,
+  },
+  cancelButton: {
+    marginTop: 20,
   },
 });

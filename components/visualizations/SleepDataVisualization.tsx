@@ -7,7 +7,6 @@ import Colors from '@/constants/Colors';
 const MAX_SLEEP_HOURS = 16;
 const screenWidth = Dimensions.get('window').width;
 
-// Interfaces
 export interface SleepSession {
   startTime: string;
   endTime: string;
@@ -57,15 +56,14 @@ interface SleepVisualizationProps {
   rangeDays: number;
 }
 
-// Utility Functions
 export const getQualityColor = (quality: number) => {
   switch (quality) {
-    case 5: return '#4287f5'; // blue
-    case 4: return '#00c896'; // green
-    case 3: return '#ffd000'; // yellow
-    case 2: return '#ff9900'; // orange
-    case 1: return '#ff4d4d'; // red
-    default: return '#ccc';   // fallback
+    case 5: return '#4287f5';
+    case 4: return '#00c896';
+    case 3: return '#ffd000';
+    case 2: return '#ff9900';
+    case 1: return '#ff4d4d';
+    default: return '#ccc';
   }
 };
 
@@ -84,7 +82,6 @@ export const formatDate = (date: Date) => {
   });
 };
 
-// Components
 export const SleepEntry = ({ sleep }: { sleep: SleepData }) => {
   const duration = (sleep.end.getTime() - sleep.start.getTime()) / (1000 * 60 * 60); // hours
   const backgroundColor = getQualityColor(sleep.quality);
@@ -245,7 +242,6 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   );
 };
 
-// Main functions for processing and rendering sleep data
 export const filteredSleepData = (rawSleepData: SleepData[], rangeDays: number) => {
   const now = new Date();
   const startDate = new Date(`${new Date().toISOString().split('T')[0]}T12:00:00`);
@@ -264,14 +260,12 @@ export const processSleepData = (rawSleepData: SleepData[], rangeDays: number) =
   startDate.setDate(now.getDate() - rangeDays + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  // Create array of all dates in range
   const allDates = Array.from({ length: rangeDays }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     return date.toISOString().split('T')[0];
   });
 
-  // Process sleep data for each date
   return allDates.map(dateStr => {
     const currentDate = new Date(dateStr);
     const nextDate = new Date(currentDate);
@@ -294,7 +288,6 @@ export const processSleepData = (rawSleepData: SleepData[], rangeDays: number) =
       };
     });
 
-    // Create stacked data for each day
     const stackedData = sleepSessions.map((session, index) => ({
       x: dateStr,
       y: Math.min(session.duration, MAX_SLEEP_HOURS),
@@ -314,7 +307,6 @@ export const processSleepData = (rawSleepData: SleepData[], rangeDays: number) =
   });
 };
 
-// Add a simple skeleton component for the graph
 const GraphSkeleton = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -338,7 +330,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
 
-  // Process data when component mounts or data/range changes
   useEffect(() => {
     console.log('[SleepVisualization] Processing sleep data...');
     console.log('...[SleepVisualization] Raw data entries:', rawSleepData?.length || 0);
@@ -352,8 +343,7 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
     
     setIsLoading(true);
     console.log('[SleepVisualization] Starting data processing...');
-    
-    // Process data with a small delay to allow UI to show loading state
+
     const timer = setTimeout(() => {
       const data = processSleepData(rawSleepData, rangeDays);
       console.log('[SleepVisualization] Data processing completed');
@@ -366,18 +356,15 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
     return () => clearTimeout(timer);
   }, [rawSleepData, rangeDays]);
 
-  // Effect to scroll to current date once data is loaded
   useEffect(() => {
     if (!isLoading && scrollViewRef.current) {
       console.log('[SleepVisualization] Scrolling to current date...');
-      // Use a longer duration for the animation so users can see dates flying by
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [isLoading]);
 
-  // Check for empty data after hooks
   if (!rawSleepData || rawSleepData.length === 0) {
     console.log('[SleepVisualization] Rendering empty state - no sleep data available');
     return (
@@ -403,7 +390,7 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
       setSelectedBar({
         data: target.datum,
         position: {
-          x: locationX - 8, // Subtract 8px to compensate for negative margin
+          x: locationX - 8,
           y: locationY
         },
       });
@@ -429,7 +416,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
 
     return (
       <View style={styles.graphWrapper}>
-        {/* Fixed Y-Axis */}
         <View style={[styles.yAxisContainer, { marginLeft: -8, backgroundColor: theme.secondaryBackground }]}>
           <VictoryAxis
             dependentAxis
@@ -448,7 +434,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
           />
         </View>
 
-        {/* Scrollable Chart Area */}
         <TouchableWithoutFeedback onPress={handleBackgroundPress}>
           <ScrollView
             ref={scrollViewRef}
@@ -467,7 +452,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
                 background: { fill: theme.secondaryBackground }
               }}
             >
-              {/* Add horizontal gridlines */}
               <VictoryAxis
                 dependentAxis
                 style={{
@@ -520,7 +504,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
                       />
                     ))
                   ) : (
-                    // Add empty bar to maintain spacing
                     <VictoryBar
                       key={`${dayData.date}-empty`}
                       data={[{
@@ -566,13 +549,11 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
     );
   };
 
-  // The main component's return
   return (
     <View style={[styles.sleepContainer, { backgroundColor: theme.background }]}>
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Sleep Data</Text>
       {renderSleepGraph()}
       
-      {/* Sleep Entries List */}
       <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Sleep Entries</Text>
         {isLoading ? (
@@ -594,7 +575,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   sleepContainer: {
     flex: 1,

@@ -1,12 +1,14 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import Colors from '@/constants/Colors';
+import { useColorScheme } from 'react-native';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'success';
   fullWidth?: boolean;
-  style?: object;
+  style?: ViewStyle;
   disabled?: boolean;
 }
 
@@ -18,36 +20,42 @@ export default function CustomButton({
   style = {},
   disabled = false 
 }: ButtonProps) {
-  const buttonStyles = {
-    primary: styles.primaryButton,
-    secondary: styles.secondaryButton,
-    danger: styles.dangerButton,
-    success: styles.successButton,
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+
+  const backgroundColors: Record<string, string> = {
+    primary: theme.tint,
+    secondary: '#6C757D',
+    danger: '#DC3545',
+    success: '#28A745',
   };
-  
-  const textStyles = {
-    primary: styles.primaryButtonText,
-    secondary: styles.secondaryButtonText,
-    danger: styles.dangerButtonText,
-    success: styles.successButtonText,
+
+  const textColors: Record<string, string> = {
+    primary: theme.text,
+    secondary: '#fff',
+    danger: '#fff',
+    success: '#fff',
   };
-  
+
+  const buttonBackground = disabled ? '#E9ECEF' : backgroundColors[variant];
+  const buttonText = disabled ? '#6C757D' : textColors[variant];
+
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        buttonStyles[variant],
-        fullWidth ? styles.fullWidth : null,
-        disabled ? styles.disabledButton : null,
-        style
+        { backgroundColor: buttonBackground },
+        fullWidth && styles.fullWidth,
+        style,
+        disabled && styles.disabledButton,
       ]}
       onPress={onPress}
       disabled={disabled}
     >
       <Text style={[
-        styles.buttonText, 
-        textStyles[variant],
-        disabled ? styles.disabledButtonText : null
+        styles.buttonText,
+        { color: buttonText },
+        disabled && styles.disabledButtonText,
       ]}>
         {title}
       </Text>
@@ -61,7 +69,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    marginBottom: 15,
   },
   fullWidth: {
     width: '100%',
@@ -70,35 +77,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  primaryButton: {
-    backgroundColor: '#007BFF',
-  },
-  primaryButtonText: {
-    color: '#fff',
-  },
-  secondaryButton: {
-    backgroundColor: '#6C757D',
-  },
-  secondaryButtonText: {
-    color: '#fff',
-  },
-  dangerButton: {
-    backgroundColor: '#DC3545',
-  },
-  dangerButtonText: {
-    color: '#fff',
-  },
-  successButton: {
-    backgroundColor: '#28A745',
-  },
-  successButtonText: {
-    color: '#fff',
-  },
   disabledButton: {
-    backgroundColor: '#E9ECEF',
     opacity: 0.6,
   },
-  disabledButtonText: {
-    color: '#6C757D',
-  },
+  disabledButtonText: {},
 });

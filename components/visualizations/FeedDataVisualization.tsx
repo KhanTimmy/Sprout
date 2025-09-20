@@ -4,10 +4,9 @@ import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer }
 import { FeedData } from '@/services/ChildService';
 import Colors from '@/constants/Colors';
 
-const MAX_FEED_DURATION = 60; // Maximum duration in minutes
+const MAX_FEED_DURATION = 60;
 const screenWidth = Dimensions.get('window').width;
 
-// Interfaces
 export interface FeedSession {
   dateTime: Date;
   type: string;
@@ -61,13 +60,12 @@ interface FeedVisualizationProps {
   rangeDays: number;
 }
 
-// Utility Functions
 export const getTypeColor = (type: string) => {
   switch (type) {
-    case 'nursing': return '#ff9900'; // orange
-    case 'bottle': return '#ff4d4d'; // red
-    case 'solid': return '#00c896'; // green
-    default: return '#4287f5'; // blue
+    case 'nursing': return '#ff9900';
+    case 'bottle': return '#ff4d4d';
+    case 'solid': return '#00c896';
+    default: return '#4287f5';
   }
 };
 
@@ -86,7 +84,6 @@ export const formatDate = (date: Date) => {
   });
 };
 
-// Components
 export const FeedEntry = ({ feed }: { feed: FeedData }) => {
   const backgroundColor = getTypeColor(feed.type);
   const colorScheme = useColorScheme();
@@ -276,7 +273,6 @@ export const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position })
   );
 };
 
-// Main functions for processing and rendering feed data
 export const filteredFeedData = (rawFeedData: FeedData[], rangeDays: number) => {
   const now = new Date();
   const startDate = new Date(`${new Date().toISOString().split('T')[0]}T12:00:00`);
@@ -295,14 +291,12 @@ export const processFeedData = (rawFeedData: FeedData[], rangeDays: number) => {
   startDate.setDate(now.getDate() - rangeDays + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  // Create array of all dates in range
   const allDates = Array.from({ length: rangeDays }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     return date.toISOString().split('T')[0];
   });
 
-  // Process feed data for each date
   return allDates.map(dateStr => {
     const currentDate = new Date(dateStr);
     const nextDate = new Date(currentDate);
@@ -315,13 +309,10 @@ export const processFeedData = (rawFeedData: FeedData[], rangeDays: number) => {
 
     let totalDuration = 0;
     const feedSessions = daysFeeds.map(feed => {
-      // Calculate duration based on feed type
       let duration = 0;
       if (feed.type === 'nursing') {
-        // For nursing, we'll use a default duration of 15 minutes if not specified
         duration = 15;
       } else if (feed.type === 'bottle' || feed.type === 'solid') {
-        // For bottle and solid feeds, we'll use a default duration of 10 minutes if not specified
         duration = 10;
       }
       
@@ -337,7 +328,6 @@ export const processFeedData = (rawFeedData: FeedData[], rangeDays: number) => {
       };
     });
 
-    // Create stacked data for each day
     const stackedData = feedSessions.map((session, index) => ({
       x: dateStr,
       y: Math.min(session.duration, MAX_FEED_DURATION),
@@ -358,7 +348,6 @@ export const processFeedData = (rawFeedData: FeedData[], rangeDays: number) => {
   });
 };
 
-// Add a simple skeleton component for the graph
 const GraphSkeleton = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -381,8 +370,7 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
   const [processedData, setProcessedData] = useState<ReturnType<typeof processFeedData>>([]);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
-  
-  // Process data when component mounts or data/range changes
+
   useEffect(() => {
     console.log('[FeedVisualization] Processing feed data...');
     console.log('...[FeedVisualization] Raw data entries:', rawFeedData?.length || 0);
@@ -396,8 +384,7 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
     
     setIsLoading(true);
     console.log('[FeedVisualization] Starting data processing...');
-    
-    // Process data with a small delay to allow UI to show loading state
+
     const timer = setTimeout(() => {
       const data = processFeedData(rawFeedData, rangeDays);
       console.log('[FeedVisualization] Data processing completed');
@@ -410,18 +397,15 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
     return () => clearTimeout(timer);
   }, [rawFeedData, rangeDays]);
 
-  // Effect to scroll to current date once data is loaded
   useEffect(() => {
     if (!isLoading && scrollViewRef.current) {
       console.log('[FeedVisualization] Scrolling to current date...');
-      // Use a longer duration for the animation so users can see dates flying by
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [isLoading]);
 
-  // Check for empty data after hooks
   if (!rawFeedData || rawFeedData.length === 0) {
     console.log('[FeedVisualization] Rendering empty state - no feed data available');
     return (
@@ -473,7 +457,6 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
 
     return (
       <View style={styles.graphWrapper}>
-        {/* Fixed Y-Axis */}
         <View style={[styles.yAxisContainer, { marginLeft: -8, backgroundColor: theme.secondaryBackground }]}>
           <VictoryAxis
             dependentAxis
@@ -492,7 +475,6 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
           />
         </View>
 
-        {/* Scrollable Chart Area */}
         <TouchableWithoutFeedback onPress={handleBackgroundPress}>
           <ScrollView
             ref={scrollViewRef}
@@ -511,7 +493,6 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
                 background: { fill: theme.secondaryBackground }
               }}
             >
-              {/* Add horizontal gridlines */}
               <VictoryAxis
                 dependentAxis
                 style={{
@@ -564,7 +545,6 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
                       />
                     ))
                   ) : (
-                    // Add empty bar to maintain spacing
                     <VictoryBar
                       key={`${dayData.date}-empty`}
                       data={[{
@@ -610,13 +590,11 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
     );
   };
 
-  // The main component's return
   return (
     <View style={[styles.feedContainer, { backgroundColor: theme.background }]}>
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Feed Data</Text>
       {renderFeedGraph()}
-      
-      {/* Feed Entries List */}
+
       <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Feed Entries</Text>
         {isLoading ? (
@@ -638,7 +616,6 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   feedContainer: {
     flex: 1,

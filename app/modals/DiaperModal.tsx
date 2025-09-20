@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, useColorScheme, TouchableOpacity } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { SelectList } from 'react-native-dropdown-select-list';
 import { DiaperData } from '@/services/ChildService';
+import Colors from "@/constants/Colors";
+import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface DiaperModalProps {
   visible: boolean;
@@ -19,12 +20,15 @@ const DiaperModal = ({
   onSave, 
   childId 
 }: DiaperModalProps) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  
   const [dateTime, setDateTime] = useState(new Date());
   const [diaperType, setDiaperType] = useState('');
-  const [peeAmount, setPeeAmount] = useState('');
-  const [pooAmount, setPooAmount] = useState('');
-  const [pooColor, setPooColor] = useState('');
-  const [pooConsistency, setPooConsistency] = useState('');
+  const [peeAmount, setPeeAmount] = useState<'little' | 'medium' | 'big' | ''>('');
+  const [pooAmount, setPooAmount] = useState<'little' | 'medium' | 'big' | ''>('');
+  const [pooColor, setPooColor] = useState<'yellow' | 'brown' | 'black' | 'green' | 'red' | ''>('');
+  const [pooConsistency, setPooConsistency] = useState<'solid' | 'loose' | 'runny' | 'mucousy' | 'hard' | 'pebbles' | 'diarrhea' | ''>('');
   const [hasRash, setHasRash] = useState(false);
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
@@ -91,19 +95,17 @@ const DiaperModal = ({
         id: childId,
         dateTime,
         type: diaperType as 'pee' | 'poo' | 'mixed' | 'dry',
-        ...(diaperType === 'pee' || diaperType === 'mixed' ? { peeAmount } : {}),
-        ...(diaperType === 'poo' || diaperType === 'mixed' ? { pooAmount, pooColor, pooConsistency } : {}),
         hasRash,
       };
 
       if (diaperType === 'pee' || diaperType === 'mixed') {
-        diaperData.peeAmount = peeAmount;
+        diaperData.peeAmount = peeAmount || undefined;
       }
 
       if (diaperType === 'poo' || diaperType === 'mixed') {
-        diaperData.pooAmount = pooAmount;
-        diaperData.pooColor = pooColor;
-        diaperData.pooConsistency = pooConsistency;
+        diaperData.pooAmount = pooAmount || undefined;
+        diaperData.pooColor = pooColor || undefined;
+        diaperData.pooConsistency = pooConsistency || undefined;
       }
 
       await onSave(diaperData);
@@ -134,20 +136,21 @@ const DiaperModal = ({
       }}
       title="Input Diaper Data"
       showCloseButton={false}
-      maxHeight="100%"
+      maxHeight="85%"
     >
-      <View style={styles.container}>
-        <View style={styles.dateTimeSection}>
-          <Text style={styles.label}>Date and Time:</Text>
-          <Text style={styles.timeDisplay}>
-            {dateTime.toLocaleString()}
-          </Text>
-          <CustomButton 
-            title="Select Date and Time" 
-            onPress={() => setDatePickerVisibility(true)}
-            variant="secondary"
-          />
-        </View>
+              <View style={styles.container}>
+          <View>
+            <Text style={[styles.label, { color: theme.text }]}>Date and Time:</Text>
+            <Text 
+              style={[styles.timeDisplay, { 
+                color: theme.secondaryText,
+                borderColor: theme.placeholder
+              }]}
+              onPress={() => setDatePickerVisibility(true)}
+            >
+              {dateTime.toLocaleString()}
+            </Text>
+          </View>
 
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
@@ -161,44 +164,38 @@ const DiaperModal = ({
         />
 
         <View style={styles.typeSection}>
-          <Text style={styles.label}>Diaper Type:</Text>
-          <SelectList
-            setSelected={(val: string) => {
-              setDiaperType(val);
-              // reset nonapplicable values for diaper change types
-              if (val === 'dry') {
+          <Text style={[styles.label, { color: theme.text }]}>Diaper Type:</Text>
+          <ThemedDropdown
+            data={diaperTypeData.map(item => ({ label: item.value, value: item.value }))}
+            value={diaperType}
+            onValueChange={(val: string | number) => {
+              const stringVal = String(val);
+              setDiaperType(stringVal);
+              if (stringVal === 'dry') {
                 setPeeAmount('');
                 setPooAmount('');
                 setPooColor('');
                 setPooConsistency('');
-              } else if (val === 'pee') {
+              } else if (stringVal === 'pee') {
                 setPooAmount('');
                 setPooColor('');
                 setPooConsistency('');
-              } else if (val === 'poo') {
+              } else if (stringVal === 'poo') {
                 setPeeAmount('');
               }
             }}
-            data={diaperTypeData}
-            save="value"
             placeholder="Select diaper type"
-            boxStyles={styles.selectBox}
-            dropdownStyles={styles.dropdown}
-            search={false}
           />
         </View>
 
         {(diaperType === 'pee' || diaperType === 'mixed') && (
           <View style={styles.section}>
-            <Text style={styles.label}>Pee Amount:</Text>
-            <SelectList
-              setSelected={(val: string) => setPeeAmount(val)}
-              data={amountData}
-              save="value"
+            <Text style={[styles.label, { color: theme.text }]}>Pee Amount:</Text>
+            <ThemedDropdown
+              data={amountData.map(item => ({ label: item.value, value: item.value }))}
+              value={peeAmount}
+              onValueChange={(val: string | number) => setPeeAmount(String(val) as 'little' | 'medium' | 'big' | '')}
               placeholder="Select pee amount"
-              boxStyles={styles.selectBox}
-              dropdownStyles={styles.dropdown}
-              search={false}
             />
           </View>
         )}
@@ -206,61 +203,67 @@ const DiaperModal = ({
         {(diaperType === 'poo' || diaperType === 'mixed') && (
           <>
             <View style={styles.section}>
-              <Text style={styles.label}>Poo Amount:</Text>
-              <SelectList
-                setSelected={(val: string) => setPooAmount(val)}
-                data={amountData}
-                save="value"
+              <Text style={[styles.label, { color: theme.text }]}>Poo Amount:</Text>
+              <ThemedDropdown
+                data={amountData.map(item => ({ label: item.value, value: item.value }))}
+                value={pooAmount}
+                onValueChange={(val: string | number) => setPooAmount(String(val) as 'little' | 'medium' | 'big' | '')}
                 placeholder="Select poo amount"
-                boxStyles={styles.selectBox}
-                dropdownStyles={styles.dropdown}
-                search={false}
               />
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.label}>Poo Color:</Text>
-              <SelectList
-                setSelected={(val: string) => setPooColor(val)}
-                data={colorData}
-                save="value"
+              <Text style={[styles.label, { color: theme.text }]}>Poo Color:</Text>
+              <ThemedDropdown
+                data={colorData.map(item => ({ label: item.value, value: item.value }))}
+                value={pooColor}
+                onValueChange={(val: string | number) => setPooColor(String(val) as 'yellow' | 'brown' | 'black' | 'green' | 'red' | '')}
                 placeholder="Select poo color"
-                boxStyles={styles.selectBox}
-                dropdownStyles={styles.dropdown}
-                search={false}
               />
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.label}>Poo Consistency:</Text>
-              <SelectList
-                setSelected={(val: string) => setPooConsistency(val)}
-                data={consistencyData}
-                save="value"
+              <Text style={[styles.label, { color: theme.text }]}>Poo Consistency:</Text>
+              <ThemedDropdown
+                data={consistencyData.map(item => ({ label: item.value, value: item.value }))}
+                value={pooConsistency}
+                onValueChange={(val: string | number) => setPooConsistency(String(val) as 'solid' | 'loose' | 'runny' | 'mucousy' | 'hard' | 'pebbles' | 'diarrhea' | '')}
                 placeholder="Select poo consistency"
-                boxStyles={styles.selectBox}
-                dropdownStyles={styles.dropdown}
-                search={false}
               />
             </View>
           </>
         )}
 
         <View style={styles.rashSection}>
-          <Text style={styles.label}>Diaper Rash:</Text>
-          <View style={styles.rashButtons}>
-            <CustomButton
-              title="Yes"
+          <Text style={[styles.label, { color: theme.text }]}>Diaper Rash:</Text>
+          <View style={styles.rashGroup}>
+            <TouchableOpacity
+              style={styles.rashOption}
               onPress={() => setHasRash(true)}
-              variant={hasRash ? "success" : "secondary"}
-              style={styles.rashButton}
-            />
-            <CustomButton
-              title="No"
+            >
+              <View style={[
+                styles.rashCircle, 
+                { borderColor: theme.tint },
+                hasRash && { borderColor: theme.tint }
+              ]}>
+                {hasRash && <View style={[styles.rashInner, { backgroundColor: theme.tint }]} />}
+              </View>
+              <Text style={[styles.rashText, { color: theme.text }]}>Yes</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.rashOption}
               onPress={() => setHasRash(false)}
-              variant={!hasRash ? "success" : "secondary"}
-              style={styles.rashButton}
-            />
+            >
+              <View style={[
+                styles.rashCircle, 
+                { borderColor: theme.tint },
+                !hasRash && { borderColor: theme.tint }
+              ]}>
+                {!hasRash && <View style={[styles.rashInner, { backgroundColor: theme.tint }]} />}
+              </View>
+              <Text style={[styles.rashText, { color: theme.text }]}>No</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -269,15 +272,6 @@ const DiaperModal = ({
             title="Save"
             onPress={handleSave}
             variant="success"
-            style={styles.button}
-          />
-          <CustomButton
-            title="Cancel"
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
-            variant="primary"
             style={styles.button}
           />
         </View>
@@ -291,17 +285,14 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 15,
   },
-  dateTimeSection: {
-    marginBottom: 10,
-  },
   typeSection: {
-    marginVertical: 10,
+    marginBottom: 15,
   },
   section: {
-    marginVertical: 10,
+    marginBottom: 15,
   },
   rashSection: {
-    marginVertical: 10,
+    marginBottom: 15,
   },
   label: {
     fontSize: 16,
@@ -310,31 +301,58 @@ const styles = StyleSheet.create({
   },
   timeDisplay: {
     fontSize: 16,
-    marginBottom: 10,
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
+    marginBottom: 15,
+    padding: 12,
+    borderRadius: 8,
+    fontStyle: 'italic',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   selectBox: {
-    borderColor: '#cccccc',
-    marginTop: 5,
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
   },
   dropdown: {
-    borderColor: '#cccccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: 2,
   },
-  rashButtons: {
+  rashGroup: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
+    justifyContent: 'space-around',
+    marginTop: 10,
   },
-  rashButton: {
-    flex: 1,
-    marginHorizontal: 5,
+  rashOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 15,
+  },
+  rashCircle: {
+    height: 22,
+    width: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  rashInner: {
+    height: 10,
+    width: 10,
+    borderRadius: 5,
+  },
+  rashText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 15,
   },
   button: {
     flex: 1,

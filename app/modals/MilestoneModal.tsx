@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, useColorScheme } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { SelectList } from 'react-native-dropdown-select-list';
 import { MilestoneData } from '@/services/ChildService';
+import Colors from "@/constants/Colors";
+import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface MilestoneModalProps {
   visible: boolean;
@@ -19,6 +20,9 @@ const MilestoneModal = ({
   onSave,
   childId,
 }: MilestoneModalProps) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  
   const [dateTime, setDateTime] = useState(new Date());
   const [type, setType] = useState('');
   
@@ -47,7 +51,7 @@ const MilestoneModal = ({
       const milestoneData: MilestoneData = {
         id: childId,
         dateTime: dateTime,
-        type: type,
+        type: type as 'smiling' | 'rolling over' | 'sitting up' | 'crawling' | 'walking',
       };
       
       await onSave(milestoneData);
@@ -73,19 +77,20 @@ const MilestoneModal = ({
       }}
       title="Input Milestone Data"
       showCloseButton={false}
-      maxHeight="100%"
+      maxHeight="70%"
     >
       <View style={styles.container}>
-        <View style={styles.dateTimeSection}>
-          <Text style={styles.label}>Date & Time:</Text>
-          <Text style={styles.timeDisplay}>
+        <View>
+          <Text style={[styles.label, { color: theme.text }]}>Date & Time:</Text>
+          <Text 
+            style={[styles.timeDisplay, { 
+              color: theme.secondaryText,
+              borderColor: theme.placeholder
+            }]}
+            onPress={() => setDatePickerVisibility(true)}
+          >
             {dateTime.toLocaleString()}
           </Text>
-          <CustomButton 
-            title="Select Date & Time" 
-            onPress={() => setDatePickerVisibility(true)}
-            variant="secondary"
-          />
         </View>
 
         <DateTimePickerModal
@@ -100,16 +105,13 @@ const MilestoneModal = ({
         />
 
         <View style={styles.typeSection}>
-          <Text style={styles.label}>Milestone Type:</Text>
-            <SelectList
-            setSelected={(val: any) => setType(val)}
-            data={data}
-            save="value"
-            placeholder='Select milestone type'
-            boxStyles={styles.selectBox}
-            dropdownStyles={styles.dropdown}
-            search={false}
-            />
+          <Text style={[styles.label, { color: theme.text }]}>Milestone Type:</Text>
+          <ThemedDropdown
+            data={data.map(item => ({ label: item.value, value: item.value }))}
+            value={type}
+            onValueChange={(val: string | number) => setType(String(val))}
+            placeholder="Select milestone type"
+          />
         </View>
 
         <View style={styles.buttonContainer}>
@@ -117,15 +119,6 @@ const MilestoneModal = ({
             title="Save"
             onPress={handleSave}
             variant="success"
-            style={styles.button}
-          />
-          <CustomButton
-            title="Cancel"
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
-            variant="primary"
             style={styles.button}
           />
         </View>
@@ -139,39 +132,29 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 15,
   },
-  dateTimeSection: {
-    marginBottom: 10,
+  typeSection: {
+    marginBottom: 15,
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '600',
+    marginBottom: 10,
   },
   timeDisplay: {
     fontSize: 16,
-    marginBottom: 10,
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-  },
-  typeSection: {
-    marginVertical: 10,
-  },
-  selectBox: {
-    borderColor: '#cccccc',
-    marginTop: 5,
-  },
-  dropdown: {
-    borderColor: '#cccccc',
+    marginBottom: 15,
+    padding: 12,
+    borderRadius: 8,
+    fontStyle: 'italic',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 15,
   },
   button: {
-    flex: 1,
-    marginHorizontal: 5,
+    width: '100%',
   },
 });
 

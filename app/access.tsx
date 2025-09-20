@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { StyleSheet, FlatList, TouchableOpacity, Alert, Text, View, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { ChildService, ChildData } from '@/services/ChildService';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
@@ -10,32 +9,58 @@ import { router } from 'expo-router';
 import ChildSelectionModal from './modals/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useColorScheme } from 'react-native';
+import Colors from "@/constants/Colors";
+import CornerIndicators from '@/components/CornerIndicators';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AccessScreen() {
   const { selectedChild, saveSelectedChild, clearSelectedChild } = useSelectedChild();
   const [authorizedUsers, setAuthorizedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibility, setModalVisibility] = useState<{ childSelection: boolean }>({
+    childSelection: false
+  });  
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
 
-  // Ensure user is authenticated
-  getAuth().onAuthStateChanged((user) => {
-    if (!user) router.replace('/');
-  });
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+
+  useEffect(() => {
+    const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
+      if (!user) {
+        router.replace('/');
+      } else {
+        fetchUserChildrenList();
+      }
+    });
+    return unsubscribeAuth;
+  }, []);
+
+  const fetchUserChildrenList = async () => {
+    try {
+      console.log('[access] fetchUserChildrenList called [ChildService]fetchUserChildren');
+      const children = await ChildService.fetchUserChildren();
+      setChildrenList(children);
+    } catch (error) {
+      console.error('Error fetching children list for access screen:', error);
+    }
+  };
+
+  const handleNavigateToAddChild = () => {
+    router.push('/addchild');
+  };
 
   useEffect(() => {
     const fetchChildDetails = async () => {
       setLoading(true);
       try {
         if (selectedChild && selectedChild.id) {
-          // Directly fetch the child document from Firestore to get complete data
           const childDocRef = doc(db, 'children', selectedChild.id);
           const childDocSnap = await getDoc(childDocRef);
           
           if (childDocSnap.exists()) {
             const childData = childDocSnap.data();
-            // Get the authorized_uid array from the document
             setAuthorizedUsers(childData.authorized_uid || []);
             console.log('Authorized users:', childData.authorized_uid);
           } else {
@@ -58,17 +83,6 @@ export default function AccessScreen() {
     }
   }, [selectedChild]);
 
-  // Fetch children and show modal
-  const checkChildren = async () => {
-    try {
-      const children = await ChildService.fetchUserChildren();
-      setChildrenList(children);
-      setModalVisible(true);
-    } catch (error) {
-      console.error('Error fetching children:', error);
-    }
-  };
-
   const handleRemovalButtonPress = async () => {
     if (!selectedChild) {
       Alert.alert('No child selected', 'Please select a child to proceed.');
@@ -80,8 +94,7 @@ export default function AccessScreen() {
     const confirmationMessage = selectedChild.type === 'Parent'
       ? `Are you sure you want to delete ${selectedChild.first_name} ${selectedChild.last_name}?`
       : `Are you sure you want to remove access for ${selectedChild.first_name} ${selectedChild.last_name}?`;
-  
-    // Show the confirmation alert
+
     Alert.alert(
       'Confirm Action',
       confirmationMessage,
@@ -97,8 +110,7 @@ export default function AccessScreen() {
               await ChildService.removeChildOrAccess(selectedChild);
               
               Alert.alert('Success', `Child has been ${actionType}d successfully.`);
-              
-              // Clear selected child after action
+
               await clearSelectedChild();
             } catch (error) {
               console.error('Error performing action:', error);
@@ -111,103 +123,141 @@ export default function AccessScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Manage Access</Text>
-      
-      {/* Child Selection Button */}
-      <CustomButton
-        title={selectedChild ? "Change Child" : "Select Child"}
-        onPress={checkChildren}
-        variant="primary"
-        style={styles.selectButton}
+    <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]} edges={['top']}>
+      <CornerIndicators
+        selectedChild={selectedChild}
+        childrenList={childrenList}
+        onSelectChild={saveSelectedChild}
+        onNavigateToAddChild={handleNavigateToAddChild}
       />
       
-      {selectedChild ? (
-        <View style={styles.childInfoContainer}>
-          <Text style={styles.childName}>
-            {selectedChild.first_name} {selectedChild.last_name}
-          </Text>
-          <Text style={styles.childType}>
-            {selectedChild.type === 'Parent' ? 'You are the parent' : 'You are authorized'}
-          </Text>
-        </View>
-      ) : (
-        <Text style={styles.infoText}>No child selected. Please select a child first.</Text>
-      )}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1, width: '100%' }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer} 
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.inner}>
+              <View style={styles.headerSection}>
+                <Text style={[styles.title, { color: theme.text }]}>Manage Access</Text>
+              </View>
 
-      {selectedChild && (
-        <CustomButton 
-          title={selectedChild.type === 'Parent' ? 'Delete Child' : 'Remove Access'} 
-          onPress={handleRemovalButtonPress} // Now with confirmation pop-up
-          variant="danger" 
-        />
-      )}
-
-      {selectedChild && selectedChild.type === 'Parent' && (
-        <>
-          <Text style={styles.sectionTitle}>Authorized Caregivers</Text>
-          
-          {authorizedUsers.length > 0 ? (
-            <FlatList
-              data={authorizedUsers}
-              keyExtractor={(item, index) => `user-${index}`}
-              renderItem={({ item }) => (
-                <View style={styles.userItem}>
-                  <Text style={styles.userText}>{item}</Text>
-                  <TouchableOpacity 
-                    style={styles.removeButton}
-                    onPress={async () => {
-                      try {
-                        // Get current document
-                        const childDocRef = doc(db, 'children', selectedChild.id);
-                        // Update the authorized_uid list
-                        await updateDoc(childDocRef, {
-                          authorized_uid: arrayRemove(item)
-                        });
-                        // Update local state
-                        setAuthorizedUsers(prev => prev.filter(uid => uid !== item));
-                        console.log('Removed user:', item);
-                      } catch (error) {
-                        console.error('Error removing authorized user:', error);
-                      }
-                    }}
-                  >
-                    <Text style={styles.removeButtonText}>Remove</Text>
-                  </TouchableOpacity>
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.tint} />
+                  <Text style={[styles.loadingText, { color: theme.secondaryText }]}>Loading...</Text>
+                </View>
+              ) : selectedChild ? (
+                <View style={[styles.childInfoContainer, { backgroundColor: theme.secondaryBackground, borderColor: theme.tint }]}>
+                  <View style={styles.childInfoHeader}>
+                    <Ionicons name="person" size={24} color={theme.tint} />
+                    <View style={styles.childInfoText}>
+                      <Text style={[styles.childName, { color: theme.text }]}>
+                        {selectedChild.first_name} {selectedChild.last_name}
+                      </Text>
+                      <Text style={[styles.childType, { color: theme.secondaryText }]}>
+                        {selectedChild.type === 'Parent' ? 'You are the parent' : 'You are authorized'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={[styles.noChildContainer, { backgroundColor: theme.secondaryBackground }]}>
+                  <Ionicons name="information-circle" size={24} color={theme.secondaryText} />
+                  <Text style={[styles.noChildText, { color: theme.text }]}>
+                    No child selected. Please select a child first.
+                  </Text>
                 </View>
               )}
-              style={styles.userList}
-            />
-          ) : (
-            <Text style={styles.infoText}>No authorized users for this child.</Text>
-          )}
-          
-          <CustomButton 
-            title="Add New Authorized Caregiver" 
-            onPress={() => {
-              router.push('/addcaregiver'),
-              console.log('Add new authorized user');
-            }} 
-            style={styles.addButton}
-          />
-        </>
-      )}
 
-      {/* Child Selection Modal */}
-      <ChildSelectionModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        childrenList={childrenList}
-        selectedChild={selectedChild}
-        onSelectChild={(child) => saveSelectedChild(child)}
-        onClearSelection={clearSelectedChild}
-      />
+              {selectedChild && (
+                <CustomButton
+                  title={selectedChild.type === 'Parent' ? 'Delete Child' : 'Remove Access'}
+                  onPress={handleRemovalButtonPress}
+                  variant="danger"
+                  style={styles.actionButton}
+                />
+              )}
 
-      <CustomButton
-        title="Back"
-        onPress={() => router.back()}
-        variant="primary"
-      />
+              {selectedChild && selectedChild.type === 'Parent' && (
+                <View style={styles.caregiversSection}>
+                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Authorized Caregivers</Text>
+                  
+                  {authorizedUsers.length > 0 ? (
+                    <View style={styles.userListContainer}>
+                      <FlatList
+                        data={authorizedUsers}
+                        keyExtractor={(item, index) => `user-${index}`}
+                        renderItem={({ item }) => (
+                          <View style={[styles.userItem, { backgroundColor: theme.background }]}>
+                            <View style={styles.userInfo}>
+                              <Ionicons name="mail" size={16} color={theme.secondaryText} />
+                              <Text style={[styles.userText, { color: theme.text }]}>{item}</Text>
+                            </View>
+                            <TouchableOpacity 
+                              style={[styles.removeButton, { backgroundColor: '#DC3545' }]}
+                              onPress={async () => {
+                                try {
+                                  const childDocRef = doc(db, 'children', selectedChild.id);
+                                  await updateDoc(childDocRef, {
+                                    authorized_uid: arrayRemove(item)
+                                  });
+                                  setAuthorizedUsers(prev => prev.filter(uid => uid !== item));
+                                  console.log('Removed user:', item);
+                                } catch (error) {
+                                  console.error('Error removing authorized user:', error);
+                                }
+                              }}
+                            >
+                              <Ionicons name="trash" size={16} color="#fff" />
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                        style={styles.userList}
+                        scrollEnabled={false}
+                      />
+                    </View>
+                  ) : (
+                    <View style={[styles.emptyStateContainer, { backgroundColor: theme.background }]}>
+                      <Ionicons name="people-outline" size={32} color={theme.secondaryText} />
+                      <Text style={[styles.emptyStateText, { color: theme.secondaryText }]}>
+                        No authorized users for this child.
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <CustomButton 
+                    title="Add New Caregiver" 
+                    onPress={() => {
+                      router.push('/addcaregiver');
+                      console.log('Add new authorized user');
+                    }} 
+                  />
+                </View>
+              )}
+              
+              <ChildSelectionModal
+                visible={modalVisibility.childSelection}
+                onClose={() => setModalVisibility(prev => ({ ...prev, childSelection: false }))}
+                childrenList={childrenList}
+                selectedChild={selectedChild}
+                onSelectChild={saveSelectedChild}
+                onClearSelection={clearSelectedChild}
+              />
+
+              <CustomButton
+                title="Back"
+                onPress={() => router.back()}
+                variant="secondary"
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -215,83 +265,139 @@ export default function AccessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingVertical: 20,
+    paddingTop: 60,
+  },
+  inner: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  headerSection: {
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    marginBottom: 8,
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontWeight: '800',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
-  selectButton: {
-    marginBottom: 20,
-    width: '100%',
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 22,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '500',
   },
   childInfoContainer: {
     width: '100%',
-    padding: 15,
-    marginVertical: 10,
-    backgroundColor: '#f0f7ff',
-    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  childInfoHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#cce5ff',
+  },
+  childInfoText: {
+    marginLeft: 12,
+    flex: 1,
   },
   childName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   childType: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  noChildContainer: {
+    width: '100%',
+    padding: 16,
+    marginBottom: 20,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  noChildText: {
+    marginLeft: 12,
     fontSize: 16,
-    color: '#666',
-    fontStyle: 'italic',
+    fontWeight: '500',
+    flex: 1,
+  },
+  actionButton: {
+    marginBottom: 30,
+  },
+  caregiversSection: {
+    width: '100%',
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  userListContainer: {
+    marginBottom: 16,
   },
   userList: {
     width: '100%',
-    maxHeight: 300,
   },
   userItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    padding: 15,
-    marginVertical: 5,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
+    padding: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   userText: {
     fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
     flex: 1,
   },
-  infoText: {
-    fontSize: 16,
-    color: '#666',
-    marginVertical: 20,
-    textAlign: 'center',
-  },
   removeButton: {
-    backgroundColor: '#DC3545',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
-  removeButtonText: {
-    color: 'white',
+  emptyStateContainer: {
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    borderStyle: 'dashed',
+  },
+  emptyStateText: {
+    marginTop: 10,
+    fontSize: 16,
     fontWeight: '500',
-  },
-  addButton: {
-    marginTop: 20,
-    width: '100%',
+    textAlign: 'center',
   },
 });
