@@ -55,7 +55,7 @@ const index = () => {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.inner}>
               <View style={styles.headerSection}>
-                <Text style={[styles.title, { color: theme.text }]}>SPROUT</Text>
+                <Text style={[styles.title, { color: theme.text }]}>Swaddle</Text>
                 <Image
                   style={styles.logo}
                   source={require('../assets/images/logo.png')}
