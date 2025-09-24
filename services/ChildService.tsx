@@ -22,6 +22,7 @@ const CACHE_KEYS = {
   DIAPER: 'childData_diaper_',
   ACTIVITY: 'childData_activity_',
   MILESTONE: 'childData_milestone_',
+  WEIGHT: 'childData_weight_',
   LAST_FETCH: 'childData_lastFetch_'
 };
 
@@ -57,6 +58,7 @@ const clearChildCache = async (childId: string): Promise<void> => {
       CACHE_KEYS.DIAPER + childId,
       CACHE_KEYS.ACTIVITY + childId,
       CACHE_KEYS.MILESTONE + childId,
+      CACHE_KEYS.WEIGHT + childId,
       CACHE_KEYS.LAST_FETCH + childId
     ];
     await AsyncStorage.multiRemove(keys);
@@ -98,6 +100,10 @@ export interface ChildData {
   type: string;
   dob: string;
   sex: 'male' | 'female';
+  weight?: {
+    pounds: number;
+    ounces: number;
+  };
 }
 
 export interface NewChildData {
@@ -105,6 +111,10 @@ export interface NewChildData {
   last_name: string;
   dob: string;
   sex: string;
+  weight?: {
+    pounds: number;
+    ounces: number;
+  };
 }
 
 export interface SleepData {
@@ -148,6 +158,13 @@ export interface MilestoneData {
   type: 'smiling' | 'rolling over' | 'sitting up' | 'crawling' | 'walking';
 }
 
+export interface WeightData {
+  id: string;
+  dateTime: Date;
+  pounds: number;
+  ounces: number;
+}
+
 export const ChildService = {
   async fetchUserChildren(): Promise<ChildData[]> {
     const user = getAuth().currentUser;
@@ -177,6 +194,7 @@ export const ChildService = {
             type: 'Parent',
             dob: parentChildData.dob,
             sex: parentChildData.sex,
+            weight: parentChildData.weight,
           });
         }
       });
@@ -191,6 +209,7 @@ export const ChildService = {
             type: 'Authorized',
             dob: authChildData.dob,
             sex: authChildData.sex,
+            weight: authChildData.weight,
           });
         }
       });
@@ -211,14 +230,20 @@ export const ChildService = {
     }
 
     try {
-      const docRef = await addDoc(collection(db, 'children'), {
+      const docData: any = {
         first_name: childData.first_name,
         last_name: childData.last_name,
         dob: childData.dob,
         sex: childData.sex,
         parent_uid: user.email,
         authorized_uid: [],
-      });
+      };
+      
+      if (childData.weight) {
+        docData.weight = childData.weight;
+      }
+      
+      const docRef = await addDoc(collection(db, 'children'), docData);
       console.log(`...[addChild] child created: ${docRef.id}`);
       return {
         first_name: childData.first_name,
@@ -227,6 +252,7 @@ export const ChildService = {
         id: docRef.id,
         dob: childData.dob,
         sex: childData.sex as "male" | "female",
+        weight: childData.weight,
       };
     } catch (error) {
       console.error('[ChildService]addChild error occurred:', error);
@@ -410,6 +436,35 @@ export const ChildService = {
       };
     } catch (error) {
       console.error('[ChildService]addMilestone error occurred:', error);
+      throw error;
+    }
+  },
+
+  async addWeight(weightData: WeightData): Promise<WeightData> {
+    const user = getAuth().currentUser;
+    if (!user) {
+      console.error('[ChildService]addWeight failed: user not authenticated');
+      throw new Error('User must be logged in to add weight data');
+    }
+  
+    try {
+      const docRef = await addDoc(collection(db, 'children', weightData.id, 'weight'), {
+        dateTime: weightData.dateTime,
+        pounds: weightData.pounds,
+        ounces: weightData.ounces
+      });
+      console.log(`...[addWeight] data created: ${weightData.id}`);
+
+      await clearChildCache(weightData.id);
+      
+      return {
+        id: weightData.id,
+        dateTime: weightData.dateTime,
+        pounds: weightData.pounds,
+        ounces: weightData.ounces,
+      };
+    } catch (error) {
+      console.error('[ChildService]addWeight error occurred:', error);
       throw error;
     }
   },
@@ -622,6 +677,48 @@ export const ChildService = {
       return data;
     } catch (error) {
       console.error('[ChildService]getMilestone error occurred:', error);
+      throw error;
+    }
+  },
+
+  async getWeight(childId: string): Promise<WeightData[]> {
+    const user = getAuth().currentUser;
+    if (!user) {
+      console.error('[ChildService]getWeight failed: user not authenticated');
+      throw new Error('User must be logged in to get weight data');
+    }
+    try {
+      console.log('[ChildService]getWeight executing for childId:', childId);
+
+      if (await isCacheValid(childId)) {
+        const cachedData = await AsyncStorage.getItem(CACHE_KEYS.WEIGHT + childId);
+        if (cachedData) {
+          console.log('[Cache] Returning cached weight data');
+          const parsedData = JSON.parse(cachedData);
+          return parsedData.map((weight: any) => ({
+            ...weight,
+            dateTime: new Date(weight.dateTime)
+          }));
+        }
+      }
+
+      incrementQueryCounter('getWeight', childId);
+      const weightCollection = collection(db, 'children', childId, 'weight');
+      const snapshot = await getDocs(weightCollection);
+      console.log(`...[getWeight] weight data returned with ${snapshot.docs.length} entries`);
+      
+      const data = snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        dateTime: doc.data().dateTime.toDate()
+      })) as WeightData[];
+
+      await AsyncStorage.setItem(CACHE_KEYS.WEIGHT + childId, JSON.stringify(data));
+      await updateCacheTimestamp(childId);
+      console.log('[Cache] Cached weight data');
+      
+      return data;
+    } catch (error) {
+      console.error('[ChildService]getWeight error occurred:', error);
       throw error;
     }
   }

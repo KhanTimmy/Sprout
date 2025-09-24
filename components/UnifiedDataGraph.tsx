@@ -1,12 +1,13 @@
 import React, { useRef } from 'react';
 import { View, ScrollView } from 'react-native';
-import { SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+import { SleepData, FeedData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import type { TrendType } from './TrendSelector';
 import SleepVisualization from './visualizations/SleepDataVisualization';
 import FeedVisualization from './visualizations/FeedDataVisualization';
 import DiaperVisualization from './visualizations/DiaperDataVisualization';
 import ActivityVisualization from './visualizations/ActivityDataVisualization';
 import MilestoneVisualization from './visualizations/MilestoneDataVisualization';
+import WeightVisualization from './visualizations/WeightDataVisualization';
 
 interface UnifiedDataGraphProps {
   sleepData: SleepData[];
@@ -14,6 +15,7 @@ interface UnifiedDataGraphProps {
   diaperData: DiaperData[];
   activityData: ActivityData[];
   milestoneData: MilestoneData[];
+  weightData: WeightData[];
   rangeDays: number;
   activeDataType: TrendType;
 }
@@ -24,6 +26,7 @@ const UnifiedDataGraph = ({
   diaperData: rawDiaperData,
   activityData: rawActivityData,
   milestoneData: rawMilestoneData,
+  weightData: rawWeightData,
   rangeDays,
   activeDataType,
 }: UnifiedDataGraphProps) => {
@@ -46,6 +49,9 @@ const UnifiedDataGraph = ({
         )}
         {activeDataType === 'milestone' && (
           <MilestoneVisualization milestoneData={rawMilestoneData} rangeDays={rangeDays} />
+        )}
+        {activeDataType === 'weight' && (
+          <WeightVisualization weightData={rawWeightData} rangeDays={rangeDays} />
         )}
       </View>
     </ScrollView>

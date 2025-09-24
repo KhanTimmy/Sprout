@@ -5,7 +5,7 @@ import { useColorScheme } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import UnifiedDataGraph from '@/components/UnifiedDataGraph';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import TrendSelector, { TrendType } from '@/components/TrendSelector';
@@ -25,6 +25,7 @@ export default function Reports() {
   const [diapers, setDiapers] = useState<DiaperData[]>([]);
   const [activities, setActivities] = useState<ActivityData[]>([]);
   const [milestones, setMilestones] = useState<MilestoneData[]>([]);
+  const [weights, setWeights] = useState<WeightData[]>([]);
 
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
 
@@ -63,18 +64,20 @@ export default function Reports() {
         setDiapers([]);
         setActivities([]);
         setMilestones([]);
+        setWeights([]);
         return;
       }
 
       console.log('[Reports] fetchAllData executing for child:', selectedChild.first_name, selectedChild.last_name);
       try {
         console.log('[Reports] Fetching all data types from ChildService...');
-        const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData] = await Promise.all([
+        const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
           ChildService.getFeed(selectedChild.id),
           ChildService.getSleep(selectedChild.id),
           ChildService.getDiaper(selectedChild.id),
           ChildService.getActivity(selectedChild.id),
-          ChildService.getMilestone(selectedChild.id)
+          ChildService.getMilestone(selectedChild.id),
+          ChildService.getWeight(selectedChild.id)
         ]);
 
         console.log('[Reports] Data fetched successfully:');
@@ -83,12 +86,14 @@ export default function Reports() {
         console.log('...[Reports] Diapers:', diapersData.length, 'entries');
         console.log('...[Reports] Activities:', activitiesData.length, 'entries');
         console.log('...[Reports] Milestones:', milestonesData.length, 'entries');
+        console.log('...[Reports] Weights:', weightsData.length, 'entries');
 
         setFeedings(feedingsData);
         setSleeps(sleepsData);
         setDiapers(diapersData);
         setActivities(activitiesData);
         setMilestones(milestonesData);
+        setWeights(weightsData);
         
         console.log('[Reports] All data states updated, ready for visualization');
       } catch (error) {
@@ -135,6 +140,7 @@ export default function Reports() {
               diaperData={diapers}
               activityData={activities}
               milestoneData={milestones}
+              weightData={weights}
               rangeDays={rangeDays}
               activeDataType={selectedTrend}
             />

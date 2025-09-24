@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Alert, TouchableOpacity, ActivityIndicator, ScrollView, ViewStyle, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from 'react-native';
 import CornerIndicators from '@/components/CornerIndicators';
@@ -18,7 +18,8 @@ const TREND_TYPES = [
   { key: 'feed', icon: 'food-apple', label: 'Feed' },
   { key: 'diaper', icon: 'baby-face-outline', label: 'Diaper' },
   { key: 'activity', icon: 'run', label: 'Activity' },
-  { key: 'milestone', icon: 'star', label: 'Milestone' }
+  { key: 'milestone', icon: 'star', label: 'Milestone' },
+  { key: 'weight', icon: 'scale-bathroom', label: 'Weight' }
 ] as const;
 
 const InsightsTrendSelector: React.FC<{
@@ -73,16 +74,9 @@ const InsightsTrendSelector: React.FC<{
           >
             <MaterialCommunityIcons 
               name={type.icon as any}
-              size={24}
+              size={28}
               color={selectedTypes.includes(type.key) ? theme.tint : theme.secondaryText}
             />
-            <Text style={[
-              styles.trendLabel,
-              { color: selectedTypes.includes(type.key) ? theme.tint : theme.secondaryText },
-              selectedTypes.includes(type.key) && styles.trendLabelSelected
-            ]}>
-              {type.label}
-            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -107,6 +101,7 @@ export default function InsightsScreen() {
   const [diaperData, setDiaperData] = useState<DiaperData[]>([]);
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [milestoneData, setMilestoneData] = useState<MilestoneData[]>([]);
+  const [weightData, setWeightData] = useState<WeightData[]>([]);
 
   useEffect(() => {
     const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
@@ -142,12 +137,13 @@ export default function InsightsScreen() {
     try {
       setLoading(true);
       console.log('[Insights] Fetching all data types from ChildService...');
-      const [feeds, sleeps, diapers, activities, milestones] = await Promise.all([
+      const [feeds, sleeps, diapers, activities, milestones, weights] = await Promise.all([
         ChildService.getFeed(selectedChild.id),
         ChildService.getSleep(selectedChild.id),
         ChildService.getDiaper(selectedChild.id),
         ChildService.getActivity(selectedChild.id),
-        ChildService.getMilestone(selectedChild.id)
+        ChildService.getMilestone(selectedChild.id),
+        ChildService.getWeight(selectedChild.id)
       ]);
 
       console.log('[Insights] Data fetched successfully:');
@@ -156,12 +152,14 @@ export default function InsightsScreen() {
       console.log('...[Insights] Diapers:', diapers.length, 'entries');
       console.log('...[Insights] Activities:', activities.length, 'entries');
       console.log('...[Insights] Milestones:', milestones.length, 'entries');
+      console.log('...[Insights] Weights:', weights.length, 'entries');
 
       setFeedData(feeds);
       setSleepData(sleeps);
       setDiaperData(diapers);
       setActivityData(activities);
       setMilestoneData(milestones);
+      setWeightData(weights);
       
       console.log('[Insights] All data states updated, ready for AI analysis');
     } catch (error) {
@@ -275,6 +273,11 @@ export default function InsightsScreen() {
         console.log('...[Insights] Milestone data - Total:', milestoneData.length, 'Filtered:', filteredMilestone.length, 'entries');
         dataSummary.milestone = filteredMilestone;
       }
+      if (selectedTypes.includes('weight')) {
+        const filteredWeight = filterDataByTimeRange(weightData);
+        console.log('...[Insights] Weight data - Total:', weightData.length, 'Filtered:', filteredWeight.length, 'entries');
+        dataSummary.weight = filteredWeight;
+      }
 
       console.log('[Insights] Data summary prepared, sending to AI...');
       console.log('...[Insights] Final data summary structure:', Object.keys(dataSummary));
@@ -293,7 +296,7 @@ export default function InsightsScreen() {
           {
             role: 'system',
             content: `You are a pediatric child development expert AI. You will be given a structured JSON object containing a baby's caregiving history and developmental data.
-            The data may include sections on: feeding, sleep, diaper changes, physical activities, and milestones. Sometimes not all sections will be included, only what is selected by the caregiver.
+            The data may include sections on: feeding, sleep, diaper changes, physical activities, milestones, and weight. Sometimes not all sections will be included, only what is selected by the caregiver.
 
             CRITICAL RULES – DO NOT IGNORE THIS:
             Do not confirm understanding of the prompt before generating the response, just generate the response.
@@ -305,7 +308,7 @@ export default function InsightsScreen() {
             Convert timestamps to name of Month and Day (e.g., May 26th).
             Only generate insights for sections that BOTH:
             1. Contain data in the JSON, AND
-            2. Were explicitly selected by the caregiver (via the keys: "feed", "sleep", "diaper", "activity", "milestone").
+            2. Were explicitly selected by the caregiver (via the keys: "feed", "sleep", "diaper", "activity", "milestone", "weight").
 
             Use the following Markdown headers only if their associated section meets both criteria:
 
@@ -335,6 +338,10 @@ export default function InsightsScreen() {
             ## Milestone
             You must include this section ONLY if "milestone" has data
             Analyze developmental progress and upcoming age-appropriate goals.
+
+            ## Weight
+            You must include this section ONLY if "weight" has data
+            Review weight trends, growth patterns, and nutritional adequacy.
 
             ## Warnings or Concerns
             This is a required section. You must include this section.
@@ -403,6 +410,7 @@ export default function InsightsScreen() {
         throw new Error(`API returned error: ${response.status}`);
       }
       const result = await response.json();
+      console.log(result.choices[0]);
       const rawContent = result.choices?.[0]?.message?.content || 'No insights returned. Try again later.';
       const aiText = rawContent.replace(/<think>[\s\S]*?<\/think>/, '').trim();
       console.log('[Insights] AI response received successfully');
@@ -618,13 +626,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-  },
-  trendLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  trendLabelSelected: {
-    fontWeight: '600',
   },
 });
