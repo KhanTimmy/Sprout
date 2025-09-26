@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, useColorScheme, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
 import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer } from 'victory-native';
 import { FeedData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const MAX_FEED_DURATION = 60;
 const screenWidth = Dimensions.get('window').width;
@@ -86,8 +86,7 @@ export const formatDate = (date: Date) => {
 
 export const FeedEntry = ({ feed }: { feed: FeedData }) => {
   const backgroundColor = getTypeColor(feed.type);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <View style={[
@@ -162,8 +161,7 @@ const FeedSessionsList: React.FC<FeedSessionsListProps> = ({ sessions }) => (
 export const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const lastGestureState = useRef({ dx: 0, dy: 0 });
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -349,8 +347,7 @@ export const processFeedData = (rawFeedData: FeedData[], rangeDays: number) => {
 };
 
 const GraphSkeleton = () => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   return (
     <View style={[styles.skeletonContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -368,8 +365,7 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processedData, setProcessedData] = useState<ReturnType<typeof processFeedData>>([]);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     console.log('[FeedVisualization] Processing feed data...');
@@ -595,7 +591,7 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Feed Data</Text>
       {renderFeedGraph()}
 
-      <View>
+      <View style={styles.listContainer}>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Feed Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -609,6 +605,7 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
             keyExtractor={(item, index) => `feed-${index}`}
             style={[styles.feedList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -638,6 +635,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     padding: 10,
+  },
+  listContainer: {
+    flex: 1,
+    minHeight: 200,
   },
   feedList: {
     flex: 1,

@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Text, View, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColorScheme } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
 import UnifiedDataGraph from '@/components/UnifiedDataGraph';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import TrendSelector, { TrendType } from '@/components/TrendSelector';
 import ChildSelectionModal from '../modals/ChildSelectionModal';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
+import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import CloudBackground from '@/components/CloudBackground';
+import { View as SafeAreaView } from 'react-native';
 
 
 export default function Reports() {
+  const { theme } = useTheme();
+  
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const { selectedChild, saveSelectedChild, clearSelectedChild, loading } = useSelectedChild();
   const [rangeDays, setRangeDays] = useState(7);
@@ -27,6 +32,15 @@ export default function Reports() {
   const [milestones, setMilestones] = useState<MilestoneData[]>([]);
 
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
+
+  // Swipe navigation for tab switching
+  const { panGesture, translateX } = useTabSwipeNavigation('reports');
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
+  });
 
   useEffect(() => {
     const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
@@ -100,20 +114,19 @@ export default function Reports() {
     fetchAllData();
   }, [selectedChild]);
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <CornerIndicators
-        selectedChild={selectedChild}
-        childrenList={childrenList}
-        onSelectChild={saveSelectedChild}
-        onNavigateToAddChild={handleNavigateToAddChild}
-      />
-      <View style={styles.contentContainer}>
-        <View style={styles.headerSection}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
+    <SafeAreaView style={styles.container}>
+      <CloudBackground>
+        <CornerIndicators
+          selectedChild={selectedChild}
+          childrenList={childrenList}
+          onSelectChild={saveSelectedChild}
+          onNavigateToAddChild={handleNavigateToAddChild}
+        />
+        <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.contentContainer, animatedStyle]}>
+          <View style={styles.headerSection}>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
         </View>
 
         <View style={styles.controlsSection}>
@@ -128,7 +141,7 @@ export default function Reports() {
         </View>
 
         <View style={styles.graphSection}>
-          <View style={[styles.graphContainer, { backgroundColor: theme.secondaryBackground }]}>
+          <View style={[styles.graphContainer, { backgroundColor: theme.cardBackground }]}>
             <UnifiedDataGraph
               sleepData={sleeps}
               feedData={feedings}
@@ -140,7 +153,9 @@ export default function Reports() {
             />
           </View>
         </View>
-      </View>
+        </Animated.View>
+        </GestureDetector>
+      </CloudBackground>
 
       <ChildSelectionModal
         visible={childSelectionModalVisible}
@@ -157,14 +172,17 @@ export default function Reports() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   contentContainer: {
     flex: 1,
-    padding: 20,
-    paddingTop: 60,
+    padding: 16,
+    paddingTop: 80, // Account for corner indicator buttons
+    paddingBottom: 90, // Account for overlapping tab bar
   },
   headerSection: {
     alignItems: 'center',
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 28,

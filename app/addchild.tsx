@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, useColorScheme, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
+import { View as SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, NewChildData, ChildData } from '@/services/ChildService';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AddChild() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -105,8 +105,8 @@ export default function AddChild() {
                   <Text style={[styles.inputLabel, { color: theme.text }]}>First Name</Text>
                   <TextInput
                     style={[styles.input, { 
-                      backgroundColor: theme.secondaryBackground,
-                      borderColor: theme.tint,
+                      backgroundColor: theme.cardBackground,
+                      borderColor: theme.primary,
                       color: theme.text
                     }]}
                     placeholder="Enter first name"
@@ -123,8 +123,8 @@ export default function AddChild() {
                   <Text style={[styles.inputLabel, { color: theme.text }]}>Last Name</Text>
                   <TextInput
                     style={[styles.input, { 
-                      backgroundColor: theme.secondaryBackground,
-                      borderColor: theme.tint,
+                      backgroundColor: theme.cardBackground,
+                      borderColor: theme.primary,
                       color: theme.text
                     }]}
                     placeholder="Enter last name"
@@ -141,13 +141,13 @@ export default function AddChild() {
                   <Text style={[styles.inputLabel, { color: theme.text }]}>Date of Birth</Text>
                   <TouchableOpacity
                     style={[styles.dateButton, { 
-                      backgroundColor: theme.secondaryBackground,
-                      borderColor: theme.tint
+                      backgroundColor: theme.cardBackground,
+                      borderColor: theme.primary
                     }]}
                     onPress={() => setDatePickerVisibility(true)}
                   >
                     <View style={styles.dateButtonContent}>
-                      <Ionicons name="calendar" size={20} color={theme.tint} />
+                      <Ionicons name="calendar" size={20} color={theme.primary} />
                       <Text style={[styles.dateButtonText, { color: dob ? theme.text : theme.placeholder }]}>
                         {dob ? dob : "Select Date of Birth"}
                       </Text>
@@ -164,10 +164,10 @@ export default function AddChild() {
                     >
                       <View style={[
                         styles.radioCircle, 
-                        { borderColor: theme.tint },
-                        sex === 'male' && { borderColor: theme.tint }
+                        { borderColor: theme.primary },
+                        sex === 'male' && { borderColor: theme.primary }
                       ]}>
-                        {sex === 'male' && <View style={[styles.radioInner, { backgroundColor: theme.tint }]} />}
+                        {sex === 'male' && <View style={[styles.radioInner, { backgroundColor: theme.primary }]} />}
                       </View>
                       <Text style={[styles.radioText, { color: theme.text }]}>Male</Text>
                     </TouchableOpacity>
@@ -178,10 +178,10 @@ export default function AddChild() {
                     >
                       <View style={[
                         styles.radioCircle, 
-                        { borderColor: theme.tint },
-                        sex === 'female' && { borderColor: theme.tint }
+                        { borderColor: theme.primary },
+                        sex === 'female' && { borderColor: theme.primary }
                       ]}>
-                        {sex === 'female' && <View style={[styles.radioInner, { backgroundColor: theme.tint }]} />}
+                        {sex === 'female' && <View style={[styles.radioInner, { backgroundColor: theme.primary }]} />}
                       </View>
                       <Text style={[styles.radioText, { color: theme.text }]}>Female</Text>
                     </TouchableOpacity>
@@ -190,7 +190,7 @@ export default function AddChild() {
 
                 {loading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={theme.tint} />
+                    <ActivityIndicator size="large" color={theme.primary} />
                     <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
                       Adding child...
                     </Text>

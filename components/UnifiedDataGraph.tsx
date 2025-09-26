@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, ScrollView } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import { SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
 import type { TrendType } from './TrendSelector';
 import SleepVisualization from './visualizations/SleepDataVisualization';
@@ -27,28 +27,27 @@ const UnifiedDataGraph = ({
   rangeDays,
   activeDataType,
 }: UnifiedDataGraphProps) => {
-  const scrollViewRef = useRef<ScrollView>(null);
+  const renderVisualization = () => {
+    switch (activeDataType) {
+      case 'sleep':
+        return <SleepVisualization sleepData={rawSleepData} rangeDays={rangeDays} />;
+      case 'feed':
+        return <FeedVisualization feedData={rawFeedData} rangeDays={rangeDays} />;
+      case 'diaper':
+        return <DiaperVisualization diaperData={rawDiaperData} rangeDays={rangeDays} />;
+      case 'activity':
+        return <ActivityVisualization activityData={rawActivityData} rangeDays={rangeDays} />;
+      case 'milestone':
+        return <MilestoneVisualization milestoneData={rawMilestoneData} rangeDays={rangeDays} />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <ScrollView>
-      <View>
-        {activeDataType === 'sleep' && (
-          <SleepVisualization sleepData={rawSleepData} rangeDays={rangeDays} />
-        )}
-        {activeDataType === 'feed' && (
-          <FeedVisualization feedData={rawFeedData} rangeDays={rangeDays} />
-        )}
-        {activeDataType === 'diaper' && (
-          <DiaperVisualization diaperData={rawDiaperData} rangeDays={rangeDays} />
-        )}
-        {activeDataType === 'activity' && (
-          <ActivityVisualization activityData={rawActivityData} rangeDays={rangeDays} />
-        )}
-        {activeDataType === 'milestone' && (
-          <MilestoneVisualization milestoneData={rawMilestoneData} rangeDays={rangeDays} />
-        )}
-      </View>
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      {renderVisualization()}
+    </View>
   );
 };
 

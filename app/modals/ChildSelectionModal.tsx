@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import { ChildData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface ChildSelectionModalProps {
@@ -29,8 +29,7 @@ const ChildSelectionModal = ({
     value: child.id,
   }));
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <CustomModal

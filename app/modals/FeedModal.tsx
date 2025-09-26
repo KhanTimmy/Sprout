@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { FeedData } from '@/services/ChildService';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface FeedModalProps {
@@ -20,8 +20,7 @@ const FeedModal = ({
   onSave,
   childId,
 }: FeedModalProps) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   const [amount, setAmount] = useState('');
   const [dateTime, setDateTime] = useState(new Date());
@@ -236,14 +235,15 @@ const FeedModal = ({
           />
         </View>
 
-        <View style={styles.buttonContainer}>
-          <CustomButton
-            title='Save'
-            onPress={handleSave}
-            variant="success"
-            style={styles.button}
-          />
-        </View>
+      </View>
+      
+      <View style={styles.buttonContainer}>
+        <CustomButton
+          title='Save'
+          onPress={handleSave}
+          variant="success"
+          style={styles.button}
+        />
       </View>
     </CustomModal>
   );

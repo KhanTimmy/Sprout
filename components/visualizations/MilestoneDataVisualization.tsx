@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, useColorScheme, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
 import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer } from 'victory-native';
 import { MilestoneData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const MAX_MILESTONES_PER_DAY = 5;
 const screenWidth = Dimensions.get('window').width;
@@ -78,8 +78,7 @@ export const formatDate = (date: Date) => {
 
 export const MilestoneEntry = ({ milestone }: { milestone: MilestoneData }) => {
   const backgroundColor = getTypeColor(milestone.type);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <View style={[
@@ -132,8 +131,7 @@ const MilestoneSessionsList: React.FC<MilestoneSessionsListProps> = ({ sessions 
 const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const lastGestureState = useRef({ dx: 0, dy: 0 });
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -283,8 +281,7 @@ export const processMilestoneData = (rawMilestoneData: MilestoneData[], rangeDay
 };
 
 const GraphSkeleton = () => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   return (
     <View style={[styles.skeletonContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -302,8 +299,7 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processedData, setProcessedData] = useState<ReturnType<typeof processMilestoneData>>([]);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     console.log('[MilestoneVisualization] Processing milestone data...');
@@ -526,7 +522,7 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Milestone Data</Text>
       {renderMilestoneGraph()}
 
-      <View>
+      <View style={styles.listContainer}>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Milestone Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -540,6 +536,7 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
             keyExtractor={(item, index) => `milestone-${index}`}
             style={[styles.milestoneList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -569,6 +566,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     padding: 10,
+  },
+  listContainer: {
+    flex: 1,
+    minHeight: 200,
   },
   milestoneList: {
     flex: 1,

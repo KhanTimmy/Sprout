@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, useColorScheme, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { SleepData } from '@/services/ChildService';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SleepModalProps {
   visible: boolean;
@@ -19,8 +19,7 @@ const SleepModal = ({
   onSave,
   childId,
 }: SleepModalProps) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(new Date());
@@ -161,14 +160,15 @@ const SleepModal = ({
           )}
         </View>
 
-        <View style={styles.buttonContainer}>
-          <CustomButton
-            title="Save"
-            onPress={handleSave}
-            variant="success"
-            style={styles.button}
-          />
-        </View>
+      </View>
+      
+      <View style={styles.buttonContainer}>
+        <CustomButton
+          title="Save"
+          onPress={handleSave}
+          variant="success"
+          style={styles.button}
+        />
       </View>
     </CustomModal>
   );

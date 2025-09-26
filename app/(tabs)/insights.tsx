@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Alert, TouchableOpacity, ActivityIndicator, ScrollView, ViewStyle, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
 import { getAuth } from 'firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import Markdown from 'react-native-markdown-display';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import CloudBackground from '@/components/CloudBackground';
+import { View as SafeAreaView } from 'react-native';
 
 const TREND_TYPES = [
   { key: 'sleep', icon: 'power-sleep', label: 'Sleep' },
@@ -25,8 +28,7 @@ const InsightsTrendSelector: React.FC<{
   selectedTypes: string[];
   onSelect: (type: string) => void;
 }> = ({ selectedTypes, onSelect }) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const getBorderRadius = (index: number): ViewStyle => {
     const isSelected = selectedTypes.includes(TREND_TYPES[index].key);
@@ -48,18 +50,12 @@ const InsightsTrendSelector: React.FC<{
       borderBottomLeftRadius: blockStart === index ? 20 : 0,
       borderTopRightRadius: blockEnd === index ? 20 : 0,
       borderBottomRightRadius: blockEnd === index ? 20 : 0,
-      borderWidth: 1,
-      borderColor: theme.tint,
-      borderLeftWidth: blockStart === index ? 1 : 0,
-      borderRightWidth: blockEnd === index ? 1 : 0,
-      borderTopWidth: 1,
-      borderBottomWidth: 1,
     };
   };
 
   return (
     <View style={[styles.trendSelectorContainer, { backgroundColor: theme.background }]}>
-      <View style={[styles.trendTrack, { backgroundColor: theme.secondaryBackground }]}>
+      <View style={[styles.trendTrack, { backgroundColor: theme.cardBackground }]}>
         {TREND_TYPES.map((type, index) => (
           <TouchableOpacity
             key={type.key}
@@ -74,11 +70,11 @@ const InsightsTrendSelector: React.FC<{
             <MaterialCommunityIcons 
               name={type.icon as any}
               size={24}
-              color={selectedTypes.includes(type.key) ? theme.tint : theme.secondaryText}
+              color={selectedTypes.includes(type.key) ? theme.primary : theme.secondaryText}
             />
             <Text style={[
               styles.trendLabel,
-              { color: selectedTypes.includes(type.key) ? theme.tint : theme.secondaryText },
+              { color: selectedTypes.includes(type.key) ? theme.primary : theme.secondaryText },
               selectedTypes.includes(type.key) && styles.trendLabelSelected
             ]}>
               {type.label}
@@ -91,8 +87,7 @@ const InsightsTrendSelector: React.FC<{
 };
 
 export default function InsightsScreen() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const { selectedChild, saveSelectedChild } = useSelectedChild();
@@ -107,6 +102,15 @@ export default function InsightsScreen() {
   const [diaperData, setDiaperData] = useState<DiaperData[]>([]);
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [milestoneData, setMilestoneData] = useState<MilestoneData[]>([]);
+
+  // Swipe navigation for tab switching
+  const { panGesture, translateX } = useTabSwipeNavigation('insights');
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
+  });
 
   useEffect(() => {
     const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
@@ -400,7 +404,20 @@ export default function InsightsScreen() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[Insights] API Response Error:', errorText);
-        throw new Error(`API returned error: ${response.status}`);
+        
+        // Parse error response to get more details
+        let errorDetails;
+        try {
+          errorDetails = JSON.parse(errorText);
+        } catch {
+          errorDetails = { error: { message: errorText } };
+        }
+        
+        // Create a more specific error with details
+        const error = new Error(`API returned error: ${response.status}`) as any;
+        error.status = response.status;
+        error.details = errorDetails;
+        throw error;
       }
       const result = await response.json();
       const rawContent = result.choices?.[0]?.message?.content || 'No insights returned. Try again later.';
@@ -412,8 +429,22 @@ export default function InsightsScreen() {
       if (error.name === 'AbortError') {
         console.log('[Insights] Fetch was aborted by user');
         setAiResponse(null);
+      } else if (error.status === 429) {
+        // Rate limit exceeded
+        const rateLimitMessage = error.details?.error?.message || 'Rate limit exceeded';
+        setAiResponse(`🚫 Rate Limit Reached\n\n${rateLimitMessage}\n\nAI insights are temporarily unavailable. This is a free service with daily limits. Please try again tomorrow or consider upgrading your plan for unlimited access.\n\nIn the meantime, you can still view your data and track your child's progress manually.`);
+      } else if (error.status === 401) {
+        // Authentication error
+        setAiResponse('🔐 Authentication Error\n\nThere was an issue with the AI service authentication. Please contact support if this continues.');
+      } else if (error.status === 500) {
+        // Server error
+        setAiResponse('⚠️ Service Temporarily Unavailable\n\nThe AI insights service is currently experiencing issues. Please try again in a few minutes.');
+      } else if (error.status >= 400 && error.status < 500) {
+        // Client error
+        setAiResponse('❌ Request Error\n\nThere was an issue with your request. Please check your data and try again.');
       } else {
-        setAiResponse('Error fetching insights. Please try again.');
+        // Generic error
+        setAiResponse('❌ Unable to Fetch Insights\n\nThere was an unexpected error while fetching AI insights. Please try again later.\n\nYou can still view your data and track progress manually.');
       }
     } finally {
       setLoading(false);
@@ -426,18 +457,20 @@ export default function InsightsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <CornerIndicators
-        selectedChild={selectedChild}
-        childrenList={childrenList}
-        onSelectChild={handleChildSelection}
-        onNavigateToAddChild={handleNavigateToAddChild}
-      />
-      
-      <View style={styles.contentContainer}>
-        <View style={styles.headerSection}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Insights</Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <CloudBackground>
+        <CornerIndicators
+          selectedChild={selectedChild}
+          childrenList={childrenList}
+          onSelectChild={handleChildSelection}
+          onNavigateToAddChild={handleNavigateToAddChild}
+        />
+        
+        <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.contentContainer, animatedStyle]}>
+          <View style={styles.headerSection}>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>Insights</Text>
+          </View>
         
         <View style={styles.controlsSection}>
           <InsightsTrendSelector
@@ -462,9 +495,17 @@ export default function InsightsScreen() {
             </TouchableOpacity>
           )}
 
+          {/* Rate limit info */}
+          <View style={[styles.infoCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+            <MaterialCommunityIcons name="information" size={16} color={theme.primary} />
+            <Text style={[styles.infoText, { color: theme.secondaryText }]}>
+              AI insights are powered by a free service with daily limits. If you hit the limit, try again tomorrow.
+            </Text>
+          </View>
+
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.tint} />
+              <ActivityIndicator size="large" color={theme.primary} />
               <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
                 Analyzing data...
               </Text>
@@ -473,7 +514,7 @@ export default function InsightsScreen() {
             <TouchableOpacity
               style={[
                 styles.fetchButton,
-                { backgroundColor: theme.tint },
+                { backgroundColor: theme.primary },
                 (!selectedChild || loading) && styles.fetchButtonDisabled
               ]}
               onPress={handleFetchInsights}
@@ -490,7 +531,7 @@ export default function InsightsScreen() {
         {aiResponse && (
           <View style={styles.aiResponseSection}>
             <ScrollView 
-              style={[styles.aiResponseContainer, { backgroundColor: theme.secondaryBackground }]}
+              style={[styles.aiResponseContainer, { backgroundColor: theme.cardBackground }]}
               showsVerticalScrollIndicator={true}
               contentContainerStyle={styles.aiResponseContent}
             >
@@ -508,7 +549,9 @@ export default function InsightsScreen() {
             </ScrollView>
           </View>
         )}
-      </View>
+        </Animated.View>
+        </GestureDetector>
+      </CloudBackground>
     </SafeAreaView>
   );
 }
@@ -516,14 +559,17 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   contentContainer: {
     flex: 1,
-    padding: 20,
-    paddingTop: 60,
+    padding: 16,
+    paddingTop: 80, // Account for corner indicator buttons
+    paddingBottom: 90, // Account for overlapping tab bar
   },
   headerSection: {
     alignItems: 'center',
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 28,
@@ -538,6 +584,7 @@ const styles = StyleSheet.create({
   },
   controlsSection: {
     marginBottom: 8,
+    gap: 12,
   },
   fetchButton: {
     flexDirection: 'row',
@@ -573,6 +620,21 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: 8,
   },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginTop: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  infoText: {
+    fontSize: 12,
+    fontWeight: '400',
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 16,
+  },
   aiResponseSection: {
     flex: 1,
     marginTop: 4,
@@ -604,25 +666,27 @@ const styles = StyleSheet.create({
   },
   trendSelectorContainer: {
     width: '100%',
-    height: 70,
     marginVertical: 10,
     paddingHorizontal: 0,
+    height: 70,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   trendTrack: {
     flexDirection: 'row',
     height: '100%',
-    borderRadius: 20,
-    overflow: 'hidden',
   },
   trendOption: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+    zIndex: 1,
   },
   trendLabel: {
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
   },
   trendLabelSelected: {
     fontWeight: '600',
