@@ -2,8 +2,8 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "sprout",
-    slug: "sprout",
+    name: "swaddle",
+    slug: "swaddle",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",

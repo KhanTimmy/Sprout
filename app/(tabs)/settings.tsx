@@ -64,7 +64,7 @@ export default function SettingsScreen() {
   const showCOPPADisclaimer = () => {
     Alert.alert(
       'COPPA Compliance',
-      'Sprout is fully compliant with the Children\'s Online Privacy Protection Act (COPPA).\n\n' +
+      'Swaddle is fully compliant with the Children\'s Online Privacy Protection Act (COPPA).\n\n' +
       '• We do not collect personal information from children under 13 without verifiable parental consent\n' +
       '• All data is stored securely and locally on your device\n' +
       '• We do not share personal information with third parties\n' +
@@ -93,7 +93,7 @@ export default function SettingsScreen() {
   const showAccessibilityInfo = () => {
     Alert.alert(
       'Accessibility Features',
-      'Sprout includes several accessibility features:\n\n' +
+      'Swaddle includes several accessibility features:\n\n' +
       '• High contrast mode for better visibility\n' +
       '• Large, easy-to-read fonts\n' +
       '• Simple, intuitive navigation\n' +
@@ -211,16 +211,16 @@ export default function SettingsScreen() {
                 
                 <SettingItem
                   icon="information"
-                  title="About Sprout"
+                  title="About "
                   subtitle="Version 1.0.0"
-                  onPress={() => Alert.alert('About Sprout', 'Sprout - Baby Growth Tracker\nVersion 1.0.0\n\nA safe, COPPA-compliant app for tracking your baby\'s growth and development.')}
+                  onPress={() => Alert.alert('About Swaddle', 'Swaddle - Baby Growth Tracker\nVersion 1.0.0\n\nA safe, COPPA-compliant app for tracking your baby\'s growth and development.')}
                 />
 
                 <SettingItem
                   icon="help-circle"
                   title="Help & Support"
                   subtitle="Get help and contact support"
-                  onPress={() => Alert.alert('Help & Support', 'Need help? Contact our support team:\n\nEmail: support@sproutapp.com\nPhone: 1-800-SPROUT-1\n\nWe\'re here to help!')}
+                  onPress={() => Alert.alert('Help & Support', 'Need help? Contact our support team:\n\nEmail: support@swaddleapp.com\nPhone: 1-800-SWADDLE-1\n\nWe\'re here to help!')}
                 />
               </View>
 
