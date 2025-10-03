@@ -12,6 +12,8 @@ interface WeightModalProps {
   onSave: (weightData: WeightData) => Promise<void>;
   childId: string | undefined;
   currentWeight?: WeightData | null;
+  initialData?: WeightData;
+  onDelete?: (docId: string) => Promise<void>;
 }
 
 const WeightModal = ({
@@ -20,6 +22,8 @@ const WeightModal = ({
   onSave,
   childId,
   currentWeight,
+  initialData,
+  onDelete,
 }: WeightModalProps) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -28,17 +32,23 @@ const WeightModal = ({
   const [ounces, setOunces] = useState('');
   const [dateTime, setDateTime] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  
+  const isEditMode = !!initialData;
 
   // Initialize form with current weight when modal opens
   React.useEffect(() => {
-    if (visible && currentWeight) {
+    if (visible && initialData) {
+      setPounds(initialData.pounds.toString());
+      setOunces(initialData.ounces.toString());
+      setDateTime(initialData.dateTime);
+    } else if (visible && currentWeight) {
       setPounds(currentWeight.pounds.toString());
       setOunces(currentWeight.ounces.toString());
     } else if (visible) {
       setPounds('');
       setOunces('');
     }
-  }, [visible, currentWeight]);
+  }, [visible, currentWeight, initialData]);
 
   const handleSave = async () => {
     // Use current weight as defaults if user didn't enter new values
@@ -71,6 +81,7 @@ const WeightModal = ({
         dateTime: dateTime,
         pounds: poundsNum,
         ounces: ouncesNum,
+        ...(isEditMode && initialData?.docId ? { docId: initialData.docId } : {}),
       };
       
       await onSave(weightData);
@@ -83,14 +94,45 @@ const WeightModal = ({
   };
 
   const resetForm = () => {
-    if (currentWeight) {
+    if (initialData) {
+      setPounds(initialData.pounds.toString());
+      setOunces(initialData.ounces.toString());
+      setDateTime(initialData.dateTime);
+    } else if (currentWeight) {
       setPounds(currentWeight.pounds.toString());
       setOunces(currentWeight.ounces.toString());
     } else {
       setPounds('');
       setOunces('');
     }
-    setDateTime(new Date());
+    if (!initialData) {
+      setDateTime(new Date());
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!initialData?.docId || !onDelete) return;
+    
+    Alert.alert(
+      'Delete Weight Entry',
+      'Are you sure you want to delete this weight entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await onDelete(initialData.docId!);
+              onClose();
+            } catch (error) {
+              console.error('Error deleting weight data:', error);
+              Alert.alert('Error', 'Could not delete weight data');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -100,7 +142,7 @@ const WeightModal = ({
         resetForm();
         onClose();
       }}
-      title="Record Weight Change"
+      title={isEditMode ? "Edit Weight Entry" : "Record Weight Change"}
       showCloseButton={false}
       maxHeight="85%"
     >
@@ -185,8 +227,16 @@ const WeightModal = ({
         </View>
 
         <View style={styles.buttonContainer}>
+          {isEditMode && onDelete && (
+            <CustomButton
+              title="Delete"
+              onPress={handleDelete}
+              variant="danger"
+              style={styles.button}
+            />
+          )}
           <CustomButton
-            title='Save'
+            title={isEditMode ? "Update" : "Save"}
             onPress={handleSave}
             variant="success"
             style={styles.button}

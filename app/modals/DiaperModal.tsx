@@ -12,13 +12,17 @@ interface DiaperModalProps {
   onClose: () => void;
   onSave: (diaperData: DiaperData) => Promise<void>;
   childId: string | undefined;
+  initialData?: DiaperData;
+  onDelete?: (docId: string) => Promise<void>;
 }
 
 const DiaperModal = ({ 
   visible, 
   onClose, 
   onSave, 
-  childId 
+  childId,
+  initialData,
+  onDelete,
 }: DiaperModalProps) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -30,6 +34,8 @@ const DiaperModal = ({
   const [pooColor, setPooColor] = useState<'yellow' | 'brown' | 'black' | 'green' | 'red' | ''>('');
   const [pooConsistency, setPooConsistency] = useState<'solid' | 'loose' | 'runny' | 'mucousy' | 'hard' | 'pebbles' | 'diarrhea' | ''>('');
   const [hasRash, setHasRash] = useState(false);
+  
+  const isEditMode = !!initialData;
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -96,6 +102,7 @@ const DiaperModal = ({
         dateTime,
         type: diaperType as 'pee' | 'poo' | 'mixed' | 'dry',
         hasRash,
+        ...(isEditMode && initialData?.docId ? { docId: initialData.docId } : {}),
       };
 
       if (diaperType === 'pee' || diaperType === 'mixed') {
@@ -118,13 +125,55 @@ const DiaperModal = ({
   };
 
   const resetForm = () => {
-    setDateTime(new Date());
-    setDiaperType('');
-    setPeeAmount('');
-    setPooAmount('');
-    setPooColor('');
-    setPooConsistency('');
-    setHasRash(false);
+    if (initialData) {
+      setDateTime(initialData.dateTime);
+      setDiaperType(initialData.type);
+      setPeeAmount(initialData.peeAmount || '');
+      setPooAmount(initialData.pooAmount || '');
+      setPooColor(initialData.pooColor || '');
+      setPooConsistency(initialData.pooConsistency || '');
+      setHasRash(initialData.hasRash);
+    } else {
+      setDateTime(new Date());
+      setDiaperType('');
+      setPeeAmount('');
+      setPooAmount('');
+      setPooColor('');
+      setPooConsistency('');
+      setHasRash(false);
+    }
+  };
+
+  // Initialize form when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible, initialData]);
+
+  const handleDelete = async () => {
+    if (!initialData?.docId || !onDelete) return;
+    
+    Alert.alert(
+      'Delete Diaper Entry',
+      'Are you sure you want to delete this diaper entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await onDelete(initialData.docId!);
+              onClose();
+            } catch (error) {
+              console.error('Error deleting diaper data:', error);
+              Alert.alert('Error', 'Could not delete diaper data');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -134,7 +183,7 @@ const DiaperModal = ({
         resetForm();
         onClose();
       }}
-      title="Input Diaper Data"
+      title={isEditMode ? "Edit Diaper Data" : "Input Diaper Data"}
       showCloseButton={false}
       maxHeight="85%"
     >
@@ -268,8 +317,16 @@ const DiaperModal = ({
         </View>
 
         <View style={styles.buttonContainer}>
+          {isEditMode && onDelete && (
+            <CustomButton
+              title="Delete"
+              onPress={handleDelete}
+              variant="danger"
+              style={styles.button}
+            />
+          )}
           <CustomButton
-            title="Save"
+            title={isEditMode ? "Update" : "Save"}
             onPress={handleSave}
             variant="success"
             style={styles.button}

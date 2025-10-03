@@ -5,11 +5,16 @@ import { useColorScheme } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
+import { ChildService, ChildUpdateService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import UnifiedDataGraph from '@/components/UnifiedDataGraph';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import TrendSelector, { TrendType } from '@/components/TrendSelector';
 import ChildSelectionModal from '../modals/ChildSelectionModal';
+import SleepModal from '../modals/SleepModal';
+import FeedModal from '../modals/FeedModal';
+import DiaperModal from '../modals/DiaperModal';
+import ActivityModal from '../modals/ActivityModal';
+import WeightModal from '../modals/WeightModal';
 import Colors from '@/constants/Colors';
 import CornerIndicators from '@/components/CornerIndicators';
 
@@ -28,6 +33,17 @@ export default function Reports() {
   const [weights, setWeights] = useState<WeightData[]>([]);
 
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
+  const [editContext, setEditContext] = useState<{ type: TrendType; entry: any } | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
+  
+  // Modal visibility states
+  const [modalVisibility, setModalVisibility] = useState({
+    sleep: false,
+    feed: false,
+    diaper: false,
+    activity: false,
+    weight: false,
+  });
 
   useEffect(() => {
     const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
@@ -108,6 +124,151 @@ export default function Reports() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
 
+  const handleEditRequest = (args: { type: TrendType; payload: any }) => {
+    setEditContext({ type: args.type, entry: args.payload });
+    setModalVisibility(prev => ({ ...prev, [args.type]: true }));
+  };
+
+  const handleModalClose = (type: TrendType) => {
+    setModalVisibility(prev => ({ ...prev, [type]: false }));
+    setEditContext(null);
+  };
+
+  const handleSave = async (type: TrendType, data: any) => {
+    if (!selectedChild) return;
+    
+    try {
+      if (editContext?.entry?.docId) {
+        // Update existing entry
+        const { docId, ...updateData } = data;
+        switch (type) {
+          case 'sleep':
+            await ChildUpdateService.updateSleep(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'feed':
+            await ChildUpdateService.updateFeed(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'diaper':
+            await ChildUpdateService.updateDiaper(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'activity':
+            await ChildUpdateService.updateActivity(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'weight':
+            await ChildUpdateService.updateWeight(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+        }
+      } else {
+        // Create new entry
+        switch (type) {
+          case 'sleep':
+            await ChildService.addSleep(data);
+            break;
+          case 'feed':
+            await ChildService.addFeed(data);
+            break;
+          case 'diaper':
+            await ChildService.addDiaper(data);
+            break;
+          case 'activity':
+            await ChildService.addActivity(data);
+            break;
+          case 'weight':
+            await ChildService.addWeight(data);
+            break;
+        }
+      }
+      
+      // Refresh data
+      const fetchAllData = async () => {
+        if (!selectedChild) return;
+        
+        try {
+          const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
+            ChildService.getFeed(selectedChild.id),
+            ChildService.getSleep(selectedChild.id),
+            ChildService.getDiaper(selectedChild.id),
+            ChildService.getActivity(selectedChild.id),
+            ChildService.getMilestone(selectedChild.id),
+            ChildService.getWeight(selectedChild.id)
+          ]);
+
+          setFeedings(feedingsData);
+          setSleeps(sleepsData);
+          setDiapers(diapersData);
+          setActivities(activitiesData);
+          setMilestones(milestonesData);
+          setWeights(weightsData);
+        } catch (error) {
+          console.error('[Reports] Error refreshing data:', error);
+        }
+      };
+      
+      await fetchAllData();
+      setDataVersion(prev => prev + 1); // Increment to trigger popup refresh
+      handleModalClose(type);
+    } catch (error) {
+      console.error(`Error saving ${type} data:`, error);
+      Alert.alert('Error', `Could not save ${type} data`);
+    }
+  };
+
+  const handleDelete = async (type: TrendType, docId: string) => {
+    if (!selectedChild) return;
+    
+    try {
+      switch (type) {
+        case 'sleep':
+          await ChildUpdateService.deleteSleep(selectedChild.id, docId);
+          break;
+        case 'feed':
+          await ChildUpdateService.deleteFeed(selectedChild.id, docId);
+          break;
+        case 'diaper':
+          await ChildUpdateService.deleteDiaper(selectedChild.id, docId);
+          break;
+        case 'activity':
+          await ChildUpdateService.deleteActivity(selectedChild.id, docId);
+          break;
+        case 'weight':
+          await ChildUpdateService.deleteWeight(selectedChild.id, docId);
+          break;
+      }
+      
+      // Refresh data
+      const fetchAllData = async () => {
+        if (!selectedChild) return;
+        
+        try {
+          const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
+            ChildService.getFeed(selectedChild.id),
+            ChildService.getSleep(selectedChild.id),
+            ChildService.getDiaper(selectedChild.id),
+            ChildService.getActivity(selectedChild.id),
+            ChildService.getMilestone(selectedChild.id),
+            ChildService.getWeight(selectedChild.id)
+          ]);
+
+          setFeedings(feedingsData);
+          setSleeps(sleepsData);
+          setDiapers(diapersData);
+          setActivities(activitiesData);
+          setMilestones(milestonesData);
+          setWeights(weightsData);
+        } catch (error) {
+          console.error('[Reports] Error refreshing data:', error);
+        }
+      };
+      
+      await fetchAllData();
+      setDataVersion(prev => prev + 1); // Increment to trigger popup refresh
+      handleModalClose(type);
+    } catch (error) {
+      console.error(`Error deleting ${type} data:`, error);
+      Alert.alert('Error', `Could not delete ${type} data`);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <CornerIndicators
@@ -143,6 +304,8 @@ export default function Reports() {
               weightData={weights}
               rangeDays={rangeDays}
               activeDataType={selectedTrend}
+              onEditRequest={handleEditRequest}
+              dataVersion={dataVersion}
             />
           </View>
         </View>
@@ -155,6 +318,52 @@ export default function Reports() {
         selectedChild={selectedChild}
         onSelectChild={saveSelectedChild}
         onClearSelection={clearSelectedChild}
+      />
+
+      {/* Edit Modals */}
+      <SleepModal
+        visible={modalVisibility.sleep}
+        onClose={() => handleModalClose('sleep')}
+        onSave={(data) => handleSave('sleep', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'sleep' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'sleep' ? (docId) => handleDelete('sleep', docId) : undefined}
+      />
+
+      <FeedModal
+        visible={modalVisibility.feed}
+        onClose={() => handleModalClose('feed')}
+        onSave={(data) => handleSave('feed', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'feed' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'feed' ? (docId) => handleDelete('feed', docId) : undefined}
+      />
+
+      <DiaperModal
+        visible={modalVisibility.diaper}
+        onClose={() => handleModalClose('diaper')}
+        onSave={(data) => handleSave('diaper', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'diaper' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'diaper' ? (docId) => handleDelete('diaper', docId) : undefined}
+      />
+
+      <ActivityModal
+        visible={modalVisibility.activity}
+        onClose={() => handleModalClose('activity')}
+        onSave={(data) => handleSave('activity', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'activity' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'activity' ? (docId) => handleDelete('activity', docId) : undefined}
+      />
+
+      <WeightModal
+        visible={modalVisibility.weight}
+        onClose={() => handleModalClose('weight')}
+        onSave={(data) => handleSave('weight', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'weight' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'weight' ? (docId) => handleDelete('weight', docId) : undefined}
       />
     </SafeAreaView>
   );

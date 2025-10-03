@@ -119,6 +119,7 @@ export interface NewChildData {
 
 export interface SleepData {
   id: string;
+  docId?: string;
   start: Date;
   end: Date;
   quality: number;
@@ -126,6 +127,7 @@ export interface SleepData {
 
 export interface FeedData {
   id: string;
+  docId?: string;
   amount: number;
   dateTime: Date;
   description: string;
@@ -137,6 +139,7 @@ export interface FeedData {
 
 export interface DiaperData {
   id: string;
+  docId?: string;
   dateTime: Date;
   type: 'pee' | 'poo' | 'mixed' | 'dry';
   peeAmount?: 'little' | 'medium' | 'big';
@@ -148,18 +151,21 @@ export interface DiaperData {
 
 export interface ActivityData {
   id: string;
+  docId?: string;
   dateTime: Date;
   type: 'bath' | 'tummy time' | 'story time' | 'skin to skin' | 'brush teeth';
 }
 
 export interface MilestoneData {
   id: string;
+  docId?: string;
   dateTime: Date;
   type: 'smiling' | 'rolling over' | 'sitting up' | 'crawling' | 'walking';
 }
 
 export interface WeightData {
   id: string;
+  docId?: string;
   dateTime: Date;
   pounds: number;
   ounces: number;
@@ -496,10 +502,11 @@ export const ChildService = {
       const snapshot = await getDocs(sleepCollection);
       console.log(`...[getSleep] sleep data returned with ${snapshot.docs.length} entries`);
       
-      const data = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        start: doc.data().start.toDate(),
-        end: doc.data().end.toDate()
+      const data = snapshot.docs.map((d) => ({
+        ...(d.data() as any),
+        docId: d.id,
+        start: d.data().start.toDate(),
+        end: d.data().end.toDate()
       })) as SleepData[];
 
       await AsyncStorage.setItem(CACHE_KEYS.SLEEP + childId, JSON.stringify(data));
@@ -539,9 +546,10 @@ export const ChildService = {
       const snapshot = await getDocs(feedCollection);
       console.log(`...[getFeed] feed data returned with ${snapshot.docs.length} entries`);
       
-      const data = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        dateTime: doc.data().dateTime.toDate()
+      const data = snapshot.docs.map((d) => ({
+        ...(d.data() as any),
+        docId: d.id,
+        dateTime: d.data().dateTime.toDate()
       })) as FeedData[];
 
       await AsyncStorage.setItem(CACHE_KEYS.FEED + childId, JSON.stringify(data));
@@ -581,9 +589,10 @@ export const ChildService = {
       const snapshot = await getDocs(diaperCollection);
       console.log(`...[getDiaper] diaper data returned with ${snapshot.docs.length} entries`);
       
-      const data = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        dateTime: doc.data().dateTime.toDate()
+      const data = snapshot.docs.map((d) => ({
+        ...(d.data() as any),
+        docId: d.id,
+        dateTime: d.data().dateTime.toDate()
       })) as DiaperData[];
 
       await AsyncStorage.setItem(CACHE_KEYS.DIAPER + childId, JSON.stringify(data));
@@ -623,9 +632,10 @@ export const ChildService = {
       const snapshot = await getDocs(activityCollection);
       console.log(`...[getActivity] activity data returned with ${snapshot.docs.length} entries`);
       
-      const data = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        dateTime: doc.data().dateTime.toDate()
+      const data = snapshot.docs.map((d) => ({
+        ...(d.data() as any),
+        docId: d.id,
+        dateTime: d.data().dateTime.toDate()
       })) as ActivityData[];
 
       await AsyncStorage.setItem(CACHE_KEYS.ACTIVITY + childId, JSON.stringify(data));
@@ -665,9 +675,10 @@ export const ChildService = {
       const snapshot = await getDocs(milestoneCollection);
       console.log(`...[getMilestone] milestone data returned with ${snapshot.docs.length} entries`);
       
-      const data = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        dateTime: doc.data().dateTime.toDate()
+      const data = snapshot.docs.map((d) => ({
+        ...(d.data() as any),
+        docId: d.id,
+        dateTime: d.data().dateTime.toDate()
       })) as MilestoneData[];
 
       await AsyncStorage.setItem(CACHE_KEYS.MILESTONE + childId, JSON.stringify(data));
@@ -707,9 +718,10 @@ export const ChildService = {
       const snapshot = await getDocs(weightCollection);
       console.log(`...[getWeight] weight data returned with ${snapshot.docs.length} entries`);
       
-      const data = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        dateTime: doc.data().dateTime.toDate()
+      const data = snapshot.docs.map((d) => ({
+        ...(d.data() as any),
+        docId: d.id,
+        dateTime: d.data().dateTime.toDate()
       })) as WeightData[];
 
       await AsyncStorage.setItem(CACHE_KEYS.WEIGHT + childId, JSON.stringify(data));
@@ -722,4 +734,102 @@ export const ChildService = {
       throw error;
     }
   }
+};
+
+export const ChildUpdateService = {
+  async updateSleep(childId: string, docId: string, partial: Partial<SleepData>): Promise<void> {
+    const ref = doc(db, 'children', childId, 'sleep', docId);
+    await updateDoc(ref, {
+      ...(partial.start ? { start: partial.start } : {}),
+      ...(partial.end ? { end: partial.end } : {}),
+      ...(typeof partial.quality === 'number' ? { quality: partial.quality } : {}),
+    });
+    await clearChildCache(childId);
+  },
+  async deleteSleep(childId: string, docId: string): Promise<void> {
+    const ref = doc(db, 'children', childId, 'sleep', docId);
+    await deleteDoc(ref);
+    await clearChildCache(childId);
+  },
+
+  async updateFeed(childId: string, docId: string, partial: Partial<FeedData>): Promise<void> {
+    const ref = doc(db, 'children', childId, 'feed', docId);
+    await updateDoc(ref, {
+      ...(typeof partial.amount === 'number' ? { amount: partial.amount } : {}),
+      ...(partial.dateTime ? { dateTime: partial.dateTime } : {}),
+      ...(partial.description !== undefined ? { description: partial.description } : {}),
+      ...(typeof partial.duration === 'number' ? { duration: partial.duration } : {}),
+      ...(partial.notes !== undefined ? { notes: partial.notes } : {}),
+      ...(partial.type ? { type: partial.type } : {}),
+      ...(partial.side !== undefined ? { side: partial.side || null } : {}),
+    } as any);
+    await clearChildCache(childId);
+  },
+  async deleteFeed(childId: string, docId: string): Promise<void> {
+    const ref = doc(db, 'children', childId, 'feed', docId);
+    await deleteDoc(ref);
+    await clearChildCache(childId);
+  },
+
+  async updateDiaper(childId: string, docId: string, partial: Partial<DiaperData>): Promise<void> {
+    const ref = doc(db, 'children', childId, 'diaper', docId);
+    await updateDoc(ref, {
+      ...(partial.dateTime ? { dateTime: partial.dateTime } : {}),
+      ...(partial.type ? { type: partial.type } : {}),
+      ...(partial.hasRash !== undefined ? { hasRash: partial.hasRash } : {}),
+      ...(partial.peeAmount !== undefined ? { peeAmount: partial.peeAmount || null } : {}),
+      ...(partial.pooAmount !== undefined ? { pooAmount: partial.pooAmount || null } : {}),
+      ...(partial.pooColor !== undefined ? { pooColor: partial.pooColor || null } : {}),
+      ...(partial.pooConsistency !== undefined ? { pooConsistency: partial.pooConsistency || null } : {}),
+    } as any);
+    await clearChildCache(childId);
+  },
+  async deleteDiaper(childId: string, docId: string): Promise<void> {
+    const ref = doc(db, 'children', childId, 'diaper', docId);
+    await deleteDoc(ref);
+    await clearChildCache(childId);
+  },
+
+  async updateActivity(childId: string, docId: string, partial: Partial<ActivityData>): Promise<void> {
+    const ref = doc(db, 'children', childId, 'activity', docId);
+    await updateDoc(ref, {
+      ...(partial.dateTime ? { dateTime: partial.dateTime } : {}),
+      ...(partial.type ? { type: partial.type } : {}),
+    });
+    await clearChildCache(childId);
+  },
+  async deleteActivity(childId: string, docId: string): Promise<void> {
+    const ref = doc(db, 'children', childId, 'activity', docId);
+    await deleteDoc(ref);
+    await clearChildCache(childId);
+  },
+
+  async updateMilestone(childId: string, docId: string, partial: Partial<MilestoneData>): Promise<void> {
+    const ref = doc(db, 'children', childId, 'milestone', docId);
+    await updateDoc(ref, {
+      ...(partial.dateTime ? { dateTime: partial.dateTime } : {}),
+      ...(partial.type ? { type: partial.type } : {}),
+    });
+    await clearChildCache(childId);
+  },
+  async deleteMilestone(childId: string, docId: string): Promise<void> {
+    const ref = doc(db, 'children', childId, 'milestone', docId);
+    await deleteDoc(ref);
+    await clearChildCache(childId);
+  },
+
+  async updateWeight(childId: string, docId: string, partial: Partial<WeightData>): Promise<void> {
+    const ref = doc(db, 'children', childId, 'weight', docId);
+    await updateDoc(ref, {
+      ...(partial.dateTime ? { dateTime: partial.dateTime } : {}),
+      ...(typeof partial.pounds === 'number' ? { pounds: partial.pounds } : {}),
+      ...(typeof partial.ounces === 'number' ? { ounces: partial.ounces } : {}),
+    });
+    await clearChildCache(childId);
+  },
+  async deleteWeight(childId: string, docId: string): Promise<void> {
+    const ref = doc(db, 'children', childId, 'weight', docId);
+    await deleteDoc(ref);
+    await clearChildCache(childId);
+  },
 };

@@ -18,6 +18,8 @@ interface UnifiedDataGraphProps {
   weightData: WeightData[];
   rangeDays: number;
   activeDataType: TrendType;
+  onEditRequest?: (params: { type: TrendType; payload: any }) => void;
+  dataVersion?: number;
 }
 
 const UnifiedDataGraph = ({
@@ -29,6 +31,8 @@ const UnifiedDataGraph = ({
   weightData: rawWeightData,
   rangeDays,
   activeDataType,
+  onEditRequest,
+  dataVersion,
 }: UnifiedDataGraphProps) => {
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -36,22 +40,22 @@ const UnifiedDataGraph = ({
     <ScrollView>
       <View>
         {activeDataType === 'sleep' && (
-          <SleepVisualization sleepData={rawSleepData} rangeDays={rangeDays} />
+          <SleepVisualization sleepData={rawSleepData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'sleep', payload })} dataVersion={dataVersion} />
         )}
         {activeDataType === 'feed' && (
-          <FeedVisualization feedData={rawFeedData} rangeDays={rangeDays} />
+          <FeedVisualization feedData={rawFeedData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'feed', payload })} dataVersion={dataVersion} />
         )}
         {activeDataType === 'diaper' && (
-          <DiaperVisualization diaperData={rawDiaperData} rangeDays={rangeDays} />
+          <DiaperVisualization diaperData={rawDiaperData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'diaper', payload })} dataVersion={dataVersion} />
         )}
         {activeDataType === 'activity' && (
-          <ActivityVisualization activityData={rawActivityData} rangeDays={rangeDays} />
+          <ActivityVisualization activityData={rawActivityData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'activity', payload })} dataVersion={dataVersion} />
         )}
         {activeDataType === 'milestone' && (
           <MilestoneVisualization milestoneData={rawMilestoneData} rangeDays={rangeDays} />
         )}
         {activeDataType === 'weight' && (
-          <WeightVisualization weightData={rawWeightData} rangeDays={rangeDays} />
+          <WeightVisualization weightData={rawWeightData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'weight', payload })} dataVersion={dataVersion} />
         )}
       </View>
     </ScrollView>

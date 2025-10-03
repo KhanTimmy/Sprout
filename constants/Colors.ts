@@ -10,6 +10,7 @@ export default {
     secondaryBackground: '#F5F9F9',
     secondaryText: '#5A5A5A',
     slider: 'rgba(92, 184, 228, 0.15)',
+    selection: 'rgba(92, 184, 228, 0.25)',
   },
   dark: {
     text: '#F5F8FC',
@@ -19,5 +20,6 @@ export default {
     secondaryBackground: '#2F3C4C',
     secondaryText: '#C0CCD9',
     slider: 'rgba(112, 193, 255, 0.18)',
+    selection: '#3A4A5C',
   },
 };

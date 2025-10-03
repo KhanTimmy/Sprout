@@ -49,6 +49,8 @@ interface PointPopoutProps {
 interface WeightVisualizationProps {
   weightData: WeightData[];
   rangeDays: number;
+  onEditRequest?: (payload: WeightData) => void;
+  dataVersion?: number;
 }
 
 export const formatWeight = (pounds: number, ounces: number) => {
@@ -329,8 +331,13 @@ const GraphSkeleton = () => {
   );
 };
 
-export const WeightVisualization: React.FC<WeightVisualizationProps> = ({ weightData: rawWeightData, rangeDays }) => {
+export const WeightVisualization: React.FC<WeightVisualizationProps> = ({ weightData: rawWeightData, rangeDays, onEditRequest, dataVersion }) => {
   const [selectedPoint, setSelectedPoint] = useState<any>(null);
+  
+  // Clear selected point when data changes
+  React.useEffect(() => {
+    setSelectedPoint(null);
+  }, [dataVersion]);
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -647,7 +654,11 @@ export const WeightVisualization: React.FC<WeightVisualizationProps> = ({ weight
         ) : (
           <FlatList
             data={filteredWeightData(rawWeightData, rangeDays)}
-            renderItem={({ item }) => <WeightEntry weight={item} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity activeOpacity={0.7} onPress={() => onEditRequest?.(item)}>
+                <WeightEntry weight={item} />
+              </TouchableOpacity>
+            )}
             keyExtractor={(item, index) => `weight-${index}`}
             style={[styles.weightList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}

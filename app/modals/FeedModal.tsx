@@ -12,6 +12,8 @@ interface FeedModalProps {
   onClose: () => void;
   onSave: (feedData: FeedData) => Promise<void>;
   childId: string | undefined;
+  initialData?: FeedData;
+  onDelete?: (docId: string) => Promise<void>;
 }
 
 const FeedModal = ({
@@ -19,6 +21,8 @@ const FeedModal = ({
   onClose,
   onSave,
   childId,
+  initialData,
+  onDelete,
 }: FeedModalProps) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -30,6 +34,8 @@ const FeedModal = ({
   const [notes, setNotes] = useState('');
   const [feedType, setFeedType] = useState('');
   const [side, setSide] = useState<'left' | 'right' | ''>('');
+  
+  const isEditMode = !!initialData;
   
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -82,6 +88,7 @@ const FeedModal = ({
         duration: durationNumber,
         notes: notes,
         type: feedType as 'nursing' | 'bottle' | 'solid',
+        ...(isEditMode && initialData?.docId ? { docId: initialData.docId } : {}),
       };
 
       if (feedType === 'nursing') {
@@ -98,12 +105,55 @@ const FeedModal = ({
   };
 
   const resetForm = () => {
-    setDateTime(new Date());
-    setDescription('');
-    setDuration('');
-    setNotes('');
-    setFeedType('');
-    setSide('');
+    if (initialData) {
+      setDateTime(initialData.dateTime);
+      setDescription(initialData.description);
+      setDuration(initialData.duration.toString());
+      setNotes(initialData.notes);
+      setFeedType(initialData.type);
+      setSide(initialData.side || '');
+      setAmount(initialData.amount.toString());
+    } else {
+      setDateTime(new Date());
+      setDescription('');
+      setDuration('');
+      setNotes('');
+      setFeedType('');
+      setSide('');
+      setAmount('');
+    }
+  };
+
+  // Initialize form when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible, initialData]);
+
+  const handleDelete = async () => {
+    if (!initialData?.docId || !onDelete) return;
+    
+    Alert.alert(
+      'Delete Feed Entry',
+      'Are you sure you want to delete this feed entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await onDelete(initialData.docId!);
+              onClose();
+            } catch (error) {
+              console.error('Error deleting feed data:', error);
+              Alert.alert('Error', 'Could not delete feed data');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -113,7 +163,7 @@ const FeedModal = ({
         resetForm();
         onClose();
       }}
-      title="Input Feeding Data"
+      title={isEditMode ? "Edit Feeding Data" : "Input Feeding Data"}
       showCloseButton={false}
       maxHeight="85%"
     >
@@ -237,8 +287,16 @@ const FeedModal = ({
         </View>
 
         <View style={styles.buttonContainer}>
+          {isEditMode && onDelete && (
+            <CustomButton
+              title="Delete"
+              onPress={handleDelete}
+              variant="danger"
+              style={styles.button}
+            />
+          )}
           <CustomButton
-            title='Save'
+            title={isEditMode ? "Update" : "Save"}
             onPress={handleSave}
             variant="success"
             style={styles.button}

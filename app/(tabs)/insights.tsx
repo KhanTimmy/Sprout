@@ -12,6 +12,8 @@ import TimeRangeSelector from '@/components/TimeRangeSelector';
 import Markdown from 'react-native-markdown-display';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import CustomModal from '@/components/CustomModal';
+import { generateAndEmailReport, type ReportPayload } from '@/services/ReportService';
 
 const TREND_TYPES = [
   { key: 'sleep', icon: 'power-sleep', label: 'Sleep' },
@@ -102,6 +104,12 @@ export default function InsightsScreen() {
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [milestoneData, setMilestoneData] = useState<MilestoneData[]>([]);
   const [weightData, setWeightData] = useState<WeightData[]>([]);
+
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
+  const [lastReportPayload, setLastReportPayload] = useState<ReportPayload | null>(null);
+  const [reportSending, setReportSending] = useState(false);
+  const hasInsights = !!aiResponse;
+  const [includeInsights, setIncludeInsights] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
@@ -225,6 +233,7 @@ export default function InsightsScreen() {
     }
     setLoading(true);
     setAiResponse(null);
+    setShowReportPrompt(false);
 
     console.log('[Insights] handleFetchInsights executing');
     console.log('...[Insights] Time range selected:', rangeDays, 'days');
@@ -429,6 +438,92 @@ export default function InsightsScreen() {
     }
   };
 
+  const handleOpenReportPrompt = () => {
+    if (!selectedChild) {
+      Alert.alert('Select Child', 'Please select a child first.');
+      return;
+    }
+    if (selectedTypes.length === 0) {
+      Alert.alert('Select Data', 'Please select at least one data type.');
+      return;
+    }
+
+    const dataSummary: Record<string, any> = {
+      child: {
+        id: selectedChild.id,
+        first_name: selectedChild.first_name,
+        last_name: selectedChild.last_name,
+        type: selectedChild.type,
+        dob: selectedChild.dob,
+        sex: selectedChild.sex,
+      },
+      range_days: rangeDays,
+    };
+
+    if (selectedTypes.includes('feed')) {
+      dataSummary.feed = filterDataByTimeRange(feedData);
+    }
+    if (selectedTypes.includes('sleep')) {
+      dataSummary.sleep = filterSleepDataByTimeRange(sleepData);
+    }
+    if (selectedTypes.includes('diaper')) {
+      dataSummary.diaper = filterDataByTimeRange(diaperData);
+    }
+    if (selectedTypes.includes('activity')) {
+      dataSummary.activity = filterDataByTimeRange(activityData);
+    }
+    if (selectedTypes.includes('milestone')) {
+      dataSummary.milestone = filterDataByTimeRange(milestoneData);
+    }
+    if (selectedTypes.includes('weight')) {
+      dataSummary.weight = filterDataByTimeRange(weightData);
+    }
+
+    const payload: ReportPayload = {
+      child: {
+        ...dataSummary.child,
+        parentFirstName: '',
+        parentLastName: '',
+        parentEmail: getAuth().currentUser?.email || undefined,
+      },
+      rangeDays: dataSummary.range_days,
+      selectedTypes: selectedTypes as any,
+      data: {
+        feed: dataSummary.feed,
+        sleep: dataSummary.sleep,
+        diaper: dataSummary.diaper,
+        activity: dataSummary.activity,
+        milestone: dataSummary.milestone,
+        weight: dataSummary.weight,
+      },
+    };
+    setLastReportPayload(payload);
+    setShowReportPrompt(true);
+  };
+
+  const handleGenerateReport = async () => {
+    if (!lastReportPayload) {
+      setShowReportPrompt(false);
+      return;
+    }
+    try {
+      setReportSending(true);
+      const payload: ReportPayload = {
+        ...lastReportPayload,
+        insightsMarkdown: includeInsights && hasInsights ? (aiResponse || '').slice(0, 12000) : undefined,
+        modelName: Constants.expoConfig?.extra?.AI_MODEL as string | undefined,
+      };
+      await generateAndEmailReport(payload);
+    } catch (e) {
+      console.error('[Insights] Error generating/emailing report:', e);
+      Alert.alert('Report Error', 'Could not generate or send the report.');
+    } finally {
+      setReportSending(false);
+      setShowReportPrompt(false);
+      setIncludeInsights(false);
+    }
+  };
+
   const handleNavigateToAddChild = () => {
     router.push('/addchild');
   };
@@ -478,20 +573,37 @@ export default function InsightsScreen() {
               </Text>
             </View>
           ) : (
-            <TouchableOpacity
-              style={[
-                styles.fetchButton,
-                { backgroundColor: theme.tint },
-                (!selectedChild || loading) && styles.fetchButtonDisabled
-              ]}
-              onPress={handleFetchInsights}
-              disabled={!selectedChild || loading}
-            >
-              <MaterialCommunityIcons name="brain" size={20} color={selectedChild ? theme.background : theme.secondaryText} />
-              <Text style={[styles.fetchButtonText, { color: selectedChild ? theme.background : theme.secondaryText }]}>
-                Generate Insights
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.fetchButton,
+                  { backgroundColor: theme.tint, flex: 1, marginRight: 8, marginTop: 0 },
+                  (!selectedChild || loading) && styles.fetchButtonDisabled
+                ]}
+                onPress={handleFetchInsights}
+                disabled={!selectedChild || loading}
+              >
+                <MaterialCommunityIcons name="brain" size={20} color={selectedChild ? theme.background : theme.secondaryText} />
+                <Text style={[styles.fetchButtonText, { color: selectedChild ? theme.background : theme.secondaryText }]}> 
+                  Build Insights
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.fetchButton,
+                  { backgroundColor: theme.secondaryBackground, flex: 1, marginTop: 0 },
+                  (!selectedChild || loading) && styles.fetchButtonDisabled
+                ]}
+                onPress={handleOpenReportPrompt}
+                disabled={!selectedChild || loading}
+              >
+                <MaterialCommunityIcons name="file-export" size={20} color={theme.text} />
+                <Text style={[styles.fetchButtonText, { color: theme.text }]}> 
+                  Export PDF
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 
@@ -516,6 +628,60 @@ export default function InsightsScreen() {
             </ScrollView>
           </View>
         )}
+
+        <CustomModal
+          visible={showReportPrompt}
+          onClose={() => setShowReportPrompt(false)}
+          title="Generate PDF Report?"
+          showCloseButton={false}
+          closeOnOutsideClick={false}
+          maxHeight={'75%'}
+        >
+          <View>
+            <Text style={{ marginBottom: 12, color: theme.text }}>
+              Would you like to generate an exportable PDF report using the selected trends and time range and send it to your email?
+            </Text>
+            <TouchableOpacity
+              activeOpacity={hasInsights ? 0.7 : 1}
+              onPress={() => {
+                if (!hasInsights) return;
+                setIncludeInsights(prev => !prev);
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, opacity: hasInsights ? 1 : 0.5 }}
+            >
+              <MaterialCommunityIcons
+                name={includeInsights && hasInsights ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={22}
+                color={hasInsights ? theme.tint : theme.secondaryText}
+              />
+              <Text style={{ marginLeft: 8, color: hasInsights ? theme.text : theme.secondaryText }}>
+                Include AI insights?
+              </Text>
+            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12, justifyContent: 'center' }}>
+              <TouchableOpacity
+                onPress={() => setShowReportPrompt(false)}
+                style={[styles.fetchButton, { backgroundColor: theme.secondaryBackground }]}
+              >
+                <Text style={[styles.fetchButtonText, { color: theme.text, marginLeft: 0 }]}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleGenerateReport}
+                disabled={reportSending}
+                style={[styles.fetchButton, { backgroundColor: theme.tint, opacity: reportSending ? 0.6 : 1 }]}
+              >
+                {reportSending ? (
+                  <ActivityIndicator color={theme.background} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="email" size={20} color={theme.background} />
+                    <Text style={[styles.fetchButtonText, { color: theme.background }]}>Yes, email it</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </CustomModal>
       </View>
     </SafeAreaView>
   );
@@ -546,6 +712,11 @@ const styles = StyleSheet.create({
   },
   controlsSection: {
     marginBottom: 8,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
   fetchButton: {
     flexDirection: 'row',

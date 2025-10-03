@@ -51,6 +51,8 @@ interface BarPopoutProps {
 interface ActivityVisualizationProps {
   activityData: ActivityData[];
   rangeDays: number;
+  onEditRequest?: (payload: ActivityData) => void;
+  dataVersion?: number;
 }
 
 export const getTypeColor = (type: string) => {
@@ -298,8 +300,13 @@ const GraphSkeleton = () => {
   );
 };
 
-export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ activityData: rawActivityData, rangeDays }) => {
+export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ activityData: rawActivityData, rangeDays, onEditRequest, dataVersion }) => {
   const [selectedBar, setSelectedBar] = useState<any>(null);
+  
+  // Clear selected bar when data changes
+  React.useEffect(() => {
+    setSelectedBar(null);
+  }, [dataVersion]);
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -541,7 +548,11 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
         ) : (
           <FlatList
             data={filteredActivityData(rawActivityData, rangeDays)}
-            renderItem={({ item }) => <ActivityEntry activity={item} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity activeOpacity={0.7} onPress={() => onEditRequest?.(item)}>
+                <ActivityEntry activity={item} />
+              </TouchableOpacity>
+            )}
             keyExtractor={(item, index) => `activity-${index}`}
             style={[styles.activityList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}

@@ -10,7 +10,9 @@ interface SleepModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (sleepData: SleepData) => Promise<void>;
-  childId: string | undefined; 
+  childId: string | undefined;
+  initialData?: SleepData;
+  onDelete?: (docId: string) => Promise<void>;
 }
 
 const SleepModal = ({
@@ -18,6 +20,8 @@ const SleepModal = ({
   onClose,
   onSave,
   childId,
+  initialData,
+  onDelete,
 }: SleepModalProps) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -25,6 +29,8 @@ const SleepModal = ({
   const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(new Date());
   const [quality, setQuality] = useState<number>(0);
+  
+  const isEditMode = !!initialData;
   
   const [isStartPickerVisible, setStartPickerVisibility] = useState(false);
   const [isEndPickerVisible, setEndPickerVisibility] = useState(false);
@@ -59,6 +65,7 @@ const SleepModal = ({
         start: startDateTime,
         end: endDateTime,
         quality: quality,
+        ...(isEditMode && initialData?.docId ? { docId: initialData.docId } : {}),
       };
       
       await onSave(sleepData);
@@ -70,11 +77,49 @@ const SleepModal = ({
     }
   };
 
-  const resetForm = () => {
-    setStartDateTime(new Date());
-    setEndDateTime(new Date());
-    setQuality(0);
+  const handleDelete = async () => {
+    if (!initialData?.docId || !onDelete) return;
+    
+    Alert.alert(
+      'Delete Sleep Entry',
+      'Are you sure you want to delete this sleep entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await onDelete(initialData.docId!);
+              onClose();
+            } catch (error) {
+              console.error('Error deleting sleep data:', error);
+              Alert.alert('Error', 'Could not delete sleep data');
+            }
+          },
+        },
+      ]
+    );
   };
+
+  const resetForm = () => {
+    if (initialData) {
+      setStartDateTime(initialData.start);
+      setEndDateTime(initialData.end);
+      setQuality(initialData.quality);
+    } else {
+      setStartDateTime(new Date());
+      setEndDateTime(new Date());
+      setQuality(0);
+    }
+  };
+
+  // Initialize form when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible, initialData]);
 
   return (
     <CustomModal
@@ -83,7 +128,7 @@ const SleepModal = ({
         resetForm();
         onClose();
       }}
-      title="Input Sleep Data"
+      title={isEditMode ? "Edit Sleep Data" : "Input Sleep Data"}
       showCloseButton={false}
       maxHeight="75%"
     >
@@ -162,8 +207,16 @@ const SleepModal = ({
         </View>
 
         <View style={styles.buttonContainer}>
+          {isEditMode && onDelete && (
+            <CustomButton
+              title="Delete"
+              onPress={handleDelete}
+              variant="danger"
+              style={styles.button}
+            />
+          )}
           <CustomButton
-            title="Save"
+            title={isEditMode ? "Update" : "Save"}
             onPress={handleSave}
             variant="success"
             style={styles.button}
@@ -207,10 +260,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 15,
+    gap: 10,
   },
   button: {
-    width: '100%',
+    flex: 1,
   },
   starContainer: {
     flexDirection: 'row',

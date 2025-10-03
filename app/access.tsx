@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, Alert, Text, View, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, Alert, Text, View, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, SafeAreaView } from 'react-native';
 import CustomButton from '@/components/CustomButton';
 import { ChildService, ChildData } from '@/services/ChildService';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
@@ -8,10 +8,8 @@ import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import ChildSelectionModal from './modals/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'react-native';
 import Colors from "@/constants/Colors";
-import CornerIndicators from '@/components/CornerIndicators';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AccessScreen() {
@@ -123,13 +121,7 @@ export default function AccessScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]} edges={['top']}>
-      <CornerIndicators
-        selectedChild={selectedChild}
-        childrenList={childrenList}
-        onSelectChild={saveSelectedChild}
-        onNavigateToAddChild={handleNavigateToAddChild}
-      />
+    <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}> 
       
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -144,6 +136,9 @@ export default function AccessScreen() {
             <View style={styles.inner}>
               <View style={styles.headerSection}>
                 <Text style={[styles.title, { color: theme.text }]}>Manage Access</Text>
+                <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
+                  View caregivers for your child, remove access, or add a new caregiver
+                </Text>
               </View>
 
               {loading ? (
@@ -160,7 +155,7 @@ export default function AccessScreen() {
                         {selectedChild.first_name} {selectedChild.last_name}
                       </Text>
                       <Text style={[styles.childType, { color: theme.secondaryText }]}>
-                        {selectedChild.type === 'Parent' ? 'You are the parent' : 'You are authorized'}
+                        {selectedChild.type === 'Parent' ? 'You are the parent' : 'You are an authorized caregiver'}
                       </Text>
                     </View>
                   </View>
@@ -276,7 +271,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   headerSection: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
   title: {
@@ -284,18 +279,18 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 8,
     letterSpacing: 0.5,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   subtitle: {
     fontSize: 16,
     fontWeight: '400',
     lineHeight: 22,
-    textAlign: 'center',
-    paddingHorizontal: 20,
+    textAlign: 'left',
+    paddingHorizontal: 0,
   },
   loadingContainer: {
     alignItems: 'center',
-    marginVertical: 40,
+    marginVertical: 20,
   },
   loadingText: {
     marginTop: 12,
@@ -341,7 +336,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionButton: {
-    marginBottom: 30,
+    marginBottom: 20,
   },
   caregiversSection: {
     width: '100%',
@@ -353,7 +348,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   userListContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   userList: {
     width: '100%',
@@ -388,7 +383,7 @@ const styles = StyleSheet.create({
   emptyStateContainer: {
     alignItems: 'center',
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',

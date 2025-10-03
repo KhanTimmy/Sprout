@@ -40,20 +40,25 @@ export default function AddChild() {
       setError('Please select the sex');
       return false;
     }
-    if (pounds.trim() || ounces.trim()) {
-      const poundsNum = parseInt(pounds) || 0;
-      const ouncesNum = parseInt(ounces) || 0;
-      
-      if (poundsNum < 0 || ouncesNum < 0) {
-        setError('Weight values cannot be negative');
+    if (pounds.trim() !== '' || ounces.trim() !== '') {
+      if (pounds.trim() === '' || ounces.trim() === '') {
+        setError('If entering weight, enter both pounds and ounces');
+        return false;
+      }
+
+      const poundsNum = parseInt(pounds, 10);
+      const ouncesNum = parseInt(ounces, 10);
+
+      if (isNaN(poundsNum) || isNaN(ouncesNum)) {
+        setError('Pounds and ounces must be numbers');
+        return false;
+      }
+      if (poundsNum <= 0 || ouncesNum <= 0) {
+        setError('Pounds and ounces must be greater than 0');
         return false;
       }
       if (ouncesNum >= 16) {
-        setError('Ounces must be less than 16');
-        return false;
-      }
-      if (poundsNum === 0 && ouncesNum === 0) {
-        setError('If entering weight, ounces must be greater than 0');
+        setError('Ounces must be between 1 and 15');
         return false;
       }
     }
@@ -76,10 +81,10 @@ export default function AddChild() {
         sex: sex,
       };
 
-      // Add weight if provided
-      if (pounds.trim() || ounces.trim()) {
-        const poundsNum = parseInt(pounds) || 0;
-        const ouncesNum = parseInt(ounces) || 0;
+      // Add weight if both fields provided (validated above)
+      if (pounds.trim() !== '' && ounces.trim() !== '') {
+        const poundsNum = parseInt(pounds, 10);
+        const ouncesNum = parseInt(ounces, 10);
         childData.weight = {
           pounds: poundsNum,
           ounces: ouncesNum
@@ -131,7 +136,6 @@ export default function AddChild() {
                 ) : null}
 
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: theme.text }]}>First Name</Text>
                   <TextInput
                     style={[styles.input, { 
                       backgroundColor: theme.secondaryBackground,
@@ -149,7 +153,6 @@ export default function AddChild() {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: theme.text }]}>Last Name</Text>
                   <TextInput
                     style={[styles.input, { 
                       backgroundColor: theme.secondaryBackground,
@@ -167,7 +170,6 @@ export default function AddChild() {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: theme.text }]}>Date of Birth</Text>
                   <TouchableOpacity
                     style={[styles.dateButton, { 
                       backgroundColor: theme.secondaryBackground,
@@ -185,7 +187,6 @@ export default function AddChild() {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: theme.text }]}>Sex</Text>
                   <View style={styles.radioGroup}>
                     <TouchableOpacity
                       style={styles.radioOption}
@@ -218,17 +219,15 @@ export default function AddChild() {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: theme.text }]}>Weight (Optional)</Text>
                   <View style={styles.weightInputContainer}>
                     <View style={styles.weightInputWrapper}>
-                      <Text style={[styles.weightLabel, { color: theme.secondaryText }]}>Pounds</Text>
                       <TextInput
                         style={[styles.weightInput, { 
                           backgroundColor: theme.secondaryBackground,
                           borderColor: theme.tint,
                           color: theme.text
                         }]}
-                        placeholder="0"
+                        placeholder="Enter Lbs."
                         placeholderTextColor={theme.placeholder}
                         value={pounds}
                         onChangeText={setPounds}
@@ -237,14 +236,13 @@ export default function AddChild() {
                       />
                     </View>
                     <View style={styles.weightInputWrapper}>
-                      <Text style={[styles.weightLabel, { color: theme.secondaryText }]}>Ounces</Text>
                       <TextInput
                         style={[styles.weightInput, { 
                           backgroundColor: theme.secondaryBackground,
                           borderColor: theme.tint,
                           color: theme.text
                         }]}
-                        placeholder="0"
+                        placeholder="Enter Oz."
                         placeholderTextColor={theme.placeholder}
                         value={ounces}
                         onChangeText={setOunces}
@@ -253,9 +251,6 @@ export default function AddChild() {
                       />
                     </View>
                   </View>
-                  <Text style={[styles.weightNote, { color: theme.secondaryText }]}>
-                    Note: 0 pounds is allowed, but 0 ounces is not
-                  </Text>
                 </View>
 
                 {loading ? (
