@@ -573,11 +573,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   listContainer: {
-    flex: 1,
-    minHeight: 200,
+    height: 300, // Fixed height for better scrolling
   },
   activityList: {
-    flex: 1,
+    height: 250, // Fixed height for the FlatList
   },
   activityEntry: {
     padding: 12,

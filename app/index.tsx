@@ -10,7 +10,7 @@ import { Image } from 'expo-image';
 import CustomButton from "@/components/CustomButton";
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
-import CloudBackground from '@/components/CloudBackground';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
 const index = () => {
@@ -45,7 +45,7 @@ const index = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CloudBackground>
+      <AnimatedCloudBackground>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1, width: '100%' }}
@@ -167,7 +167,7 @@ const index = () => {
             </TouchableWithoutFeedback>
           </ScrollView>
         </KeyboardAvoidingView>
-      </CloudBackground>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 };
@@ -208,10 +208,10 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 200,
     alignSelf: 'center',
-    borderRadius: 60,
+    borderRadius: 100,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

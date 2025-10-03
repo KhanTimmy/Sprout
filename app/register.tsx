@@ -7,7 +7,7 @@ import { router } from "expo-router"
 import CustomButton from '@/components/CustomButton';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import CloudBackground from '@/components/CloudBackground';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import BackButton from '@/components/BackButton';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
@@ -57,7 +57,7 @@ export default function Register() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CloudBackground>
+      <AnimatedCloudBackground>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1, width: '100%' }}
@@ -205,7 +205,7 @@ export default function Register() {
             </TouchableWithoutFeedback>
           </ScrollView>
         </KeyboardAvoidingView>
-      </CloudBackground>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 }

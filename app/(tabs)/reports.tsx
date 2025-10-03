@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, Text, View, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text, View, Alert, ScrollView } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
@@ -13,7 +13,7 @@ import ChildSelectionModal from '../modals/ChildSelectionModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
-import CloudBackground from '@/components/CloudBackground';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import { View as SafeAreaView } from 'react-native';
 
 
@@ -116,7 +116,7 @@ export default function Reports() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CloudBackground>
+      <AnimatedCloudBackground>
         <CornerIndicators
           selectedChild={selectedChild}
           childrenList={childrenList}
@@ -125,37 +125,44 @@ export default function Reports() {
         />
         <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.contentContainer, animatedStyle]}>
-          <View style={styles.headerSection}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
-        </View>
+          <ScrollView 
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={true}
+            bounces={true}
+          >
+            <View style={styles.headerSection}>
+              <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
+            </View>
 
-        <View style={styles.controlsSection}>
-          <TrendSelector
-            selected={selectedTrend}
-            onSelect={setSelectedTrend}
-          />
-          <TimeRangeSelector
-            selectedRange={rangeDays}
-            onRangeChange={setRangeDays}
-          />
-        </View>
+            <View style={styles.controlsSection}>
+              <TrendSelector
+                selected={selectedTrend}
+                onSelect={setSelectedTrend}
+              />
+              <TimeRangeSelector
+                selectedRange={rangeDays}
+                onRangeChange={setRangeDays}
+              />
+            </View>
 
-        <View style={styles.graphSection}>
-          <View style={[styles.graphContainer, { backgroundColor: theme.cardBackground }]}>
-            <UnifiedDataGraph
-              sleepData={sleeps}
-              feedData={feedings}
-              diaperData={diapers}
-              activityData={activities}
-              milestoneData={milestones}
-              rangeDays={rangeDays}
-              activeDataType={selectedTrend}
-            />
-          </View>
-        </View>
+            <View style={styles.graphSection}>
+              <View style={[styles.graphContainer, { backgroundColor: theme.cardBackground }]}>
+                <UnifiedDataGraph
+                  sleepData={sleeps}
+                  feedData={feedings}
+                  diaperData={diapers}
+                  activityData={activities}
+                  milestoneData={milestones}
+                  rangeDays={rangeDays}
+                  activeDataType={selectedTrend}
+                />
+              </View>
+            </View>
+          </ScrollView>
         </Animated.View>
         </GestureDetector>
-      </CloudBackground>
+      </AnimatedCloudBackground>
 
       <ChildSelectionModal
         visible={childSelectionModalVisible}
@@ -180,6 +187,13 @@ const styles = StyleSheet.create({
     paddingTop: 80, // Account for corner indicator buttons
     paddingBottom: 90, // Account for overlapping tab bar
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20, // Extra padding at bottom for better scrolling
+  },
   headerSection: {
     alignItems: 'center',
     marginBottom: 16,
@@ -199,10 +213,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   graphSection: {
-    flex: 1,
+    minHeight: 400, // Minimum height for the graph section
   },
   graphContainer: {
-    flex: 1,
+    minHeight: 400, // Minimum height for the graph container
     width: '100%',
     borderRadius: 12,
     padding: 16,

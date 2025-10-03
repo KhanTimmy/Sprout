@@ -13,7 +13,7 @@ import Markdown from 'react-native-markdown-display';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
-import CloudBackground from '@/components/CloudBackground';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import { View as SafeAreaView } from 'react-native';
 
 const TREND_TYPES = [
@@ -458,7 +458,7 @@ export default function InsightsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CloudBackground>
+      <AnimatedCloudBackground>
         <CornerIndicators
           selectedChild={selectedChild}
           childrenList={childrenList}
@@ -551,7 +551,7 @@ export default function InsightsScreen() {
         )}
         </Animated.View>
         </GestureDetector>
-      </CloudBackground>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 }

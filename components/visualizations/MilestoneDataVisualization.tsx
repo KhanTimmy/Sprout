@@ -568,11 +568,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   listContainer: {
-    flex: 1,
-    minHeight: 200,
+    height: 300, // Fixed height for better scrolling
   },
   milestoneList: {
-    flex: 1,
+    height: 250, // Fixed height for the FlatList
   },
   milestoneEntry: {
     padding: 12,

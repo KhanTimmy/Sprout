@@ -5,7 +5,7 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
-import CloudBackground from '@/components/CloudBackground';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import CornerIndicators from '@/components/CornerIndicators';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData } from '@/services/ChildService';
@@ -142,7 +142,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CloudBackground>
+      <AnimatedCloudBackground>
         <CornerIndicators
           selectedChild={selectedChild}
           childrenList={childrenList}
@@ -259,7 +259,7 @@ export default function SettingsScreen() {
             </ScrollView>
           </Animated.View>
         </GestureDetector>
-      </CloudBackground>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 }

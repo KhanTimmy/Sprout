@@ -16,7 +16,7 @@ import DiaperModal from '../modals/DiaperModal';
 import ActivityModal from '../modals/ActivityModal';
 import MilestoneModal from '../modals/MilestoneModal';
 import CornerIndicators from '@/components/CornerIndicators';
-import CloudBackground from '@/components/CloudBackground';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import AnimatedActionButton from '@/components/AnimatedActionButton';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
@@ -129,7 +129,7 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CloudBackground>
+      <AnimatedCloudBackground>
         <CornerIndicators
           selectedChild={selectedChild}
           childrenList={childrenList}
@@ -140,10 +140,6 @@ export default function Home() {
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.contentContainer, animatedStyle]}>
             <View style={styles.headerSection}>
-              <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
-              <Text style={[styles.headerSubtitle, { color: theme.secondaryText }]}>
-        
-              </Text>
             </View>
 
             {selectedChild ? (
@@ -221,7 +217,7 @@ export default function Home() {
         )}
           </Animated.View>
         </GestureDetector>
-      </CloudBackground>
+      </AnimatedCloudBackground>
 
       <ChildSelectionModal
         visible={modalVisibility.childSelection}
@@ -283,22 +279,16 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     marginTop: 8,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    paddingVertical: 10,
   },
   headerSubtitle: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
+    marginTop: 8,
+    letterSpacing: 0.3,
   },
   childInfoCard: {
     width: '100%',
