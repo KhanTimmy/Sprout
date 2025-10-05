@@ -61,6 +61,8 @@ interface BarPopoutProps {
 interface DiaperVisualizationProps {
   diaperData: DiaperData[];
   rangeDays: number;
+  onEditRequest?: (payload: DiaperData) => void;
+  dataVersion?: number;
 }
 
 export const getTypeColor = (type: string) => {
@@ -412,8 +414,13 @@ const GraphSkeleton = () => {
   );
 };
 
-export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaperData: rawDiaperData, rangeDays }) => {
+export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaperData: rawDiaperData, rangeDays, onEditRequest, dataVersion }) => {
   const [selectedBar, setSelectedBar] = useState<any>(null);
+  
+  // Clear selected bar when data changes
+  React.useEffect(() => {
+    setSelectedBar(null);
+  }, [dataVersion]);
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -654,7 +661,11 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
         ) : (
           <FlatList
             data={filteredDiaperData(rawDiaperData, rangeDays)}
-            renderItem={({ item }) => <DiaperEntry diaper={item} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity activeOpacity={0.7} onPress={() => onEditRequest?.(item)}>
+                <DiaperEntry diaper={item} />
+              </TouchableOpacity>
+            )}
             keyExtractor={(item, index) => `diaper-${index}`}
             style={[styles.diaperList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}

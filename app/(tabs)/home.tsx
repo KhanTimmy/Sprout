@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -34,6 +34,7 @@ export default function Home() {
   const { theme } = useTheme();
 
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
+  const [latestWeight, setLatestWeight] = useState<WeightData | null>(null);
   const { selectedChild, saveSelectedChild, clearSelectedChild, loading } = useSelectedChild();
 
   const [modalVisibility, setModalVisibility] = useState({
@@ -43,6 +44,7 @@ export default function Home() {
     diaper: false,
     activity: false,
     milestone: false,
+    weight: false,
   });
 
   // Swipe navigation for tab switching
@@ -65,6 +67,14 @@ export default function Home() {
     return unsubscribeAuth;
   }, []);
 
+  useEffect(() => {
+    if (selectedChild) {
+      fetchLatestWeight(selectedChild.id);
+    } else {
+      setLatestWeight(null);
+    }
+  }, [selectedChild]);
+
   const fetchUserChildrenList = async () => {
     try {
       console.log('[home] fetchUserChildrenList called [ChildService]fetchUserChildren');
@@ -76,10 +86,34 @@ export default function Home() {
     }
   };
 
-  const handleSave = async (data: SleepData | FeedData | DiaperData | ActivityData | MilestoneData, saveFunction: Function, successMessage: string, errorMessage: string) => {
+  const fetchLatestWeight = async (childId: string) => {
+    try {
+      console.log('[home] fetchLatestWeight called for childId:', childId);
+      const weightData = await ChildService.getWeight(childId);
+      if (weightData && weightData.length > 0) {
+        // Sort by dateTime descending and get the most recent
+        const sortedWeights = weightData.sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
+        setLatestWeight(sortedWeights[0]);
+        console.log('[home] Latest weight found:', sortedWeights[0]);
+      } else {
+        setLatestWeight(null);
+        console.log('[home] No weight data found');
+      }
+    } catch (error) {
+      console.error('Error fetching latest weight:', error);
+      setLatestWeight(null);
+    }
+  };
+
+  const handleSave = async (data: SleepData | FeedData | DiaperData | ActivityData | MilestoneData | WeightData, saveFunction: Function, successMessage: string, errorMessage: string) => {
     try {
       await saveFunction(data);
       Alert.alert('Success', successMessage);
+      
+      // If weight data was saved, refresh the latest weight
+      if ('pounds' in data && 'ounces' in data && selectedChild) {
+        fetchLatestWeight(selectedChild.id);
+      }
     } catch (error) {
       console.error(`${errorMessage}:`, error);
       Alert.alert('Error', errorMessage);
@@ -261,6 +295,14 @@ export default function Home() {
         onClose={() => setModalVisibility(prev => ({ ...prev, milestone: false }))}
         onSave={(data) => handleSave(data, ChildService.addMilestone, 'Milestone data added!', 'Error adding milestone data. Please try again.')}
         childId={selectedChild?.id}
+      />
+
+      <WeightModal
+        visible={modalVisibility.weight}
+        onClose={() => setModalVisibility(prev => ({ ...prev, weight: false }))}
+        onSave={(data) => handleSave(data, ChildService.addWeight, 'Weight data added!', 'Error adding weight data. Please try again.')}
+        childId={selectedChild?.id}
+        currentWeight={latestWeight}
       />
     </SafeAreaView>
   );

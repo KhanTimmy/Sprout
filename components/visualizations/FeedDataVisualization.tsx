@@ -58,6 +58,8 @@ export interface BarPopoutProps {
 interface FeedVisualizationProps {
   feedData: FeedData[];
   rangeDays: number;
+  onEditRequest?: (payload: FeedData) => void;
+  dataVersion?: number;
 }
 
 export const getTypeColor = (type: string) => {
@@ -359,8 +361,13 @@ const GraphSkeleton = () => {
   );
 };
 
-export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: rawFeedData, rangeDays }) => {
+export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: rawFeedData, rangeDays, onEditRequest, dataVersion }) => {
   const [selectedBar, setSelectedBar] = useState<any>(null);
+  
+  // Clear selected bar when data changes
+  React.useEffect(() => {
+    setSelectedBar(null);
+  }, [dataVersion]);
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -601,7 +608,11 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
         ) : (
           <FlatList
             data={filteredFeedData(rawFeedData, rangeDays)}
-            renderItem={({ item }) => <FeedEntry feed={item} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity activeOpacity={0.7} onPress={() => onEditRequest?.(item)}>
+                <FeedEntry feed={item} />
+              </TouchableOpacity>
+            )}
             keyExtractor={(item, index) => `feed-${index}`}
             style={[styles.feedList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}

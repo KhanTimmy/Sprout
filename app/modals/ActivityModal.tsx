@@ -12,6 +12,8 @@ interface ActivityModalProps {
   onClose: () => void;
   onSave: (activityData: ActivityData) => Promise<void>;
   childId: string | undefined;
+  initialData?: ActivityData;
+  onDelete?: (docId: string) => Promise<void>;
 }
 
 const ActivityModal = ({
@@ -19,11 +21,15 @@ const ActivityModal = ({
   onClose,
   onSave,
   childId,
+  initialData,
+  onDelete,
 }: ActivityModalProps) => {
   const { theme } = useTheme();
   
   const [dateTime, setDateTime] = useState(new Date());
   const [type, setType] = useState('');
+  
+  const isEditMode = !!initialData;
   
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -51,6 +57,7 @@ const ActivityModal = ({
         id: childId,
         dateTime: dateTime,
         type: type as 'bath' | 'tummy time' | 'story time' | 'skin to skin' | 'brush teeth',
+        ...(isEditMode && initialData?.docId ? { docId: initialData.docId } : {}),
       };
       
       await onSave(activityData);
@@ -63,8 +70,45 @@ const ActivityModal = ({
   };
 
   const resetForm = () => {
-    setDateTime(new Date());
-    setType('');
+    if (initialData) {
+      setDateTime(initialData.dateTime);
+      setType(initialData.type);
+    } else {
+      setDateTime(new Date());
+      setType('');
+    }
+  };
+
+  // Initialize form when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible, initialData]);
+
+  const handleDelete = async () => {
+    if (!initialData?.docId || !onDelete) return;
+    
+    Alert.alert(
+      'Delete Activity Entry',
+      'Are you sure you want to delete this activity entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await onDelete(initialData.docId!);
+              onClose();
+            } catch (error) {
+              console.error('Error deleting activity data:', error);
+              Alert.alert('Error', 'Could not delete activity data');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -74,7 +118,7 @@ const ActivityModal = ({
         resetForm();
         onClose();
       }}
-      title="Input Activity Data"
+      title={isEditMode ? "Edit Activity Data" : "Input Activity Data"}
       showCloseButton={false}
       maxHeight="80%"
     >
@@ -175,10 +219,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 15,
+    gap: 10,
   },
   button: {
-    width: '100%',
+    flex: 1,
   },
 });
 

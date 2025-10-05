@@ -54,6 +54,8 @@ interface BarPopoutProps {
 interface SleepVisualizationProps {
   sleepData: SleepData[];
   rangeDays: number;
+  onEditRequest?: (payload: SleepData) => void;
+  dataVersion?: number;
 }
 
 export const getQualityColor = (quality: number) => {
@@ -318,8 +320,13 @@ const GraphSkeleton = () => {
   );
 };
 
-export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepData: rawSleepData, rangeDays }) => {
+export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepData: rawSleepData, rangeDays, onEditRequest, dataVersion }) => {
   const [selectedBar, setSelectedBar] = useState<any>(null);
+  
+  // Clear selected bar when data changes
+  React.useEffect(() => {
+    setSelectedBar(null);
+  }, [dataVersion]);
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -560,7 +567,11 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
         ) : (
           <FlatList
             data={filteredSleepData(rawSleepData, rangeDays)}
-            renderItem={({ item }) => <SleepEntry sleep={item} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity activeOpacity={0.7} onPress={() => onEditRequest?.(item)}>
+                <SleepEntry sleep={item} />
+              </TouchableOpacity>
+            )}
             keyExtractor={(item, index) => `sleep-${index}`}
             style={[styles.sleepList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}

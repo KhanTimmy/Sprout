@@ -7,6 +7,7 @@ import FeedVisualization from './visualizations/FeedDataVisualization';
 import DiaperVisualization from './visualizations/DiaperDataVisualization';
 import ActivityVisualization from './visualizations/ActivityDataVisualization';
 import MilestoneVisualization from './visualizations/MilestoneDataVisualization';
+import WeightVisualization from './visualizations/WeightDataVisualization';
 
 interface UnifiedDataGraphProps {
   sleepData: SleepData[];
@@ -14,8 +15,11 @@ interface UnifiedDataGraphProps {
   diaperData: DiaperData[];
   activityData: ActivityData[];
   milestoneData: MilestoneData[];
+  weightData: WeightData[];
   rangeDays: number;
   activeDataType: TrendType;
+  onEditRequest?: (params: { type: TrendType; payload: any }) => void;
+  dataVersion?: number;
 }
 
 const UnifiedDataGraph = ({
@@ -24,8 +28,11 @@ const UnifiedDataGraph = ({
   diaperData: rawDiaperData,
   activityData: rawActivityData,
   milestoneData: rawMilestoneData,
+  weightData: rawWeightData,
   rangeDays,
   activeDataType,
+  onEditRequest,
+  dataVersion,
 }: UnifiedDataGraphProps) => {
   const renderVisualization = () => {
     switch (activeDataType) {

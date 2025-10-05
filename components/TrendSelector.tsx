@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 
-export type TrendType = 'sleep' | 'feed' | 'diaper' | 'activity' | 'milestone';
+export type TrendType = 'sleep' | 'feed' | 'diaper' | 'activity' | 'milestone' | 'weight';
 
 interface TrendSelectorProps {
   onSelect: (type: TrendType) => void;
@@ -15,7 +15,8 @@ const TREND_TYPES = [
   { key: 'feed' as const, icon: 'food-apple', label: 'Feed' },
   { key: 'diaper' as const, icon: 'baby-face-outline', label: 'Diaper' },
   { key: 'activity' as const, icon: 'run', label: 'Activity' },
-  { key: 'milestone' as const, icon: 'star', label: 'Milestone' }
+  { key: 'milestone' as const, icon: 'star', label: 'Milestone' },
+  { key: 'weight' as const, icon: 'scale-bathroom', label: 'Weight' }
 ];
 
 const TrendSelector: React.FC<TrendSelectorProps> = ({ onSelect, selected }) => {
@@ -61,16 +62,9 @@ const TrendSelector: React.FC<TrendSelectorProps> = ({ onSelect, selected }) => 
           >
             <MaterialCommunityIcons 
               name={type.icon as any}
-              size={24}
+              size={28}
               color={type.key === selected ? theme.tint : theme.secondaryText}
             />
-            <Text style={[
-              styles.trendLabel,
-              { color: theme.secondaryText },
-              type.key === selected && { ...styles.trendLabelSelected, color: theme.tint }
-            ]}>
-              {type.label}
-            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -118,15 +112,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
     zIndex: 1,
-  },
-  trendLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  trendLabelSelected: {
-    fontWeight: '600',
   },
   trendSlider: {
     position: 'absolute',

@@ -21,7 +21,8 @@ const TREND_TYPES = [
   { key: 'feed', icon: 'food-apple', label: 'Feed' },
   { key: 'diaper', icon: 'baby-face-outline', label: 'Diaper' },
   { key: 'activity', icon: 'run', label: 'Activity' },
-  { key: 'milestone', icon: 'star', label: 'Milestone' }
+  { key: 'milestone', icon: 'star', label: 'Milestone' },
+  { key: 'weight', icon: 'scale-bathroom', label: 'Weight' }
 ] as const;
 
 const InsightsTrendSelector: React.FC<{
@@ -102,6 +103,13 @@ export default function InsightsScreen() {
   const [diaperData, setDiaperData] = useState<DiaperData[]>([]);
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [milestoneData, setMilestoneData] = useState<MilestoneData[]>([]);
+  const [weightData, setWeightData] = useState<WeightData[]>([]);
+
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
+  const [lastReportPayload, setLastReportPayload] = useState<ReportPayload | null>(null);
+  const [reportSending, setReportSending] = useState(false);
+  const hasInsights = !!aiResponse;
+  const [includeInsights, setIncludeInsights] = useState(false);
 
   // Swipe navigation for tab switching
   const { panGesture, translateX } = useTabSwipeNavigation('insights');
@@ -146,12 +154,13 @@ export default function InsightsScreen() {
     try {
       setLoading(true);
       console.log('[Insights] Fetching all data types from ChildService...');
-      const [feeds, sleeps, diapers, activities, milestones] = await Promise.all([
+      const [feeds, sleeps, diapers, activities, milestones, weights] = await Promise.all([
         ChildService.getFeed(selectedChild.id),
         ChildService.getSleep(selectedChild.id),
         ChildService.getDiaper(selectedChild.id),
         ChildService.getActivity(selectedChild.id),
-        ChildService.getMilestone(selectedChild.id)
+        ChildService.getMilestone(selectedChild.id),
+        ChildService.getWeight(selectedChild.id)
       ]);
 
       console.log('[Insights] Data fetched successfully:');
@@ -160,12 +169,14 @@ export default function InsightsScreen() {
       console.log('...[Insights] Diapers:', diapers.length, 'entries');
       console.log('...[Insights] Activities:', activities.length, 'entries');
       console.log('...[Insights] Milestones:', milestones.length, 'entries');
+      console.log('...[Insights] Weights:', weights.length, 'entries');
 
       setFeedData(feeds);
       setSleepData(sleeps);
       setDiaperData(diapers);
       setActivityData(activities);
       setMilestoneData(milestones);
+      setWeightData(weights);
       
       console.log('[Insights] All data states updated, ready for AI analysis');
     } catch (error) {
@@ -231,6 +242,7 @@ export default function InsightsScreen() {
     }
     setLoading(true);
     setAiResponse(null);
+    setShowReportPrompt(false);
 
     console.log('[Insights] handleFetchInsights executing');
     console.log('...[Insights] Time range selected:', rangeDays, 'days');
@@ -279,6 +291,11 @@ export default function InsightsScreen() {
         console.log('...[Insights] Milestone data - Total:', milestoneData.length, 'Filtered:', filteredMilestone.length, 'entries');
         dataSummary.milestone = filteredMilestone;
       }
+      if (selectedTypes.includes('weight')) {
+        const filteredWeight = filterDataByTimeRange(weightData);
+        console.log('...[Insights] Weight data - Total:', weightData.length, 'Filtered:', filteredWeight.length, 'entries');
+        dataSummary.weight = filteredWeight;
+      }
 
       console.log('[Insights] Data summary prepared, sending to AI...');
       console.log('...[Insights] Final data summary structure:', Object.keys(dataSummary));
@@ -297,7 +314,7 @@ export default function InsightsScreen() {
           {
             role: 'system',
             content: `You are a pediatric child development expert AI. You will be given a structured JSON object containing a baby's caregiving history and developmental data.
-            The data may include sections on: feeding, sleep, diaper changes, physical activities, and milestones. Sometimes not all sections will be included, only what is selected by the caregiver.
+            The data may include sections on: feeding, sleep, diaper changes, physical activities, milestones, and weight. Sometimes not all sections will be included, only what is selected by the caregiver.
 
             CRITICAL RULES – DO NOT IGNORE THIS:
             Do not confirm understanding of the prompt before generating the response, just generate the response.
@@ -309,7 +326,7 @@ export default function InsightsScreen() {
             Convert timestamps to name of Month and Day (e.g., May 26th).
             Only generate insights for sections that BOTH:
             1. Contain data in the JSON, AND
-            2. Were explicitly selected by the caregiver (via the keys: "feed", "sleep", "diaper", "activity", "milestone").
+            2. Were explicitly selected by the caregiver (via the keys: "feed", "sleep", "diaper", "activity", "milestone", "weight").
 
             Use the following Markdown headers only if their associated section meets both criteria:
 
@@ -339,6 +356,10 @@ export default function InsightsScreen() {
             ## Milestone
             You must include this section ONLY if "milestone" has data
             Analyze developmental progress and upcoming age-appropriate goals.
+
+            ## Weight
+            You must include this section ONLY if "weight" has data
+            Review weight trends, growth patterns, and nutritional adequacy.
 
             ## Warnings or Concerns
             This is a required section. You must include this section.
@@ -420,6 +441,7 @@ export default function InsightsScreen() {
         throw error;
       }
       const result = await response.json();
+      console.log(result.choices[0]);
       const rawContent = result.choices?.[0]?.message?.content || 'No insights returned. Try again later.';
       const aiText = rawContent.replace(/<think>[\s\S]*?<\/think>/, '').trim();
       console.log('[Insights] AI response received successfully');
@@ -449,6 +471,92 @@ export default function InsightsScreen() {
     } finally {
       setLoading(false);
       setController(null);
+    }
+  };
+
+  const handleOpenReportPrompt = () => {
+    if (!selectedChild) {
+      Alert.alert('Select Child', 'Please select a child first.');
+      return;
+    }
+    if (selectedTypes.length === 0) {
+      Alert.alert('Select Data', 'Please select at least one data type.');
+      return;
+    }
+
+    const dataSummary: Record<string, any> = {
+      child: {
+        id: selectedChild.id,
+        first_name: selectedChild.first_name,
+        last_name: selectedChild.last_name,
+        type: selectedChild.type,
+        dob: selectedChild.dob,
+        sex: selectedChild.sex,
+      },
+      range_days: rangeDays,
+    };
+
+    if (selectedTypes.includes('feed')) {
+      dataSummary.feed = filterDataByTimeRange(feedData);
+    }
+    if (selectedTypes.includes('sleep')) {
+      dataSummary.sleep = filterSleepDataByTimeRange(sleepData);
+    }
+    if (selectedTypes.includes('diaper')) {
+      dataSummary.diaper = filterDataByTimeRange(diaperData);
+    }
+    if (selectedTypes.includes('activity')) {
+      dataSummary.activity = filterDataByTimeRange(activityData);
+    }
+    if (selectedTypes.includes('milestone')) {
+      dataSummary.milestone = filterDataByTimeRange(milestoneData);
+    }
+    if (selectedTypes.includes('weight')) {
+      dataSummary.weight = filterDataByTimeRange(weightData);
+    }
+
+    const payload: ReportPayload = {
+      child: {
+        ...dataSummary.child,
+        parentFirstName: '',
+        parentLastName: '',
+        parentEmail: getAuth().currentUser?.email || undefined,
+      },
+      rangeDays: dataSummary.range_days,
+      selectedTypes: selectedTypes as any,
+      data: {
+        feed: dataSummary.feed,
+        sleep: dataSummary.sleep,
+        diaper: dataSummary.diaper,
+        activity: dataSummary.activity,
+        milestone: dataSummary.milestone,
+        weight: dataSummary.weight,
+      },
+    };
+    setLastReportPayload(payload);
+    setShowReportPrompt(true);
+  };
+
+  const handleGenerateReport = async () => {
+    if (!lastReportPayload) {
+      setShowReportPrompt(false);
+      return;
+    }
+    try {
+      setReportSending(true);
+      const payload: ReportPayload = {
+        ...lastReportPayload,
+        insightsMarkdown: includeInsights && hasInsights ? (aiResponse || '').slice(0, 12000) : undefined,
+        modelName: Constants.expoConfig?.extra?.AI_MODEL as string | undefined,
+      };
+      await generateAndEmailReport(payload);
+    } catch (e) {
+      console.error('[Insights] Error generating/emailing report:', e);
+      Alert.alert('Report Error', 'Could not generate or send the report.');
+    } finally {
+      setReportSending(false);
+      setShowReportPrompt(false);
+      setIncludeInsights(false);
     }
   };
 
@@ -585,6 +693,11 @@ const styles = StyleSheet.create({
   controlsSection: {
     marginBottom: 8,
     gap: 12,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
   fetchButton: {
     flexDirection: 'row',

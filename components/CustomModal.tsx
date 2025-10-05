@@ -11,6 +11,7 @@ interface CustomModalProps {
   showCloseButton?: boolean;
   closeOnOutsideClick?: boolean;
   maxHeight?: DimensionValue;
+  minHeight?: number;
 }
 
 const CustomModal = ({
@@ -21,6 +22,7 @@ const CustomModal = ({
   showCloseButton = true,
   closeOnOutsideClick = false,
   maxHeight = '80%',
+  minHeight = 550,
 }: CustomModalProps) => {
   const { theme } = useTheme();
 
@@ -44,6 +46,7 @@ const CustomModal = ({
             { 
               backgroundColor: theme.secondaryBackground,
               maxHeight: maxHeight,
+              minHeight: minHeight,
             }
           ]}
         >

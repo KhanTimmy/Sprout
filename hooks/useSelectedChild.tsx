@@ -23,6 +23,10 @@ export interface ChildData {
   type: string;
   dob: string;
   sex: 'male' | 'female';
+  weight?: {
+    pounds: number;
+    ounces: number;
+  };
 }
 
 export function useSelectedChild() {

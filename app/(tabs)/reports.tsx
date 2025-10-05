@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
-import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+import { ChildService, ChildUpdateService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import UnifiedDataGraph from '@/components/UnifiedDataGraph';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import TrendSelector, { TrendType } from '@/components/TrendSelector';
@@ -30,8 +30,20 @@ export default function Reports() {
   const [diapers, setDiapers] = useState<DiaperData[]>([]);
   const [activities, setActivities] = useState<ActivityData[]>([]);
   const [milestones, setMilestones] = useState<MilestoneData[]>([]);
+  const [weights, setWeights] = useState<WeightData[]>([]);
 
   const [childSelectionModalVisible, setChildSelectionModalVisible] = useState(false);
+  const [editContext, setEditContext] = useState<{ type: TrendType; entry: any } | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
+  
+  // Modal visibility states
+  const [modalVisibility, setModalVisibility] = useState({
+    sleep: false,
+    feed: false,
+    diaper: false,
+    activity: false,
+    weight: false,
+  });
 
   // Swipe navigation for tab switching
   const { panGesture, translateX } = useTabSwipeNavigation('reports');
@@ -77,18 +89,20 @@ export default function Reports() {
         setDiapers([]);
         setActivities([]);
         setMilestones([]);
+        setWeights([]);
         return;
       }
 
       console.log('[Reports] fetchAllData executing for child:', selectedChild.first_name, selectedChild.last_name);
       try {
         console.log('[Reports] Fetching all data types from ChildService...');
-        const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData] = await Promise.all([
+        const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
           ChildService.getFeed(selectedChild.id),
           ChildService.getSleep(selectedChild.id),
           ChildService.getDiaper(selectedChild.id),
           ChildService.getActivity(selectedChild.id),
-          ChildService.getMilestone(selectedChild.id)
+          ChildService.getMilestone(selectedChild.id),
+          ChildService.getWeight(selectedChild.id)
         ]);
 
         console.log('[Reports] Data fetched successfully:');
@@ -97,12 +111,14 @@ export default function Reports() {
         console.log('...[Reports] Diapers:', diapersData.length, 'entries');
         console.log('...[Reports] Activities:', activitiesData.length, 'entries');
         console.log('...[Reports] Milestones:', milestonesData.length, 'entries');
+        console.log('...[Reports] Weights:', weightsData.length, 'entries');
 
         setFeedings(feedingsData);
         setSleeps(sleepsData);
         setDiapers(diapersData);
         setActivities(activitiesData);
         setMilestones(milestonesData);
+        setWeights(weightsData);
         
         console.log('[Reports] All data states updated, ready for visualization');
       } catch (error) {
@@ -171,6 +187,52 @@ export default function Reports() {
         selectedChild={selectedChild}
         onSelectChild={saveSelectedChild}
         onClearSelection={clearSelectedChild}
+      />
+
+      {/* Edit Modals */}
+      <SleepModal
+        visible={modalVisibility.sleep}
+        onClose={() => handleModalClose('sleep')}
+        onSave={(data) => handleSave('sleep', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'sleep' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'sleep' ? (docId) => handleDelete('sleep', docId) : undefined}
+      />
+
+      <FeedModal
+        visible={modalVisibility.feed}
+        onClose={() => handleModalClose('feed')}
+        onSave={(data) => handleSave('feed', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'feed' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'feed' ? (docId) => handleDelete('feed', docId) : undefined}
+      />
+
+      <DiaperModal
+        visible={modalVisibility.diaper}
+        onClose={() => handleModalClose('diaper')}
+        onSave={(data) => handleSave('diaper', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'diaper' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'diaper' ? (docId) => handleDelete('diaper', docId) : undefined}
+      />
+
+      <ActivityModal
+        visible={modalVisibility.activity}
+        onClose={() => handleModalClose('activity')}
+        onSave={(data) => handleSave('activity', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'activity' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'activity' ? (docId) => handleDelete('activity', docId) : undefined}
+      />
+
+      <WeightModal
+        visible={modalVisibility.weight}
+        onClose={() => handleModalClose('weight')}
+        onSave={(data) => handleSave('weight', data)}
+        childId={selectedChild?.id}
+        initialData={editContext?.type === 'weight' ? editContext.entry : undefined}
+        onDelete={editContext?.type === 'weight' ? (docId) => handleDelete('weight', docId) : undefined}
       />
     </SafeAreaView>
   );

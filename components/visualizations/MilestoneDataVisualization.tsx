@@ -226,8 +226,9 @@ const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
 
 export const filteredMilestoneData = (rawMilestoneData: MilestoneData[], rangeDays: number) => {
   const now = new Date();
-  const startDate = new Date(`${new Date().toISOString().split('T')[0]}T12:00:00`);
-  startDate.setDate(startDate.getDate() - rangeDays + 1);
+  const startDate = new Date();
+  startDate.setDate(now.getDate() - rangeDays + 1);
+  startDate.setHours(0, 0, 0, 0);
 
   return rawMilestoneData
     .filter(milestone => {
@@ -249,13 +250,13 @@ export const processMilestoneData = (rawMilestoneData: MilestoneData[], rangeDay
   });
 
   return allDates.map(dateStr => {
-    const currentDate = new Date(dateStr);
-    const nextDate = new Date(currentDate);
-    nextDate.setDate(currentDate.getDate() + 1);
+    const currentDate = new Date(dateStr + 'T00:00:00');
+    const nextDate = new Date(dateStr + 'T23:59:59.999');
 
     const daysMilestones = rawMilestoneData.filter(milestone => {
       const milestoneDate = new Date(milestone.dateTime);
-      return milestoneDate >= currentDate && milestoneDate < nextDate;
+      const isInRange = milestoneDate >= currentDate && milestoneDate <= nextDate;
+      return isInRange;
     }).sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
 
     const milestoneSessions = daysMilestones.map(milestone => ({

@@ -9,7 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 
-import { useColorScheme } from 'react-native';
+import { useColorScheme, LogBox } from 'react-native';
 
 export {
   ErrorBoundary,
@@ -20,6 +20,11 @@ export const unstable_settings = {
 };
 
 SplashScreen.preventAutoHideAsync();
+
+// Suppress RN warning about nested VirtualizedLists inside ScrollViews
+LogBox.ignoreLogs([
+  'VirtualizedLists should never be nested',
+]);
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({

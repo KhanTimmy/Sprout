@@ -80,7 +80,7 @@ const ThemedDropdown: React.FC<ThemedDropdownProps> = ({
           size={20}
         />
       )}
-      activeColor={theme.slider}
+      activeColor={theme.selection}
       itemContainerStyle={{
         backgroundColor: theme.secondaryBackground,
       }}
