@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, useColorScheme, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
 import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer } from 'victory-native';
 import { SleepData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const MAX_SLEEP_HOURS = 16;
 const screenWidth = Dimensions.get('window').width;
@@ -87,8 +87,7 @@ export const formatDate = (date: Date) => {
 export const SleepEntry = ({ sleep }: { sleep: SleepData }) => {
   const duration = (sleep.end.getTime() - sleep.start.getTime()) / (1000 * 60 * 60); // hours
   const backgroundColor = getQualityColor(sleep.quality);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <View style={[
@@ -149,8 +148,7 @@ const SleepSessionsList: React.FC<SleepSessionsListProps> = ({ sessions }) => (
 const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const lastGestureState = useRef({ dx: 0, dy: 0 });
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -310,8 +308,7 @@ export const processSleepData = (rawSleepData: SleepData[], rangeDays: number) =
 };
 
 const GraphSkeleton = () => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   return (
     <View style={[styles.skeletonContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -334,8 +331,7 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processedData, setProcessedData] = useState<ReturnType<typeof processSleepData>>([]);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     console.log('[SleepVisualization] Processing sleep data...');
@@ -561,7 +557,7 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Sleep Data</Text>
       {renderSleepGraph()}
       
-      <View>
+      <View style={styles.listContainer}>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Sleep Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -579,6 +575,7 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
             keyExtractor={(item, index) => `sleep-${index}`}
             style={[styles.sleepList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -609,8 +606,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
+  listContainer: {
+    height: 300, // Fixed height for better scrolling
+  },
   sleepList: {
-    flex: 1,
+    height: 250, // Fixed height for the FlatList
   },
   sleepEntry: {
     padding: 12,

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, useColorScheme, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { ActivityData } from '@/services/ChildService';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import ThemedDropdown from '@/components/ThemedDropdown';
 
 interface ActivityModalProps {
@@ -24,8 +24,7 @@ const ActivityModal = ({
   initialData,
   onDelete,
 }: ActivityModalProps) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   const [dateTime, setDateTime] = useState(new Date());
   const [type, setType] = useState('');
@@ -160,22 +159,15 @@ const ActivityModal = ({
 
 
 
-        <View style={styles.buttonContainer}>
-          {isEditMode && onDelete && (
-            <CustomButton
-              title="Delete"
-              onPress={handleDelete}
-              variant="danger"
-              style={styles.button}
-            />
-          )}
-          <CustomButton
-            title={isEditMode ? "Update" : "Save"}
-            onPress={handleSave}
-            variant="success"
-            style={styles.button}
-          />
-        </View>
+      </View>
+      
+      <View style={styles.buttonContainer}>
+        <CustomButton
+          title="Save"
+          onPress={handleSave}
+          variant="success"
+          style={styles.button}
+        />
       </View>
     </CustomModal>
   );

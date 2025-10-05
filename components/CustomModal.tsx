@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, useColorScheme, DimensionValue } from 'react-native';
-import Colors from "@/constants/Colors";
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, DimensionValue } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface CustomModalProps {
@@ -24,8 +24,7 @@ const CustomModal = ({
   maxHeight = '80%',
   minHeight = 550,
 }: CustomModalProps) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <Modal
@@ -65,14 +64,16 @@ const CustomModal = ({
             </TouchableOpacity>
           </View>
          
-          <ScrollView 
-            style={styles.contentContainer}
-            contentContainerStyle={{ flexGrow: 1 }}
-            showsVerticalScrollIndicator={true}
-            bounces={false}
-          >
-            {children}
-          </ScrollView>
+          <View style={styles.contentContainer}>
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={true}
+              bounces={false}
+            >
+              {children}
+            </ScrollView>
+          </View>
          
           {showCloseButton && (
             <TouchableOpacity
@@ -132,6 +133,15 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     width: '100%',
+    marginBottom: 15,
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 10,
   },
   closeButton: {
     borderRadius: 12,

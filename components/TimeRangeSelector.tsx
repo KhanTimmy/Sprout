@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { useColorScheme } from 'react-native';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface TimeRangeSelectorProps {
   selectedRange: number;
@@ -20,8 +19,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selectedRange, on
   const [sliderWidth, setSliderWidth] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const currentColors = useColorScheme();
-  const theme = Colors[currentColors || 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (sliderWidth > 0) {
@@ -83,7 +81,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selectedRange, on
             height: '100%',
             backgroundColor: theme.slider,
             borderColor: theme.tint,
-            borderRadius: 16,
+            borderRadius: 20,
             borderWidth: 1,
           }}
         />
@@ -98,6 +96,8 @@ const styles = StyleSheet.create({
     marginVertical: 0,
     marginHorizontal: 0,
     position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   track: {
     flexDirection: 'row',

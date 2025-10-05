@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, useColorScheme, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
 import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer } from 'victory-native';
 import { DiaperData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const MAX_DIAPER_COUNT = 12;
 const screenWidth = Dimensions.get('window').width;
@@ -92,8 +92,7 @@ export const formatDate = (date: Date) => {
 
 export const DiaperEntry = ({ diaper }: { diaper: DiaperData }) => {
   const backgroundColor = getTypeColor(diaper.type);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <View style={[
@@ -169,8 +168,7 @@ const DiaperSessionsList: React.FC<DiaperSessionsListProps> = ({ sessions }) => 
 const BarPopout: React.FC<BarPopoutProps> = ({ data, onClose, position }) => {
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const lastGestureState = useRef({ dx: 0, dy: 0 });
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const getPooColor = (color?: string) => {
     switch (color?.toLowerCase()) {
@@ -404,8 +402,7 @@ export const processDiaperData = (rawDiaperData: DiaperData[], rangeDays: number
 };
 
 const GraphSkeleton = () => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   return (
     <View style={[styles.skeletonContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -428,8 +425,7 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processedData, setProcessedData] = useState<ReturnType<typeof processDiaperData>>([]);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     console.log('[DiaperVisualization] Processing diaper data...');
@@ -655,7 +651,7 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Diaper Data</Text>
       {renderDiaperGraph()}
 
-      <View>
+      <View style={styles.listContainer}>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Diaper Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -673,6 +669,7 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
             keyExtractor={(item, index) => `diaper-${index}`}
             style={[styles.diaperList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -703,8 +700,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
+  listContainer: {
+    height: 300, // Fixed height for better scrolling
+  },
   diaperList: {
-    flex: 1,
+    height: 250, // Fixed height for the FlatList
   },
   diaperEntry: {
     padding: 12,

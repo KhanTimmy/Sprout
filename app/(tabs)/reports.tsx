@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, Text, View, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColorScheme } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text, View, Alert, ScrollView } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildUpdateService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import UnifiedDataGraph from '@/components/UnifiedDataGraph';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import TrendSelector, { TrendType } from '@/components/TrendSelector';
 import ChildSelectionModal from '../modals/ChildSelectionModal';
-import SleepModal from '../modals/SleepModal';
-import FeedModal from '../modals/FeedModal';
-import DiaperModal from '../modals/DiaperModal';
-import ActivityModal from '../modals/ActivityModal';
-import WeightModal from '../modals/WeightModal';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
+import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+import { View as SafeAreaView } from 'react-native';
 
 
 export default function Reports() {
+  const { theme } = useTheme();
+  
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const { selectedChild, saveSelectedChild, clearSelectedChild, loading } = useSelectedChild();
   const [rangeDays, setRangeDays] = useState(7);
@@ -43,6 +43,15 @@ export default function Reports() {
     diaper: false,
     activity: false,
     weight: false,
+  });
+
+  // Swipe navigation for tab switching
+  const { panGesture, translateX } = useTabSwipeNavigation('reports');
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
   });
 
   useEffect(() => {
@@ -121,195 +130,55 @@ export default function Reports() {
     fetchAllData();
   }, [selectedChild]);
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
-
-  const handleEditRequest = (args: { type: TrendType; payload: any }) => {
-    setEditContext({ type: args.type, entry: args.payload });
-    setModalVisibility(prev => ({ ...prev, [args.type]: true }));
-  };
-
-  const handleModalClose = (type: TrendType) => {
-    setModalVisibility(prev => ({ ...prev, [type]: false }));
-    setEditContext(null);
-  };
-
-  const handleSave = async (type: TrendType, data: any) => {
-    if (!selectedChild) return;
-    
-    try {
-      if (editContext?.entry?.docId) {
-        // Update existing entry
-        const { docId, ...updateData } = data;
-        switch (type) {
-          case 'sleep':
-            await ChildUpdateService.updateSleep(selectedChild.id, editContext.entry.docId, updateData);
-            break;
-          case 'feed':
-            await ChildUpdateService.updateFeed(selectedChild.id, editContext.entry.docId, updateData);
-            break;
-          case 'diaper':
-            await ChildUpdateService.updateDiaper(selectedChild.id, editContext.entry.docId, updateData);
-            break;
-          case 'activity':
-            await ChildUpdateService.updateActivity(selectedChild.id, editContext.entry.docId, updateData);
-            break;
-          case 'weight':
-            await ChildUpdateService.updateWeight(selectedChild.id, editContext.entry.docId, updateData);
-            break;
-        }
-      } else {
-        // Create new entry
-        switch (type) {
-          case 'sleep':
-            await ChildService.addSleep(data);
-            break;
-          case 'feed':
-            await ChildService.addFeed(data);
-            break;
-          case 'diaper':
-            await ChildService.addDiaper(data);
-            break;
-          case 'activity':
-            await ChildService.addActivity(data);
-            break;
-          case 'weight':
-            await ChildService.addWeight(data);
-            break;
-        }
-      }
-      
-      // Refresh data
-      const fetchAllData = async () => {
-        if (!selectedChild) return;
-        
-        try {
-          const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
-            ChildService.getFeed(selectedChild.id),
-            ChildService.getSleep(selectedChild.id),
-            ChildService.getDiaper(selectedChild.id),
-            ChildService.getActivity(selectedChild.id),
-            ChildService.getMilestone(selectedChild.id),
-            ChildService.getWeight(selectedChild.id)
-          ]);
-
-          setFeedings(feedingsData);
-          setSleeps(sleepsData);
-          setDiapers(diapersData);
-          setActivities(activitiesData);
-          setMilestones(milestonesData);
-          setWeights(weightsData);
-        } catch (error) {
-          console.error('[Reports] Error refreshing data:', error);
-        }
-      };
-      
-      await fetchAllData();
-      setDataVersion(prev => prev + 1); // Increment to trigger popup refresh
-      handleModalClose(type);
-    } catch (error) {
-      console.error(`Error saving ${type} data:`, error);
-      Alert.alert('Error', `Could not save ${type} data`);
-    }
-  };
-
-  const handleDelete = async (type: TrendType, docId: string) => {
-    if (!selectedChild) return;
-    
-    try {
-      switch (type) {
-        case 'sleep':
-          await ChildUpdateService.deleteSleep(selectedChild.id, docId);
-          break;
-        case 'feed':
-          await ChildUpdateService.deleteFeed(selectedChild.id, docId);
-          break;
-        case 'diaper':
-          await ChildUpdateService.deleteDiaper(selectedChild.id, docId);
-          break;
-        case 'activity':
-          await ChildUpdateService.deleteActivity(selectedChild.id, docId);
-          break;
-        case 'weight':
-          await ChildUpdateService.deleteWeight(selectedChild.id, docId);
-          break;
-      }
-      
-      // Refresh data
-      const fetchAllData = async () => {
-        if (!selectedChild) return;
-        
-        try {
-          const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
-            ChildService.getFeed(selectedChild.id),
-            ChildService.getSleep(selectedChild.id),
-            ChildService.getDiaper(selectedChild.id),
-            ChildService.getActivity(selectedChild.id),
-            ChildService.getMilestone(selectedChild.id),
-            ChildService.getWeight(selectedChild.id)
-          ]);
-
-          setFeedings(feedingsData);
-          setSleeps(sleepsData);
-          setDiapers(diapersData);
-          setActivities(activitiesData);
-          setMilestones(milestonesData);
-          setWeights(weightsData);
-        } catch (error) {
-          console.error('[Reports] Error refreshing data:', error);
-        }
-      };
-      
-      await fetchAllData();
-      setDataVersion(prev => prev + 1); // Increment to trigger popup refresh
-      handleModalClose(type);
-    } catch (error) {
-      console.error(`Error deleting ${type} data:`, error);
-      Alert.alert('Error', `Could not delete ${type} data`);
-    }
-  };
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <CornerIndicators
-        selectedChild={selectedChild}
-        childrenList={childrenList}
-        onSelectChild={saveSelectedChild}
-        onNavigateToAddChild={handleNavigateToAddChild}
-      />
-      <View style={styles.contentContainer}>
-        <View style={styles.headerSection}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <AnimatedCloudBackground>
+        <CornerIndicators
+          selectedChild={selectedChild}
+          childrenList={childrenList}
+          onSelectChild={saveSelectedChild}
+          onNavigateToAddChild={handleNavigateToAddChild}
+        />
+        <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.contentContainer, animatedStyle]}>
+          <ScrollView 
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={true}
+            bounces={true}
+          >
+            <View style={styles.headerSection}>
+              <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
+            </View>
 
-        <View style={styles.controlsSection}>
-          <TrendSelector
-            selected={selectedTrend}
-            onSelect={setSelectedTrend}
-          />
-          <TimeRangeSelector
-            selectedRange={rangeDays}
-            onRangeChange={setRangeDays}
-          />
-        </View>
+            <View style={styles.controlsSection}>
+              <TrendSelector
+                selected={selectedTrend}
+                onSelect={setSelectedTrend}
+              />
+              <TimeRangeSelector
+                selectedRange={rangeDays}
+                onRangeChange={setRangeDays}
+              />
+            </View>
 
-        <View style={styles.graphSection}>
-          <View style={[styles.graphContainer, { backgroundColor: theme.secondaryBackground }]}>
-            <UnifiedDataGraph
-              sleepData={sleeps}
-              feedData={feedings}
-              diaperData={diapers}
-              activityData={activities}
-              milestoneData={milestones}
-              weightData={weights}
-              rangeDays={rangeDays}
-              activeDataType={selectedTrend}
-              onEditRequest={handleEditRequest}
-              dataVersion={dataVersion}
-            />
-          </View>
-        </View>
-      </View>
+            <View style={styles.graphSection}>
+              <View style={[styles.graphContainer, { backgroundColor: theme.cardBackground }]}>
+                <UnifiedDataGraph
+                  sleepData={sleeps}
+                  feedData={feedings}
+                  diaperData={diapers}
+                  activityData={activities}
+                  milestoneData={milestones}
+                  rangeDays={rangeDays}
+                  activeDataType={selectedTrend}
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </Animated.View>
+        </GestureDetector>
+      </AnimatedCloudBackground>
 
       <ChildSelectionModal
         visible={childSelectionModalVisible}
@@ -372,14 +241,24 @@ export default function Reports() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   contentContainer: {
     flex: 1,
-    padding: 20,
-    paddingTop: 60,
+    padding: 16,
+    paddingTop: 80, // Account for corner indicator buttons
+    paddingBottom: 90, // Account for overlapping tab bar
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20, // Extra padding at bottom for better scrolling
   },
   headerSection: {
     alignItems: 'center',
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 28,
@@ -396,10 +275,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   graphSection: {
-    flex: 1,
+    minHeight: 400, // Minimum height for the graph section
   },
   graphContainer: {
-    flex: 1,
+    minHeight: 400, // Minimum height for the graph container
     width: '100%',
     borderRadius: 12,
     padding: 16,

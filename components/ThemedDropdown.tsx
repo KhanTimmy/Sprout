@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ThemedDropdownProps {
   data: Array<{ label: string; value: string | number }>;
@@ -25,8 +25,7 @@ const ThemedDropdown: React.FC<ThemedDropdownProps> = ({
   maxHeight = 300,
   style,
 }) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   const [isFocus, setIsFocus] = useState(false);
 
   return (

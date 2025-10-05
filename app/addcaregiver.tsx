@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, StyleSheet, View, Alert, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Text, TextInput, StyleSheet, View, Alert, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View as SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
-import Colors from "@/constants/Colors";
-import { useColorScheme } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AddCaregiver() {
@@ -14,8 +14,7 @@ export default function AddCaregiver() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const handleAddCaregiver = async () => {
     setError('');

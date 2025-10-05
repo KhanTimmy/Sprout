@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Alert, useColorScheme, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
 
 import ChildSelectionModal from '../modals/ChildSelectionModal';
 import SleepModal from '../modals/SleepModal';
@@ -13,22 +15,23 @@ import FeedModal from '../modals/FeedModal';
 import DiaperModal from '../modals/DiaperModal';
 import ActivityModal from '../modals/ActivityModal';
 import MilestoneModal from '../modals/MilestoneModal';
-import WeightModal from '../modals/WeightModal';
-import Colors from "@/constants/Colors";
 import CornerIndicators from '@/components/CornerIndicators';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+import AnimatedActionButton from '@/components/AnimatedActionButton';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { View as SafeAreaView } from 'react-native';
 
 const ACTION_TYPES = [
-  { key: 'sleep', icon: 'power-sleep', label: 'Sleep', modalKey: 'sleep' },
-  { key: 'feed', icon: 'food-apple', label: 'Feed', modalKey: 'feed' },
-  { key: 'diaper', icon: 'baby-face-outline', label: 'Diaper', modalKey: 'diaper' },
-  { key: 'activity', icon: 'run', label: 'Activity', modalKey: 'activity' },
-  { key: 'milestone', icon: 'star', label: 'Milestone', modalKey: 'milestone' },
-  { key: 'weight', icon: 'scale-bathroom', label: 'Weight', modalKey: 'weight' }
+  { key: 'sleep', icon: 'power-sleep', label: 'Sleep', modalKey: 'sleep', colorKey: 'sleepColor' },
+  { key: 'feed', icon: 'food-apple', label: 'Feed', modalKey: 'feed', colorKey: 'feedColor' },
+  { key: 'diaper', icon: 'baby-face-outline', label: 'Diaper', modalKey: 'diaper', colorKey: 'diaperColor' },
+  { key: 'activity', icon: 'run', label: 'Activity', modalKey: 'activity', colorKey: 'activityColor' },
+  { key: 'milestone', icon: 'star', label: 'Milestone', modalKey: 'milestone', colorKey: 'milestoneColor' }
 ] as const;
 
 export default function Home() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [latestWeight, setLatestWeight] = useState<WeightData | null>(null);
@@ -42,6 +45,15 @@ export default function Home() {
     activity: false,
     milestone: false,
     weight: false,
+  });
+
+  // Swipe navigation for tab switching
+  const { panGesture, translateX } = useTabSwipeNavigation('home');
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
   });
 
   useEffect(() => {
@@ -150,69 +162,61 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <CornerIndicators
-        selectedChild={selectedChild}
-        childrenList={childrenList}
-        onSelectChild={saveSelectedChild}
-        onNavigateToAddChild={handleNavigateToAddChild}
-      />
+    <SafeAreaView style={styles.container}>
+      <AnimatedCloudBackground>
+        <CornerIndicators
+          selectedChild={selectedChild}
+          childrenList={childrenList}
+          onSelectChild={saveSelectedChild}
+          onNavigateToAddChild={handleNavigateToAddChild}
+        />
 
-      <View style={styles.contentContainer}>
-        <View style={styles.headerSection}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
-
-        </View>
-
-        {selectedChild ? (
-          <View style={[styles.childInfoCard, { backgroundColor: theme.secondaryBackground, borderColor: theme.tint }]}>
-            <View style={styles.childInfoLayout}>
-              <View style={styles.childDetails}>
-                <Text style={[styles.childName, { color: theme.text }]}>
-                  {selectedChild.first_name} {selectedChild.last_name}
-                </Text>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Age:</Text>
-                  <Text style={[styles.detailValue, { color: theme.text }]}>
-                    {calculateAge(selectedChild.dob)}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Born:</Text>
-                  <Text style={[styles.detailValue, { color: theme.text }]}>
-                    {formatDate(selectedChild.dob)}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Sex:</Text>
-                  <Text style={[styles.detailValue, { color: theme.text }]}>
-                    {selectedChild.sex === 'male' ? 'Male' : 'Female'}
-                  </Text>
-                </View>
-                {latestWeight && (
-                  <View style={styles.detailRow}>
-                    <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Weight:</Text>
-                    <Text style={[styles.detailValue, { color: theme.text }]}>
-                      {latestWeight.pounds} lbs {latestWeight.ounces} oz
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={[styles.childImageContainer, { backgroundColor: theme.background }]}>
-                <MaterialCommunityIcons
-                  name="account-child"
-                  size={48}
-                  color={theme.tint}
-                />
-              </View>
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[styles.contentContainer, animatedStyle]}>
+            <View style={styles.headerSection}>
             </View>
-          </View>
-        ) : (
-          <View style={[styles.noChildCard, { backgroundColor: theme.secondaryBackground }]}>
+
+            {selectedChild ? (
+              <View style={[styles.childInfoCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+                <View style={styles.childInfoLayout}>
+                  <View style={styles.childDetails}>
+                    <Text style={[styles.childName, { color: theme.text }]}>
+                      {selectedChild.first_name} {selectedChild.last_name}
+                    </Text>
+                    <View style={styles.detailRow}>
+                      <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Age:</Text>
+                      <Text style={[styles.detailValue, { color: theme.text }]}>
+                        {calculateAge(selectedChild.dob)}
+                      </Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Born:</Text>
+                      <Text style={[styles.detailValue, { color: theme.text }]}>
+                        {formatDate(selectedChild.dob)}
+                      </Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Sex:</Text>
+                      <Text style={[styles.detailValue, { color: theme.text }]}>
+                        {selectedChild.sex === 'male' ? 'Male' : 'Female'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.childImageContainer, { backgroundColor: theme.primary }]}>
+                    <MaterialCommunityIcons
+                      name="account-child"
+                      size={48}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                </View>
+              </View>
+            ) : (
+          <View style={[styles.noChildCard, { backgroundColor: theme.cardBackground }]}>
             <MaterialCommunityIcons
               name="account-child-outline"
-              size={32}
+              size={48}
               color={theme.secondaryText}
             />
             <Text style={[styles.noChildText, { color: theme.secondaryText }]}>
@@ -222,33 +226,20 @@ export default function Home() {
         )}
 
         <View style={styles.actionsContainer}>
-          {ACTION_TYPES.map((action) => (
-            <TouchableOpacity
-              key={action.key}
-              style={[
-                styles.actionButton,
-                { backgroundColor: theme.secondaryBackground },
-                !selectedChild && styles.actionButtonDisabled
-              ]}
-              onPress={() => handleActionPress(action.modalKey)}
-              disabled={!selectedChild}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.actionIconContainer, { backgroundColor: selectedChild ? theme.tint : theme.background }]}>
-                <MaterialCommunityIcons
-                  name={action.icon as any}
-                  size={24}
-                  color={selectedChild ? theme.background : theme.secondaryText}
-                />
-              </View>
-              <Text style={[
-                styles.actionLabel,
-                { color: selectedChild ? theme.text : theme.secondaryText }
-              ]}>
-                {action.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {ACTION_TYPES.map((action, index) => {
+            const actionColor = selectedChild ? theme[action.colorKey as keyof typeof theme] : theme.background;
+            return (
+              <AnimatedActionButton
+                key={action.key}
+                icon={action.icon}
+                label={action.label}
+                color={actionColor}
+                onPress={() => handleActionPress(action.modalKey)}
+                disabled={!selectedChild}
+                delay={index * 100} // Staggered animation
+              />
+            );
+          })}
         </View>
 
         {!selectedChild && (
@@ -258,7 +249,9 @@ export default function Home() {
             </Text>
           </View>
         )}
-      </View>
+          </Animated.View>
+        </GestureDetector>
+      </AnimatedCloudBackground>
 
       <ChildSelectionModal
         visible={modalVisibility.childSelection}
@@ -318,47 +311,48 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   contentContainer: {
     flex: 1,
-    padding: 20,
-    paddingTop: 60,
+    padding: 16,
+    paddingTop: 80, // Account for corner indicator buttons
+    paddingBottom: 90, // Account for overlapping tab bar
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 4,
-    letterSpacing: 0.5,
+    marginBottom: 20,
+    marginTop: 8,
+    paddingVertical: 10,
   },
   headerSubtitle: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
+    marginTop: 8,
+    letterSpacing: 0.3,
   },
   childInfoCard: {
     width: '100%',
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-    borderWidth: 2,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   noChildCard: {
     width: '100%',
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
-    marginBottom: 24,
+    marginBottom: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -380,8 +374,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   childName: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '600',
     marginBottom: 12,
   },
   detailRow: {
@@ -398,51 +392,29 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   childImageContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   actionsContainer: {
     width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  actionButton: {
-    width: '30%',
-    aspectRatio: 1,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  actionButtonDisabled: {
-    opacity: 0.5,
-  },
-  actionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  actionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
+    marginBottom: 20,
+    gap: 12,
   },
   infoContainer: {
     alignItems: 'center',

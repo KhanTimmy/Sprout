@@ -8,8 +8,9 @@ import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import ChildSelectionModal from './modals/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
-import { useColorScheme } from 'react-native';
-import Colors from "@/constants/Colors";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/contexts/ThemeContext';
+import CornerIndicators from '@/components/CornerIndicators';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AccessScreen() {
@@ -21,8 +22,7 @@ export default function AccessScreen() {
   });  
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     const unsubscribeAuth = getAuth().onAuthStateChanged((user) => {
@@ -143,13 +143,13 @@ export default function AccessScreen() {
 
               {loading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={theme.tint} />
+                  <ActivityIndicator size="large" color={theme.primary} />
                   <Text style={[styles.loadingText, { color: theme.secondaryText }]}>Loading...</Text>
                 </View>
               ) : selectedChild ? (
-                <View style={[styles.childInfoContainer, { backgroundColor: theme.secondaryBackground, borderColor: theme.tint }]}>
+                <View style={[styles.childInfoContainer, { backgroundColor: theme.cardBackground, borderColor: theme.primary }]}>
                   <View style={styles.childInfoHeader}>
-                    <Ionicons name="person" size={24} color={theme.tint} />
+                    <Ionicons name="person" size={24} color={theme.primary} />
                     <View style={styles.childInfoText}>
                       <Text style={[styles.childName, { color: theme.text }]}>
                         {selectedChild.first_name} {selectedChild.last_name}
@@ -161,7 +161,7 @@ export default function AccessScreen() {
                   </View>
                 </View>
               ) : (
-                <View style={[styles.noChildContainer, { backgroundColor: theme.secondaryBackground }]}>
+                <View style={[styles.noChildContainer, { backgroundColor: theme.cardBackground }]}>
                   <Ionicons name="information-circle" size={24} color={theme.secondaryText} />
                   <Text style={[styles.noChildText, { color: theme.text }]}>
                     No child selected. Please select a child first.

@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export type TrendType = 'sleep' | 'feed' | 'diaper' | 'activity' | 'milestone' | 'weight';
 
@@ -24,8 +23,7 @@ const TrendSelector: React.FC<TrendSelectorProps> = ({ onSelect, selected }) => 
   const [sliderWidth, setSliderWidth] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (sliderWidth > 0) {
@@ -86,7 +84,7 @@ const TrendSelector: React.FC<TrendSelectorProps> = ({ onSelect, selected }) => 
             height: '100%', 
             backgroundColor: theme.slider,
             borderColor: theme.tint,
-            borderRadius: 16,
+            borderRadius: 20,
             borderWidth: 1,
           }}
         />
@@ -101,6 +99,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginHorizontal: 0,
     position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   trendTrack: {
     flexDirection: 'row',

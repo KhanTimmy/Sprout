@@ -1,6 +1,7 @@
-import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView,
-  Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, useColorScheme
- } from "react-native";
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView,
+  Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator
+} from "react-native";
+import { View as SafeAreaView } from 'react-native';
 import React, { useState } from "react";
 import { auth } from "@/firebase.config";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -8,11 +9,12 @@ import { router } from "expo-router";
 import { Image } from 'expo-image';
 import CustomButton from "@/components/CustomButton";
 import { Ionicons } from '@expo/vector-icons';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 const index = () => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,20 +44,24 @@ const index = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, width: '100%' }}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}>
+      <AnimatedCloudBackground>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, width: '100%' }}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.inner}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContainer} 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.inner}>
               <View style={styles.headerSection}>
-                <Text style={[styles.title, { color: theme.text }]}>SPROUT</Text>
+                <Text style={[styles.title, { color: theme.text }]}>Swaddle</Text>
+                <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
+                  Your baby's first digital companion
+                </Text>
                 <Image
                   style={styles.logo}
                   source={require('../assets/images/logo.png')}
@@ -77,8 +83,8 @@ const index = () => {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: theme.secondaryBackground,
-                        borderColor: theme.tint,
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.primary,
                         color: theme.text,
                       },
                     ]}
@@ -99,8 +105,8 @@ const index = () => {
                     style={[
                       styles.passwordContainer,
                       { 
-                        borderColor: theme.tint, 
-                        backgroundColor: theme.secondaryBackground 
+                        borderColor: theme.primary, 
+                        backgroundColor: theme.cardBackground 
                       },
                     ]}
                   >
@@ -121,7 +127,7 @@ const index = () => {
                       <Ionicons 
                         name={secureText ? "eye-off" : "eye"} 
                         size={24} 
-                        color={theme.tint} 
+                        color={theme.primary} 
                       />
                     </TouchableOpacity>
                   </View>
@@ -131,23 +137,20 @@ const index = () => {
                   onPress={() => router.push('/forgotpassword')}
                   style={styles.forgotPasswordContainer}
                 >
-                  <Text style={[styles.forgotPassword, { color: theme.tint }]}>
+                  <Text style={[styles.forgotPassword, { color: theme.primary }]}>
                     Forgot Password?
                   </Text>
                 </TouchableOpacity>
 
                 {loading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={theme.tint} />
-                    <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
-                      Signing in...
-                    </Text>
+                    <LoadingAnimation text="Signing in..." size="large" />
                   </View>
                 ) : (
                   <CustomButton
                     title="Sign In"
                     onPress={logIn}
-                    variant={isInputValid ? "primary" : "secondary"}
+                    variant={isInputValid ? "gradient" : "secondary"}
                     style={!isInputValid ? styles.disabledButton : undefined}
                     disabled={!isInputValid}
                   />
@@ -156,14 +159,15 @@ const index = () => {
                 <CustomButton
                   title="Create Account"
                   onPress={() => router.push('/register')}
-                  variant="secondary"
+                  variant="primary"
                   style={styles.registerButton}
                 />
               </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 };
@@ -184,14 +188,18 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
+    marginTop: 20,
   },
   title: {
     fontSize: 42,
-    fontWeight: '800',
+    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 8,
     letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,
@@ -200,10 +208,18 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 200,
     alignSelf: 'center',
-    borderRadius: 60,
+    borderRadius: 100,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
   },
   formSection: {
     width: '100%',
@@ -235,21 +251,37 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: 56,
+    height: 60,
     borderWidth: 2,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 20,
+    paddingHorizontal: 20,
     fontSize: 16,
     fontWeight: '500',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   passwordContainer: {
     flexDirection: 'row',
     width: '100%',
-    height: 56,
+    height: 60,
     alignItems: 'center',
     borderWidth: 2,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   passwordInput: {
     flex: 1,

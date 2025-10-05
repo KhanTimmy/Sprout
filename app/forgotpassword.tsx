@@ -1,11 +1,11 @@
-import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from "react-native"
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from "react-native"
+import { View as SafeAreaView } from 'react-native';
 import React, { useState } from "react"
 import { auth } from "@/firebase.config"
 import { sendPasswordResetEmail } from "firebase/auth"
 import { router } from "expo-router"
 import CustomButton from "@/components/CustomButton";
-import { useColorScheme } from 'react-native';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ForgotPassword() {
@@ -37,8 +37,7 @@ export default function ForgotPassword() {
     }
   }
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}>
@@ -83,8 +82,8 @@ export default function ForgotPassword() {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: theme.secondaryBackground,
-                        borderColor: theme.tint,
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.primary,
                         color: theme.text,
                       }
                     ]}
@@ -102,7 +101,7 @@ export default function ForgotPassword() {
 
                 {loading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={theme.tint} />
+                    <ActivityIndicator size="large" color={theme.primary} />
                     <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
                       Sending reset email...
                     </Text>
