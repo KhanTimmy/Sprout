@@ -1,8 +1,13 @@
 import React from 'react';
+<<<<<<< Updated upstream
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { hapticFeedback } from '@/utils/hapticFeedback';
+=======
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+>>>>>>> Stashed changes
 
 interface ButtonProps {
   title: string;
@@ -22,7 +27,10 @@ export default function CustomButton({
   disabled = false 
 }: ButtonProps) {
   const { theme } = useTheme();
+<<<<<<< Updated upstream
   const scaleValue = React.useRef(new Animated.Value(1)).current;
+=======
+>>>>>>> Stashed changes
 
   const backgroundColors: Record<string, string> = {
     primary: theme.primary,

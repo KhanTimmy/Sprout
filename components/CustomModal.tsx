@@ -50,10 +50,10 @@ const CustomModal = ({
             }
           ]}
         >
-          <View style={styles.modalHeader}>
+          <View style={[styles.modalHeader, { borderBottomColor: theme.cardBorder }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{title}</Text>
             <TouchableOpacity
-              style={styles.closeIconButton}
+              style={[styles.closeIconButton, { backgroundColor: theme.secondaryBackground }]}
               onPress={onClose}
             >
               <MaterialCommunityIcons 
@@ -80,7 +80,7 @@ const CustomModal = ({
               style={[styles.closeButton, { backgroundColor: theme.tint }]}
               onPress={onClose}
             >
-              <Text style={[styles.closeButtonText, { color: theme.text }]}>Close</Text>
+              <Text style={[styles.closeButtonText, { color: theme.background }]}>Close</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: '90%',
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
     minHeight: 550,
@@ -119,7 +118,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   modalTitle: {
     fontSize: 22,
@@ -128,7 +126,6 @@ const styles = StyleSheet.create({
   closeIconButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   contentContainer: {
     flex: 1,

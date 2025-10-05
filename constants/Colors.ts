@@ -11,12 +11,21 @@ const tintColorDark = '#A78BFA'; // Lighter purple
 export default {
   light: {
     text: '#374151',
+<<<<<<< Updated upstream
     background: '#F8FAFC', // Modern light background
+=======
+    background: '#E8E2FF', // Modern light background
+>>>>>>> Stashed changes
     tint: tintColorLight,
     placeholder: '#9CA3AF',
     secondaryBackground: '#FFFFFF',
     secondaryText: '#6B7280',
     slider: 'rgba(139, 92, 246, 0.2)',
+<<<<<<< Updated upstream
+=======
+    selection: 'rgba(139, 92, 246, 0.1)', // Light purple selection
+    isDark: false,
+>>>>>>> Stashed changes
     
     // Soft pastel colors
     primary: primaryColor,
@@ -54,12 +63,23 @@ export default {
   },
   dark: {
     text: '#F9FAFB',
+<<<<<<< Updated upstream
     background: '#111827', // Modern dark background
     tint: tintColorDark,
     placeholder: '#9CA3AF', 
     secondaryBackground: '#1F2937',
     secondaryText: '#D1D5DB',
     slider: 'rgba(167, 139, 250, 0.2)',
+=======
+    background: '#4C1D95', // Dark purple background
+    tint: tintColorDark,
+    placeholder: '#9CA3AF', 
+    secondaryBackground: '#374151',
+    secondaryText: '#D1D5DB',
+    slider: 'rgba(167, 139, 250, 0.2)',
+    selection: '#4B5563', // Dark gray selection for dark mode - should be clearly visible
+    isDark: true,
+>>>>>>> Stashed changes
     
     // Modern colors for dark mode
     primary: '#A78BFA',
@@ -73,7 +93,11 @@ export default {
     gradientEnd: '#A78BFA',
     
     // Card colors - modern and clean
+<<<<<<< Updated upstream
     cardBackground: '#1F2937',
+=======
+    cardBackground: '#374151',
+>>>>>>> Stashed changes
     cardBorder: '#374151',
     
     // Action button colors - modern

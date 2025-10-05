@@ -4,7 +4,11 @@ import { router } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
+<<<<<<< Updated upstream
 import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+=======
+import { ChildService, ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
+>>>>>>> Stashed changes
 import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
 import { getAuth } from 'firebase/auth';
@@ -12,9 +16,16 @@ import TimeRangeSelector from '@/components/TimeRangeSelector';
 import Markdown from 'react-native-markdown-display';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+<<<<<<< Updated upstream
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import { View as SafeAreaView } from 'react-native';
+=======
+import CustomModal from '@/components/CustomModal';
+import { generateAndEmailReport, generatePdfFile, sharePdf, type ReportPayload } from '@/services/ReportService';
+import * as FileSystem from 'expo-file-system/legacy';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+>>>>>>> Stashed changes
 
 const TREND_TYPES = [
   { key: 'sleep', icon: 'power-sleep', label: 'Sleep' },
@@ -55,8 +66,13 @@ const InsightsTrendSelector: React.FC<{
   };
 
   return (
+<<<<<<< Updated upstream
     <View style={[styles.trendSelectorContainer, { backgroundColor: theme.background }]}>
       <View style={[styles.trendTrack, { backgroundColor: theme.cardBackground }]}>
+=======
+    <View style={[styles.trendSelectorContainer, { backgroundColor: theme.background, borderRadius: 20 }]}>
+      <View style={[styles.trendTrack, { backgroundColor: theme.secondaryBackground }]}>
+>>>>>>> Stashed changes
         {TREND_TYPES.map((type, index) => (
           <TouchableOpacity
             key={type.key}
@@ -560,12 +576,51 @@ export default function InsightsScreen() {
     }
   };
 
+  const handleShareReport = async () => {
+    if (!lastReportPayload) {
+      setShowReportPrompt(false);
+      return;
+    }
+    try {
+      setReportSending(true);
+      const payload: ReportPayload = {
+        ...lastReportPayload,
+        insightsMarkdown: includeInsights && hasInsights ? (aiResponse || '').slice(0, 12000) : undefined,
+        modelName: Constants.expoConfig?.extra?.AI_MODEL as string | undefined,
+      };
+      const uri = await generatePdfFile(payload);
+      await sharePdf(uri);
+      
+      // Clean up the file after sharing
+      try {
+        const info = await FileSystem.getInfoAsync(uri);
+        if (info.exists) {
+          await FileSystem.deleteAsync(uri, { idempotent: true });
+          console.log('[Insights] PDF temp file cleared from cache after sharing:', uri);
+        }
+      } catch (cleanupErr) {
+        console.warn('[Insights] Failed to cleanup temp PDF after sharing:', cleanupErr);
+      }
+    } catch (e) {
+      console.error('[Insights] Error generating/sharing report:', e);
+      Alert.alert('Report Error', 'Could not generate or share the report.');
+    } finally {
+      setReportSending(false);
+      setShowReportPrompt(false);
+      setIncludeInsights(false);
+    }
+  };
+
   const handleNavigateToAddChild = () => {
     router.push('/addchild');
   };
 
   return (
+<<<<<<< Updated upstream
     <SafeAreaView style={styles.container}>
+=======
+    <View style={styles.container}>
+>>>>>>> Stashed changes
       <AnimatedCloudBackground>
         <CornerIndicators
           selectedChild={selectedChild}
@@ -574,11 +629,19 @@ export default function InsightsScreen() {
           onNavigateToAddChild={handleNavigateToAddChild}
         />
         
+<<<<<<< Updated upstream
         <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.contentContainer, animatedStyle]}>
           <View style={styles.headerSection}>
             <Text style={[styles.headerTitle, { color: theme.text }]}>Insights</Text>
           </View>
+=======
+        <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+          <View style={styles.contentContainer}>
+        <View style={styles.headerSection}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Insights</Text>
+        </View>
+>>>>>>> Stashed changes
         
         <View style={styles.controlsSection}>
           <InsightsTrendSelector
@@ -657,10 +720,79 @@ export default function InsightsScreen() {
             </ScrollView>
           </View>
         )}
+<<<<<<< Updated upstream
         </Animated.View>
         </GestureDetector>
       </AnimatedCloudBackground>
     </SafeAreaView>
+=======
+          </View>
+        </SafeAreaView>
+      </AnimatedCloudBackground>
+
+      <CustomModal
+          visible={showReportPrompt}
+          onClose={() => setShowReportPrompt(false)}
+          title="Generate PDF Report?"
+          showCloseButton={false}
+          closeOnOutsideClick={false}
+          maxHeight={'75%'}
+        >
+          <View>
+            <Text style={{ marginBottom: 12, color: theme.text }}>
+              Would you like to generate an exportable PDF report using the selected trends and time range?
+            </Text>
+            <TouchableOpacity
+              activeOpacity={hasInsights ? 0.7 : 1}
+              onPress={() => {
+                if (!hasInsights) return;
+                setIncludeInsights(prev => !prev);
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, opacity: hasInsights ? 1 : 0.5 }}
+            >
+              <MaterialCommunityIcons
+                name={includeInsights && hasInsights ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={22}
+                color={hasInsights ? theme.tint : theme.secondaryText}
+              />
+              <Text style={{ marginLeft: 8, color: hasInsights ? theme.text : theme.secondaryText }}>
+                Include AI insights?
+              </Text>
+            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <TouchableOpacity
+                onPress={handleGenerateReport}
+                disabled={reportSending}
+                style={[styles.fetchButton, { backgroundColor: theme.tint, opacity: reportSending ? 0.6 : 1, flex: 1, minWidth: 80 }]}
+              >
+                {reportSending ? (
+                  <ActivityIndicator color={theme.background} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="email" size={20} color={theme.background} />
+                    <Text style={[styles.fetchButtonText, { color: theme.background }]}>Email</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleShareReport}
+                disabled={reportSending}
+                style={[styles.fetchButton, { backgroundColor: theme.tint, opacity: reportSending ? 0.6 : 1, flex: 1, minWidth: 80 }]}
+              >
+                {reportSending ? (
+                  <ActivityIndicator color={theme.background} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="share" size={20} color={theme.background} />
+                    <Text style={[styles.fetchButtonText, { color: theme.background }]}>Share</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </CustomModal>
+    </View>
+>>>>>>> Stashed changes
   );
 }
 
@@ -668,12 +800,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+<<<<<<< Updated upstream
   },
   contentContainer: {
     flex: 1,
     padding: 16,
     paddingTop: 80, // Account for corner indicator buttons
     paddingBottom: 90, // Account for overlapping tab bar
+=======
+  },
+  safeAreaContainer: {
+    flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 90, // Add padding for tab bar
+>>>>>>> Stashed changes
   },
   headerSection: {
     alignItems: 'center',

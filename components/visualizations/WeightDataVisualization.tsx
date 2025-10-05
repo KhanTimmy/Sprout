@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, useColorScheme, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryContainer, VictoryScatter } from 'victory-native';
 import { WeightData } from '@/services/ChildService';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -110,8 +110,7 @@ export const formatWeightForAxis = (totalOunces: number) => {
 
 export const WeightEntry = ({ weight }: { weight: WeightData }) => {
   const totalOunces = convertToTotalOunces(weight.pounds, weight.ounces);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   return (
     <View style={[
@@ -163,8 +162,7 @@ const WeightEntriesList: React.FC<WeightEntriesListProps> = ({ entries }) => (
 const PointPopout: React.FC<PointPopoutProps> = ({ data, onClose, position }) => {
   const [popoutPosition, setPopoutPosition] = useState({ x: 0, y: 0 });
   const lastGestureState = useRef({ dx: 0, dy: 0 });
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -318,8 +316,7 @@ export const processWeightData = (rawWeightData: WeightData[], rangeDays: number
 };
 
 const GraphSkeleton = () => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   return (
     <View style={[styles.skeletonContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -342,8 +339,7 @@ export const WeightVisualization: React.FC<WeightVisualizationProps> = ({ weight
   const scrollViewRef = useRef<ScrollView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processedData, setProcessedData] = useState<ReturnType<typeof processWeightData>>([]);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     console.log('[WeightVisualization] Processing weight data...');

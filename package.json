@@ -26,7 +26,14 @@
     "expo-image": "~3.0.8",
     "expo-linear-gradient": "^15.0.7",
     "expo-linking": "~8.0.8",
+<<<<<<< Updated upstream
     "expo-router": "~6.0.7",
+=======
+    "expo-mail-composer": "~14.1.6",
+    "expo-print": "~14.1.4",
+    "expo-router": "~6.0.7",
+    "expo-sharing": "^14.0.7",
+>>>>>>> Stashed changes
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-system-ui": "~6.0.7",

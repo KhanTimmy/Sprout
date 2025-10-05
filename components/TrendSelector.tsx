@@ -50,7 +50,7 @@ const TrendSelector: React.FC<TrendSelectorProps> = ({ onSelect, selected }) => 
   const itemWidth = sliderWidth / TREND_TYPES.length;
 
   return (
-    <View style={[styles.trendSelectorContainer, { backgroundColor: theme.background }]} onLayout={handleLayout}>
+    <View style={[styles.trendSelectorContainer, { backgroundColor: theme.background, borderRadius: 20 }]} onLayout={handleLayout}>
       {/* Track */}
       <View style={[styles.trendTrack, { backgroundColor: theme.secondaryBackground }]}>
         {TREND_TYPES.map((type) => (

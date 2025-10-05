@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native';
+<<<<<<< Updated upstream
+=======
+import { Image } from 'expo-image';
+import { SafeAreaView } from 'react-native-safe-area-context';
+>>>>>>> Stashed changes
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
@@ -15,12 +20,20 @@ import FeedModal from '../modals/FeedModal';
 import DiaperModal from '../modals/DiaperModal';
 import ActivityModal from '../modals/ActivityModal';
 import MilestoneModal from '../modals/MilestoneModal';
+<<<<<<< Updated upstream
 import CornerIndicators from '@/components/CornerIndicators';
 import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import AnimatedActionButton from '@/components/AnimatedActionButton';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { View as SafeAreaView } from 'react-native';
+=======
+import WeightModal from '../modals/WeightModal';
+import { useTheme } from '@/contexts/ThemeContext';
+import CornerIndicators from '@/components/CornerIndicators';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+import AnimatedActionButton from '@/components/AnimatedActionButton';
+>>>>>>> Stashed changes
 
 const ACTION_TYPES = [
   { key: 'sleep', icon: 'power-sleep', label: 'Sleep', modalKey: 'sleep', colorKey: 'sleepColor' },
@@ -161,6 +174,7 @@ export default function Home() {
     });
   };
 
+<<<<<<< Updated upstream
   return (
     <SafeAreaView style={styles.container}>
       <AnimatedCloudBackground>
@@ -174,6 +188,86 @@ export default function Home() {
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.contentContainer, animatedStyle]}>
             <View style={styles.headerSection}>
+=======
+  const getActionColor = (actionKey: string, theme: any) => {
+    switch (actionKey) {
+      case 'sleep':
+        return theme.sleepColor;
+      case 'feed':
+        return theme.feedColor;
+      case 'diaper':
+        return theme.diaperColor;
+      case 'activity':
+        return theme.activityColor;
+      case 'milestone':
+        return theme.milestoneColor;
+      case 'weight':
+        return theme.primary;
+      default:
+        return theme.primary;
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <AnimatedCloudBackground>
+        <CornerIndicators
+          selectedChild={selectedChild}
+          childrenList={childrenList}
+          onSelectChild={saveSelectedChild}
+          onNavigateToAddChild={handleNavigateToAddChild}
+        />
+
+        <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+          <View style={styles.contentContainer}>
+        <View style={styles.headerSection}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
+
+        </View>
+
+        {selectedChild ? (
+          <View style={[styles.childInfoCard, { backgroundColor: theme.secondaryBackground, borderColor: theme.tint }]}>
+            <View style={styles.childInfoLayout}>
+              <View style={styles.childDetails}>
+                <Text style={[styles.childName, { color: theme.text }]}>
+                  {selectedChild.first_name} {selectedChild.last_name}
+                </Text>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Age:</Text>
+                  <Text style={[styles.detailValue, { color: theme.text }]}>
+                    {calculateAge(selectedChild.dob)}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Born:</Text>
+                  <Text style={[styles.detailValue, { color: theme.text }]}>
+                    {formatDate(selectedChild.dob)}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Sex:</Text>
+                  <Text style={[styles.detailValue, { color: theme.text }]}>
+                    {selectedChild.sex === 'male' ? 'Male' : 'Female'}
+                  </Text>
+                </View>
+                {latestWeight && (
+                  <View style={styles.detailRow}>
+                    <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Weight:</Text>
+                    <Text style={[styles.detailValue, { color: theme.text }]}>
+                      {latestWeight.pounds} lbs {latestWeight.ounces} oz
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={[styles.childImageContainer, { backgroundColor: theme.background }]}>
+                <Image
+                  source={require('@/assets/images/logo.png')}
+                  style={styles.logoImage}
+                  contentFit="contain"
+                />
+              </View>
+>>>>>>> Stashed changes
             </View>
 
             {selectedChild ? (
@@ -226,6 +320,7 @@ export default function Home() {
         )}
 
         <View style={styles.actionsContainer}>
+<<<<<<< Updated upstream
           {ACTION_TYPES.map((action, index) => {
             const actionColor = selectedChild ? theme[action.colorKey as keyof typeof theme] : theme.background;
             return (
@@ -240,6 +335,19 @@ export default function Home() {
               />
             );
           })}
+=======
+          {ACTION_TYPES.map((action, index) => (
+            <AnimatedActionButton
+              key={action.key}
+              icon={action.icon}
+              label={action.label}
+              color={selectedChild ? getActionColor(action.key, theme) : theme.placeholder}
+              onPress={() => handleActionPress(action.modalKey)}
+              disabled={!selectedChild}
+              delay={index * 100}
+            />
+          ))}
+>>>>>>> Stashed changes
         </View>
 
         {!selectedChild && (
@@ -249,8 +357,13 @@ export default function Home() {
             </Text>
           </View>
         )}
+<<<<<<< Updated upstream
           </Animated.View>
         </GestureDetector>
+=======
+          </View>
+        </SafeAreaView>
+>>>>>>> Stashed changes
       </AnimatedCloudBackground>
 
       <ChildSelectionModal
@@ -304,7 +417,7 @@ export default function Home() {
         childId={selectedChild?.id}
         currentWeight={latestWeight}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -312,12 +425,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+<<<<<<< Updated upstream
   },
   contentContainer: {
     flex: 1,
     padding: 16,
     paddingTop: 80, // Account for corner indicator buttons
     paddingBottom: 90, // Account for overlapping tab bar
+=======
+  },
+  safeAreaContainer: {
+    flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 90, // Add padding for tab bar
+>>>>>>> Stashed changes
   },
   headerSection: {
     alignItems: 'center',
@@ -356,7 +481,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderStyle: 'dashed',
     borderColor: 'rgba(0,0,0,0.1)',
   },
   noChildText: {
@@ -407,6 +531,11 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  logoImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
   },
   actionsContainer: {
     width: '100%',

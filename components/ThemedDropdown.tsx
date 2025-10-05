@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+<<<<<<< Updated upstream
 import { StyleSheet } from 'react-native';
+=======
+import { StyleSheet, View, Text } from 'react-native';
+>>>>>>> Stashed changes
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -81,11 +85,45 @@ const ThemedDropdown: React.FC<ThemedDropdownProps> = ({
         />
       )}
       activeColor={theme.selection}
+      containerStyle={{
+        backgroundColor: theme.secondaryBackground,
+      }}
       itemContainerStyle={{
         backgroundColor: theme.secondaryBackground,
       }}
       itemTextStyle={{
         color: theme.text,
+      }}
+      selectedItemTextStyle={{
+        color: theme.text,
+        fontWeight: '600',
+      }}
+      selectedItemContainerStyle={{
+        backgroundColor: theme.selection,
+      }}
+      flatListProps={{
+        style: {
+          backgroundColor: theme.secondaryBackground,
+        },
+      }}
+      renderItem={(item) => {
+        const isSelected = item.value === value;
+        return (
+          <View style={{
+            backgroundColor: isSelected ? theme.selection : theme.secondaryBackground,
+            padding: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.placeholder,
+          }}>
+            <Text style={{
+              color: theme.text,
+              fontWeight: isSelected ? '600' : '400',
+              fontSize: 16,
+            }}>
+              {item.label}
+            </Text>
+          </View>
+        );
       }}
     />
   );

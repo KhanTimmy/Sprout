@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< Updated upstream
 import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
 import { View as SafeAreaView } from 'react-native';
+=======
+import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, SafeAreaView } from 'react-native';
+>>>>>>> Stashed changes
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, NewChildData, ChildData } from '@/services/ChildService';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useTheme } from '@/contexts/ThemeContext';
+<<<<<<< Updated upstream
+=======
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+>>>>>>> Stashed changes
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AddChild() {
@@ -108,18 +116,19 @@ export default function AddChild() {
   const isFormValid = firstName.trim() !== '' && lastName.trim() !== '' && dob !== '' && sex !== '';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, width: '100%' }}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}>
+      <AnimatedCloudBackground>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, width: '100%' }}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.inner}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContainer} 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.inner}>
               <View style={styles.headerSection}>
                 <Text style={[styles.title, { color: theme.text }]}>Add Child</Text>
                 <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
@@ -223,8 +232,8 @@ export default function AddChild() {
                     <View style={styles.weightInputWrapper}>
                       <TextInput
                         style={[styles.weightInput, { 
-                          backgroundColor: theme.secondaryBackground,
-                          borderColor: theme.tint,
+                          backgroundColor: theme.cardBackground,
+                          borderColor: theme.primary,
                           color: theme.text
                         }]}
                         placeholder="Enter Lbs."
@@ -238,8 +247,8 @@ export default function AddChild() {
                     <View style={styles.weightInputWrapper}>
                       <TextInput
                         style={[styles.weightInput, { 
-                          backgroundColor: theme.secondaryBackground,
-                          borderColor: theme.tint,
+                          backgroundColor: theme.cardBackground,
+                          borderColor: theme.primary,
                           color: theme.text
                         }]}
                         placeholder="Enter Oz."
@@ -289,10 +298,11 @@ export default function AddChild() {
                 onCancel={() => setDatePickerVisibility(false)}
                 maximumDate={new Date()}
               />
-            </View>
-          </TouchableWithoutFeedback>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 }

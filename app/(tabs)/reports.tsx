@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
+<<<<<<< Updated upstream
 import { StyleSheet, TouchableOpacity, Text, View, Alert, ScrollView } from 'react-native';
+=======
+import { StyleSheet, TouchableOpacity, Text, View, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+>>>>>>> Stashed changes
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
@@ -10,11 +15,22 @@ import UnifiedDataGraph from '@/components/UnifiedDataGraph';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import TrendSelector, { TrendType } from '@/components/TrendSelector';
 import ChildSelectionModal from '../modals/ChildSelectionModal';
+<<<<<<< Updated upstream
 import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
 import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import { View as SafeAreaView } from 'react-native';
+=======
+import SleepModal from '../modals/SleepModal';
+import FeedModal from '../modals/FeedModal';
+import DiaperModal from '../modals/DiaperModal';
+import ActivityModal from '../modals/ActivityModal';
+import WeightModal from '../modals/WeightModal';
+import { useTheme } from '@/contexts/ThemeContext';
+import CornerIndicators from '@/components/CornerIndicators';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+>>>>>>> Stashed changes
 
 
 export default function Reports() {
@@ -130,8 +146,160 @@ export default function Reports() {
     fetchAllData();
   }, [selectedChild]);
 
+<<<<<<< Updated upstream
   return (
     <SafeAreaView style={styles.container}>
+=======
+  const { theme } = useTheme();
+
+  const handleEditRequest = (args: { type: TrendType; payload: any }) => {
+    setEditContext({ type: args.type, entry: args.payload });
+    setModalVisibility(prev => ({ ...prev, [args.type]: true }));
+  };
+
+  const handleModalClose = (type: TrendType) => {
+    setModalVisibility(prev => ({ ...prev, [type]: false }));
+    setEditContext(null);
+  };
+
+  const handleSave = async (type: TrendType, data: any) => {
+    if (!selectedChild) return;
+    
+    try {
+      if (editContext?.entry?.docId) {
+        // Update existing entry
+        const { docId, ...updateData } = data;
+        switch (type) {
+          case 'sleep':
+            await ChildUpdateService.updateSleep(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'feed':
+            await ChildUpdateService.updateFeed(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'diaper':
+            await ChildUpdateService.updateDiaper(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'activity':
+            await ChildUpdateService.updateActivity(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+          case 'weight':
+            await ChildUpdateService.updateWeight(selectedChild.id, editContext.entry.docId, updateData);
+            break;
+        }
+      } else {
+        // Create new entry
+        switch (type) {
+          case 'sleep':
+            await ChildService.addSleep(data);
+            break;
+          case 'feed':
+            await ChildService.addFeed(data);
+            break;
+          case 'diaper':
+            await ChildService.addDiaper(data);
+            break;
+          case 'activity':
+            await ChildService.addActivity(data);
+            break;
+          case 'weight':
+            await ChildService.addWeight(data);
+            break;
+        }
+      }
+      
+      // Refresh data
+      const fetchAllData = async () => {
+        if (!selectedChild) return;
+        
+        try {
+          const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
+            ChildService.getFeed(selectedChild.id),
+            ChildService.getSleep(selectedChild.id),
+            ChildService.getDiaper(selectedChild.id),
+            ChildService.getActivity(selectedChild.id),
+            ChildService.getMilestone(selectedChild.id),
+            ChildService.getWeight(selectedChild.id)
+          ]);
+
+          setFeedings(feedingsData);
+          setSleeps(sleepsData);
+          setDiapers(diapersData);
+          setActivities(activitiesData);
+          setMilestones(milestonesData);
+          setWeights(weightsData);
+        } catch (error) {
+          console.error('[Reports] Error refreshing data:', error);
+        }
+      };
+      
+      await fetchAllData();
+      setDataVersion(prev => prev + 1); // Increment to trigger popup refresh
+      handleModalClose(type);
+    } catch (error) {
+      console.error(`Error saving ${type} data:`, error);
+      Alert.alert('Error', `Could not save ${type} data`);
+    }
+  };
+
+  const handleDelete = async (type: TrendType, docId: string) => {
+    if (!selectedChild) return;
+    
+    try {
+      switch (type) {
+        case 'sleep':
+          await ChildUpdateService.deleteSleep(selectedChild.id, docId);
+          break;
+        case 'feed':
+          await ChildUpdateService.deleteFeed(selectedChild.id, docId);
+          break;
+        case 'diaper':
+          await ChildUpdateService.deleteDiaper(selectedChild.id, docId);
+          break;
+        case 'activity':
+          await ChildUpdateService.deleteActivity(selectedChild.id, docId);
+          break;
+        case 'weight':
+          await ChildUpdateService.deleteWeight(selectedChild.id, docId);
+          break;
+      }
+      
+      // Refresh data
+      const fetchAllData = async () => {
+        if (!selectedChild) return;
+        
+        try {
+          const [feedingsData, sleepsData, diapersData, activitiesData, milestonesData, weightsData] = await Promise.all([
+            ChildService.getFeed(selectedChild.id),
+            ChildService.getSleep(selectedChild.id),
+            ChildService.getDiaper(selectedChild.id),
+            ChildService.getActivity(selectedChild.id),
+            ChildService.getMilestone(selectedChild.id),
+            ChildService.getWeight(selectedChild.id)
+          ]);
+
+          setFeedings(feedingsData);
+          setSleeps(sleepsData);
+          setDiapers(diapersData);
+          setActivities(activitiesData);
+          setMilestones(milestonesData);
+          setWeights(weightsData);
+        } catch (error) {
+          console.error('[Reports] Error refreshing data:', error);
+        }
+      };
+      
+      await fetchAllData();
+      setDataVersion(prev => prev + 1); // Increment to trigger popup refresh
+      handleModalClose(type);
+    } catch (error) {
+      console.error(`Error deleting ${type} data:`, error);
+      Alert.alert('Error', `Could not delete ${type} data`);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+>>>>>>> Stashed changes
       <AnimatedCloudBackground>
         <CornerIndicators
           selectedChild={selectedChild}
@@ -139,6 +307,7 @@ export default function Reports() {
           onSelectChild={saveSelectedChild}
           onNavigateToAddChild={handleNavigateToAddChild}
         />
+<<<<<<< Updated upstream
         <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.contentContainer, animatedStyle]}>
           <ScrollView 
@@ -150,6 +319,13 @@ export default function Reports() {
             <View style={styles.headerSection}>
               <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
             </View>
+=======
+        <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+          <View style={styles.contentContainer}>
+        <View style={styles.headerSection}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Reports</Text>
+        </View>
+>>>>>>> Stashed changes
 
             <View style={styles.controlsSection}>
               <TrendSelector
@@ -162,6 +338,7 @@ export default function Reports() {
               />
             </View>
 
+<<<<<<< Updated upstream
             <View style={styles.graphSection}>
               <View style={[styles.graphContainer, { backgroundColor: theme.cardBackground }]}>
                 <UnifiedDataGraph
@@ -178,6 +355,26 @@ export default function Reports() {
           </ScrollView>
         </Animated.View>
         </GestureDetector>
+=======
+        <View style={styles.graphSection}>
+          <View style={[styles.graphContainer, { backgroundColor: theme.secondaryBackground }]}>
+            <UnifiedDataGraph
+              sleepData={sleeps}
+              feedData={feedings}
+              diaperData={diapers}
+              activityData={activities}
+              milestoneData={milestones}
+              weightData={weights}
+              rangeDays={rangeDays}
+              activeDataType={selectedTrend}
+              onEditRequest={handleEditRequest}
+              dataVersion={dataVersion}
+            />
+          </View>
+        </View>
+          </View>
+        </SafeAreaView>
+>>>>>>> Stashed changes
       </AnimatedCloudBackground>
 
       <ChildSelectionModal
@@ -234,7 +431,7 @@ export default function Reports() {
         initialData={editContext?.type === 'weight' ? editContext.entry : undefined}
         onDelete={editContext?.type === 'weight' ? (docId) => handleDelete('weight', docId) : undefined}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -242,6 +439,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+<<<<<<< Updated upstream
   },
   contentContainer: {
     flex: 1,
@@ -255,6 +453,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 20, // Extra padding at bottom for better scrolling
+=======
+  },
+  safeAreaContainer: {
+    flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 90, // Add padding for tab bar
+>>>>>>> Stashed changes
   },
   headerSection: {
     alignItems: 'center',

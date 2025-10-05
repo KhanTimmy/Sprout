@@ -8,9 +8,14 @@ import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import ChildSelectionModal from './modals/ChildSelectionModal';
 import { getAuth } from 'firebase/auth';
+<<<<<<< Updated upstream
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
+=======
+import { useTheme } from '@/contexts/ThemeContext';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+>>>>>>> Stashed changes
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AccessScreen() {
@@ -121,19 +126,19 @@ export default function AccessScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}> 
-      
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, width: '100%' }}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}> 
+      <AnimatedCloudBackground>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, width: '100%' }}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.inner}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContainer} 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.inner}>
               <View style={styles.headerSection}>
                 <Text style={[styles.title, { color: theme.text }]}>Manage Access</Text>
                 <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
@@ -249,10 +254,11 @@ export default function AccessScreen() {
                 onPress={() => router.back()}
                 variant="secondary"
               />
-            </View>
-          </TouchableWithoutFeedback>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 }

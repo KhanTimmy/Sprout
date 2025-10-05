@@ -137,7 +137,11 @@ const index = () => {
                   onPress={() => router.push('/forgotpassword')}
                   style={styles.forgotPasswordContainer}
                 >
+<<<<<<< Updated upstream
                   <Text style={[styles.forgotPassword, { color: theme.primary }]}>
+=======
+                  <Text style={[styles.forgotPassword, { color: theme.text }]}>
+>>>>>>> Stashed changes
                     Forgot Password?
                   </Text>
                 </TouchableOpacity>
@@ -150,8 +154,17 @@ const index = () => {
                   <CustomButton
                     title="Sign In"
                     onPress={logIn}
+<<<<<<< Updated upstream
                     variant={isInputValid ? "gradient" : "secondary"}
                     style={!isInputValid ? styles.disabledButton : undefined}
+=======
+                    variant={isInputValid ? "primary" : "secondary"}
+                    style={{
+                      ...styles.buttonBorder,
+                      borderColor: theme.primary,
+                      ...(!isInputValid ? styles.disabledButton : {})
+                    }}
+>>>>>>> Stashed changes
                     disabled={!isInputValid}
                   />
                 )}
@@ -160,7 +173,15 @@ const index = () => {
                   title="Create Account"
                   onPress={() => router.push('/register')}
                   variant="primary"
+<<<<<<< Updated upstream
                   style={styles.registerButton}
+=======
+                  style={{
+                    ...styles.buttonBorder,
+                    ...styles.registerButton,
+                    borderColor: theme.primary
+                  }}
+>>>>>>> Stashed changes
                 />
               </View>
               </View>
@@ -179,7 +200,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingVertical: 20,
+    paddingVertical: 10,
   },
   inner: {
     flex: 1,
@@ -188,29 +209,38 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
+<<<<<<< Updated upstream
     marginBottom: 30,
     marginTop: 20,
   },
   title: {
     fontSize: 42,
+=======
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  title: {
+    fontSize: 36,
+>>>>>>> Stashed changes
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
     letterSpacing: 1,
     textShadowColor: 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
     fontWeight: '400',
   },
   logo: {
     width: 200,
     height: 200,
     alignSelf: 'center',
+<<<<<<< Updated upstream
     borderRadius: 100,
     shadowColor: '#000',
     shadowOffset: {
@@ -220,6 +250,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 6,
+=======
+    borderRadius: 60,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+>>>>>>> Stashed changes
   },
   formSection: {
     width: '100%',
@@ -229,9 +270,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(220, 53, 69, 0.1)',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#DC3545',
   },
@@ -242,33 +283,49 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   input: {
     width: '100%',
+<<<<<<< Updated upstream
     height: 60,
     borderWidth: 2,
     borderRadius: 20,
     paddingHorizontal: 20,
+=======
+    height: 48,
+    borderWidth: 2,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+>>>>>>> Stashed changes
     fontSize: 16,
     fontWeight: '500',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
+<<<<<<< Updated upstream
       height: 4,
     },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+=======
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+>>>>>>> Stashed changes
   },
   passwordContainer: {
     flexDirection: 'row',
     width: '100%',
+<<<<<<< Updated upstream
     height: 60,
     alignItems: 'center',
     borderWidth: 2,
@@ -282,6 +339,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+=======
+    height: 48,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+>>>>>>> Stashed changes
   },
   passwordInput: {
     flex: 1,
@@ -294,7 +366,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordContainer: {
     alignSelf: 'flex-end',
-    marginBottom: 32,
+    marginBottom: 20,
   },
   forgotPassword: {
     fontSize: 14,
@@ -302,18 +374,22 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 12,
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
+    marginTop: 8,
+    fontSize: 14,
     fontWeight: '500',
   },
   disabledButton: {
     opacity: 0.6,
   },
+  buttonBorder: {
+    borderWidth: 2,
+    borderRadius: 12,
+  },
   registerButton: {
-    marginTop: 16,
+    marginTop: 12,
   },
 });
 

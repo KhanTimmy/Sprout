@@ -46,7 +46,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selectedRange, on
   const itemWidth = sliderWidth / TIME_RANGES.length;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]} onLayout={handleLayout}>
+    <View style={[styles.container, { backgroundColor: theme.background, borderRadius: 20 }]} onLayout={handleLayout}>
       <View style={[styles.track, { backgroundColor: theme.secondaryBackground }]}>
         {TIME_RANGES.map((range) => (
           <TouchableOpacity
@@ -57,8 +57,8 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selectedRange, on
           >
             <Text style={[
               styles.label,
-              { color: theme.secondaryText },
-              range.key === selectedRange && styles.labelSelected
+              { color: range.key === selectedRange ? theme.tint : theme.secondaryText },
+              range.key === selectedRange && { fontWeight: '600' }
             ]}>
               {range.label}
             </Text>
@@ -113,12 +113,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#666',
     fontWeight: '500',
-  },
-  labelSelected: {
-    color: '#4DA6FF',
-    fontWeight: '600',
   },
   slider: {
     position: 'absolute',

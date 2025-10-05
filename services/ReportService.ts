@@ -1,6 +1,7 @@
 import { printToFileAsync } from 'expo-print';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as MailComposer from 'expo-mail-composer';
+import * as Sharing from 'expo-sharing';
 import Constants from 'expo-constants';
 import { ChildData, FeedData, SleepData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 
@@ -417,13 +418,39 @@ export async function generatePdfFile(payload: ReportPayload): Promise<string> {
 }
 
 export async function emailPdf(fileUri: string, toEmail: string, subject: string, body: string): Promise<MailComposer.MailComposerResult> {
-  const result = await MailComposer.composeAsync({
-    recipients: [toEmail],
-    subject,
-    body,
-    attachments: [fileUri],
+  // Try to email with attachment first
+  try {
+    const result = await MailComposer.composeAsync({
+      recipients: [toEmail],
+      subject,
+      body,
+      attachments: [fileUri],
+    });
+    return result;
+  } catch (error) {
+    // If the file URI approach fails (FileUriExposedException), 
+    // we'll try without attachments and let the user know they need to attach manually
+    console.warn('[ReportService] File URI attachment failed, trying without attachment:', error);
+    
+    const result = await MailComposer.composeAsync({
+      recipients: [toEmail],
+      subject: `${subject} - Please attach the PDF manually`,
+      body: `${body}\n\nNote: The PDF file could not be automatically attached due to Android security restrictions. Please manually attach the PDF file from: ${fileUri}`,
+    });
+    return result;
+  }
+}
+
+export async function sharePdf(fileUri: string): Promise<void> {
+  const isAvailable = await Sharing.isAvailableAsync();
+  if (!isAvailable) {
+    throw new Error('Sharing is not available on this device');
+  }
+  
+  await Sharing.shareAsync(fileUri, {
+    mimeType: 'application/pdf',
+    dialogTitle: 'Share PDF Report'
   });
-  return result;
 }
 
 export async function generateAndEmailReport(payload: ReportPayload): Promise<{ uri: string }>{

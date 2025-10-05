@@ -6,10 +6,15 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+<<<<<<< Updated upstream
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+=======
+import { StatusBar } from 'expo-status-bar';
+>>>>>>> Stashed changes
 
 import { useColorScheme, LogBox } from 'react-native';
+import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext';
 
 export {
   ErrorBoundary,
@@ -51,6 +56,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
+<<<<<<< Updated upstream
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
@@ -79,5 +85,26 @@ function AppContent() {
         <Stack.Screen name="forgotpassword" options={{ headerShown: false }} />
       </Stack>
     </NavigationThemeProvider>
+=======
+    <SafeAreaProvider>
+      <CustomThemeProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <StatusBar style="auto" translucent={false} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="access" options={{ headerShown: false }} />
+            <Stack.Screen name="register" options={{ headerShown: false }} />
+            <Stack.Screen name="addchild" options={{ headerShown: false }} />
+            <Stack.Screen name="addcaregiver" options={{ headerShown: false }} />
+            <Stack.Screen name="forgotpassword" options={{ headerShown: false }} />
+          </Stack>
+        </ThemeProvider>
+      </CustomThemeProvider>
+    </SafeAreaProvider>
+>>>>>>> Stashed changes
   );
 }

@@ -78,7 +78,7 @@ const CornerIndicators: React.FC<CornerIndicatorsProps> = ({
         <TouchableOpacity
           style={[
             styles.leftModalOverlay,
-            { paddingTop: insets.top + 50 }
+            { paddingTop: insets.top + 20 }
           ]}
           activeOpacity={1}
           onPressOut={() => setIsLeftDropdownVisible(false)}
@@ -147,7 +147,7 @@ const CornerIndicators: React.FC<CornerIndicatorsProps> = ({
         <TouchableOpacity
           style={[
             styles.rightModalOverlay,
-            { paddingTop: insets.top + 50 }
+            { paddingTop: insets.top + 20 }
           ]}
           activeOpacity={1}
           onPressOut={() => setIsRightDropdownVisible(false)}
@@ -229,12 +229,19 @@ const styles = StyleSheet.create({
     width: 200,
     elevation: 10,
     shadowColor: '#000',
+<<<<<<< Updated upstream
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
     marginTop: 10,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+=======
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    marginTop: 0,
+>>>>>>> Stashed changes
   },
   dropdownRow: {
     flexDirection: 'row',

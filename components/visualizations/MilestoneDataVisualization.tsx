@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
+<<<<<<< Updated upstream
 import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer } from 'victory-native';
+=======
+>>>>>>> Stashed changes
 import { MilestoneData } from '@/services/ChildService';
 import { useTheme } from '@/contexts/ThemeContext';
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput } from 'react-native';
 import CustomModal from '@/components/CustomModal';
 import CustomButton from '@/components/CustomButton';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { WeightData } from '@/services/ChildService';
-import Colors from "@/constants/Colors";
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface WeightModalProps {
   visible: boolean;
@@ -25,8 +25,7 @@ const WeightModal = ({
   initialData,
   onDelete,
 }: WeightModalProps) => {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   const [pounds, setPounds] = useState('');
   const [ounces, setOunces] = useState('');
