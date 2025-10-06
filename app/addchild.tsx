@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< Updated upstream
-import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
-import { View as SafeAreaView } from 'react-native';
-=======
 import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, SafeAreaView } from 'react-native';
->>>>>>> Stashed changes
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, NewChildData, ChildData } from '@/services/ChildService';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useTheme } from '@/contexts/ThemeContext';
-<<<<<<< Updated upstream
-=======
 import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
->>>>>>> Stashed changes
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AddChild() {

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View } from 'react-native';
-import { SleepData, FeedData, DiaperData, ActivityData, MilestoneData } from '@/services/ChildService';
+import React, { useRef } from 'react';
+import { View, ScrollView } from 'react-native';
+import { SleepData, FeedData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import type { TrendType } from './TrendSelector';
 import SleepVisualization from './visualizations/SleepDataVisualization';
 import FeedVisualization from './visualizations/FeedDataVisualization';
@@ -34,27 +34,31 @@ const UnifiedDataGraph = ({
   onEditRequest,
   dataVersion,
 }: UnifiedDataGraphProps) => {
-  const renderVisualization = () => {
-    switch (activeDataType) {
-      case 'sleep':
-        return <SleepVisualization sleepData={rawSleepData} rangeDays={rangeDays} />;
-      case 'feed':
-        return <FeedVisualization feedData={rawFeedData} rangeDays={rangeDays} />;
-      case 'diaper':
-        return <DiaperVisualization diaperData={rawDiaperData} rangeDays={rangeDays} />;
-      case 'activity':
-        return <ActivityVisualization activityData={rawActivityData} rangeDays={rangeDays} />;
-      case 'milestone':
-        return <MilestoneVisualization milestoneData={rawMilestoneData} rangeDays={rangeDays} />;
-      default:
-        return null;
-    }
-  };
+  const scrollViewRef = useRef<ScrollView>(null);
 
   return (
-    <View style={{ flex: 1 }}>
-      {renderVisualization()}
-    </View>
+    <ScrollView>
+      <View>
+        {activeDataType === 'sleep' && (
+          <SleepVisualization sleepData={rawSleepData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'sleep', payload })} dataVersion={dataVersion} />
+        )}
+        {activeDataType === 'feed' && (
+          <FeedVisualization feedData={rawFeedData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'feed', payload })} dataVersion={dataVersion} />
+        )}
+        {activeDataType === 'diaper' && (
+          <DiaperVisualization diaperData={rawDiaperData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'diaper', payload })} dataVersion={dataVersion} />
+        )}
+        {activeDataType === 'activity' && (
+          <ActivityVisualization activityData={rawActivityData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'activity', payload })} dataVersion={dataVersion} />
+        )}
+        {activeDataType === 'milestone' && (
+          <MilestoneVisualization milestoneData={rawMilestoneData} rangeDays={rangeDays} />
+        )}
+        {activeDataType === 'weight' && (
+          <WeightVisualization weightData={rawWeightData} rangeDays={rangeDays} onEditRequest={(payload: any) => onEditRequest?.({ type: 'weight', payload })} dataVersion={dataVersion} />
+        )}
+      </View>
+    </ScrollView>
   );
 };
 

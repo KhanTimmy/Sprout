@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Animated, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
-import { hapticFeedback } from '@/utils/hapticFeedback';
 
 interface AnimatedActionButtonProps {
   icon: string;
@@ -71,7 +70,6 @@ export default function AnimatedActionButton({
 
   const handlePress = () => {
     if (!disabled) {
-      hapticFeedback.medium();
       onPress();
     }
   };

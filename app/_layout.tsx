@@ -1,17 +1,12 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-<<<<<<< Updated upstream
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
-=======
 import { StatusBar } from 'expo-status-bar';
->>>>>>> Stashed changes
 
 import { useColorScheme, LogBox } from 'react-native';
 import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext';
@@ -55,37 +50,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  return (
-<<<<<<< Updated upstream
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <AppContent />
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
-  );
-}
-
-function AppContent() {
-  const { isDark } = useTheme();
+  const colorScheme = useColorScheme();
 
   return (
-    <NavigationThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="access" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
-        <Stack.Screen name="addchild" options={{ headerShown: false }} />
-        <Stack.Screen name="addcaregiver" options={{ headerShown: false }} />
-        <Stack.Screen name="forgotpassword" options={{ headerShown: false }} />
-      </Stack>
-    </NavigationThemeProvider>
-=======
     <SafeAreaProvider>
       <CustomThemeProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -105,6 +72,5 @@ function AppContent() {
         </ThemeProvider>
       </CustomThemeProvider>
     </SafeAreaProvider>
->>>>>>> Stashed changes
   );
 }

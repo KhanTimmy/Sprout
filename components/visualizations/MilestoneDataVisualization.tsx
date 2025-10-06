@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList, TouchableWithoutFeedback, TouchableOpacity, ActivityIndicator, PanResponder } from 'react-native';
-<<<<<<< Updated upstream
-import { VictoryChart, VictoryBar, VictoryAxis, VictoryStack, VictoryContainer } from 'victory-native';
-=======
->>>>>>> Stashed changes
 import { MilestoneData } from '@/services/ChildService';
 import { useTheme } from '@/contexts/ThemeContext';
+import { VictoryChart, VictoryAxis, VictoryBar, VictoryStack, VictoryContainer } from 'victory-native';
 
 const MAX_MILESTONES_PER_DAY = 5;
 const screenWidth = Dimensions.get('window').width;
@@ -526,7 +523,7 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Milestone Data</Text>
       {renderMilestoneGraph()}
 
-      <View style={styles.listContainer}>
+      <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Milestone Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -540,7 +537,6 @@ export const MilestoneVisualization: React.FC<MilestoneVisualizationProps> = ({ 
             keyExtractor={(item, index) => `milestone-${index}`}
             style={[styles.milestoneList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -571,11 +567,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
-  listContainer: {
-    height: 300, // Fixed height for better scrolling
-  },
   milestoneList: {
-    height: 250, // Fixed height for the FlatList
+    flex: 1,
   },
   milestoneEntry: {
     padding: 12,

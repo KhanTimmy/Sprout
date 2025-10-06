@@ -137,11 +137,7 @@ const index = () => {
                   onPress={() => router.push('/forgotpassword')}
                   style={styles.forgotPasswordContainer}
                 >
-<<<<<<< Updated upstream
-                  <Text style={[styles.forgotPassword, { color: theme.primary }]}>
-=======
                   <Text style={[styles.forgotPassword, { color: theme.text }]}>
->>>>>>> Stashed changes
                     Forgot Password?
                   </Text>
                 </TouchableOpacity>
@@ -154,17 +150,12 @@ const index = () => {
                   <CustomButton
                     title="Sign In"
                     onPress={logIn}
-<<<<<<< Updated upstream
-                    variant={isInputValid ? "gradient" : "secondary"}
-                    style={!isInputValid ? styles.disabledButton : undefined}
-=======
                     variant={isInputValid ? "primary" : "secondary"}
                     style={{
                       ...styles.buttonBorder,
                       borderColor: theme.primary,
                       ...(!isInputValid ? styles.disabledButton : {})
                     }}
->>>>>>> Stashed changes
                     disabled={!isInputValid}
                   />
                 )}
@@ -173,15 +164,11 @@ const index = () => {
                   title="Create Account"
                   onPress={() => router.push('/register')}
                   variant="primary"
-<<<<<<< Updated upstream
-                  style={styles.registerButton}
-=======
                   style={{
                     ...styles.buttonBorder,
                     ...styles.registerButton,
                     borderColor: theme.primary
                   }}
->>>>>>> Stashed changes
                 />
               </View>
               </View>
@@ -209,19 +196,11 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-<<<<<<< Updated upstream
-    marginBottom: 30,
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 42,
-=======
     marginBottom: 15,
     marginTop: 10,
   },
   title: {
     fontSize: 36,
->>>>>>> Stashed changes
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 4,
@@ -237,20 +216,9 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 120,
+    height: 120,
     alignSelf: 'center',
-<<<<<<< Updated upstream
-    borderRadius: 100,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
-=======
     borderRadius: 60,
     shadowColor: '#000',
     shadowOffset: {
@@ -260,7 +228,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
->>>>>>> Stashed changes
   },
   formSection: {
     width: '100%',
@@ -292,54 +259,24 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-<<<<<<< Updated upstream
-    height: 60,
-    borderWidth: 2,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-=======
     height: 48,
     borderWidth: 2,
     borderRadius: 16,
     paddingHorizontal: 16,
->>>>>>> Stashed changes
     fontSize: 16,
     fontWeight: '500',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-<<<<<<< Updated upstream
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-=======
       height: 2,
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
->>>>>>> Stashed changes
   },
   passwordContainer: {
     flexDirection: 'row',
     width: '100%',
-<<<<<<< Updated upstream
-    height: 60,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-=======
     height: 48,
     alignItems: 'center',
     borderWidth: 2,
@@ -353,7 +290,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
->>>>>>> Stashed changes
   },
   passwordInput: {
     flex: 1,

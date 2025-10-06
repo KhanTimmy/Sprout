@@ -534,7 +534,7 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Activity Data</Text>
       {renderActivityGraph()}
 
-      <View style={styles.listContainer}>
+      <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Activity Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -552,7 +552,6 @@ export const ActivityVisualization: React.FC<ActivityVisualizationProps> = ({ ac
             keyExtractor={(item, index) => `activity-${index}`}
             style={[styles.activityList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -583,11 +582,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
-  listContainer: {
-    height: 300, // Fixed height for better scrolling
-  },
   activityList: {
-    height: 250, // Fixed height for the FlatList
+    flex: 1,
   },
   activityEntry: {
     padding: 12,

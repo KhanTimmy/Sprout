@@ -84,7 +84,7 @@ const TrendSelector: React.FC<TrendSelectorProps> = ({ onSelect, selected }) => 
             height: '100%', 
             backgroundColor: theme.slider,
             borderColor: theme.tint,
-            borderRadius: 20,
+            borderRadius: 16,
             borderWidth: 1,
           }}
         />
@@ -99,8 +99,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginHorizontal: 0,
     position: 'relative',
-    borderRadius: 20,
-    overflow: 'hidden',
   },
   trendTrack: {
     flexDirection: 'row',

@@ -1,15 +1,12 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from "react-native"
-import { View as SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from "react-native"
 import React, { useState } from "react"
 import { auth } from "@/firebase.config"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { router } from "expo-router"
 import CustomButton from '@/components/CustomButton';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useColorScheme } from 'react-native';
+import Colors from "@/constants/Colors";
 import { Ionicons } from '@expo/vector-icons';
-import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
-import BackButton from '@/components/BackButton';
-import LoadingAnimation from '@/components/LoadingAnimation';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -53,27 +50,26 @@ export default function Register() {
     }
   }
 
-  const { theme } = useTheme();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AnimatedCloudBackground>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1, width: '100%' }}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1, width: '100%' }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer} 
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView 
-            contentContainerStyle={styles.scrollContainer} 
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={styles.inner}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.inner}>
               <View style={styles.headerSection}>
-                <BackButton onPress={() => router.back()} style={styles.backButton} />
                 <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
                 <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
-                  Join Swaddle to track your baby's first steps
+                  Join Sprout to track your baby's growth journey
                 </Text>
               </View>
 
@@ -91,8 +87,8 @@ export default function Register() {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.primary,
+                        backgroundColor: theme.secondaryBackground,
+                        borderColor: theme.tint,
                         color: theme.text,
                       }
                     ]}
@@ -113,8 +109,8 @@ export default function Register() {
                     style={[
                       styles.passwordContainer,
                       { 
-                        borderColor: theme.primary, 
-                        backgroundColor: theme.cardBackground 
+                        borderColor: theme.tint, 
+                        backgroundColor: theme.secondaryBackground 
                       },
                     ]}
                   >
@@ -135,7 +131,7 @@ export default function Register() {
                       <Ionicons 
                         name={secureText ? "eye-off" : "eye"} 
                         size={24} 
-                        color={theme.primary} 
+                        color={theme.tint} 
                       />
                     </TouchableOpacity>
                   </View>
@@ -147,8 +143,8 @@ export default function Register() {
                     style={[
                       styles.passwordContainer,
                       { 
-                        borderColor: passwordsMatch ? theme.primary : theme.error, 
-                        backgroundColor: theme.cardBackground 
+                        borderColor: passwordsMatch ? theme.tint : '#DC3545', 
+                        backgroundColor: theme.secondaryBackground 
                       },
                     ]}
                   >
@@ -169,7 +165,7 @@ export default function Register() {
                       <Ionicons 
                         name={confirmSecureText ? "eye-off" : "eye"} 
                         size={24} 
-                        color={theme.primary} 
+                        color={theme.tint} 
                       />
                     </TouchableOpacity>
                   </View>
@@ -182,13 +178,16 @@ export default function Register() {
 
                 {loading ? (
                   <View style={styles.loadingContainer}>
-                    <LoadingAnimation text="Creating account..." size="large" />
+                    <ActivityIndicator size="large" color={theme.tint} />
+                    <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
+                      Creating account...
+                    </Text>
                   </View>
                 ) : (
                   <CustomButton
                     title="Create Account"
                     onPress={register}
-                    variant={isInputValid && passwordsMatch ? "gradient" : "secondary"}
+                    variant={isInputValid && passwordsMatch ? "primary" : "secondary"}
                     style={!isInputValid || !passwordsMatch ? styles.disabledButton : undefined}
                     disabled={!isInputValid || !passwordsMatch}
                   />
@@ -197,15 +196,14 @@ export default function Register() {
                 <CustomButton
                   title="Back to Sign In"
                   onPress={() => router.back()}
-                  variant="primary"
+                  variant="secondary"
                   style={styles.backToSignInButton}
                 />
               </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </AnimatedCloudBackground>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -223,24 +221,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   headerSection: {
-    marginBottom: 30,
-    marginTop: 20,
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 10,
+    marginBottom: 40,
+    marginTop: 40,
   },
   title: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: '800',
     marginBottom: 8,
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 16,
@@ -277,37 +265,21 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: 60,
+    height: 56,
     borderWidth: 2,
-    borderRadius: 20,
-    paddingHorizontal: 20,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
     fontWeight: '500',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   passwordContainer: {
     flexDirection: 'row',
     width: '100%',
-    height: 60,
+    height: 56,
     alignItems: 'center',
     borderWidth: 2,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderRadius: 12,
+    paddingHorizontal: 16,
   },
   passwordInput: {
     flex: 1,

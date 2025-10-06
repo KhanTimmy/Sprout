@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native';
-<<<<<<< Updated upstream
-=======
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
->>>>>>> Stashed changes
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
-import { GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { ChildService, ChildData, SleepData, FeedData, DiaperData, ActivityData, MilestoneData, WeightData } from '@/services/ChildService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from '@/contexts/ThemeContext';
 
 import ChildSelectionModal from '../modals/ChildSelectionModal';
 import SleepModal from '../modals/SleepModal';
@@ -20,27 +14,19 @@ import FeedModal from '../modals/FeedModal';
 import DiaperModal from '../modals/DiaperModal';
 import ActivityModal from '../modals/ActivityModal';
 import MilestoneModal from '../modals/MilestoneModal';
-<<<<<<< Updated upstream
-import CornerIndicators from '@/components/CornerIndicators';
-import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
-import AnimatedActionButton from '@/components/AnimatedActionButton';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import { useTabSwipeNavigation } from '@/hooks/useSwipeNavigation';
-import { View as SafeAreaView } from 'react-native';
-=======
 import WeightModal from '../modals/WeightModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import CornerIndicators from '@/components/CornerIndicators';
 import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
 import AnimatedActionButton from '@/components/AnimatedActionButton';
->>>>>>> Stashed changes
 
 const ACTION_TYPES = [
-  { key: 'sleep', icon: 'power-sleep', label: 'Sleep', modalKey: 'sleep', colorKey: 'sleepColor' },
-  { key: 'feed', icon: 'food-apple', label: 'Feed', modalKey: 'feed', colorKey: 'feedColor' },
-  { key: 'diaper', icon: 'baby-face-outline', label: 'Diaper', modalKey: 'diaper', colorKey: 'diaperColor' },
-  { key: 'activity', icon: 'run', label: 'Activity', modalKey: 'activity', colorKey: 'activityColor' },
-  { key: 'milestone', icon: 'star', label: 'Milestone', modalKey: 'milestone', colorKey: 'milestoneColor' }
+  { key: 'sleep', icon: 'power-sleep', label: 'Sleep', modalKey: 'sleep' },
+  { key: 'feed', icon: 'food-apple', label: 'Feed', modalKey: 'feed' },
+  { key: 'diaper', icon: 'baby-face-outline', label: 'Diaper', modalKey: 'diaper' },
+  { key: 'activity', icon: 'run', label: 'Activity', modalKey: 'activity' },
+  { key: 'milestone', icon: 'star', label: 'Milestone', modalKey: 'milestone' },
+  { key: 'weight', icon: 'scale-bathroom', label: 'Weight', modalKey: 'weight' }
 ] as const;
 
 export default function Home() {
@@ -58,15 +44,6 @@ export default function Home() {
     activity: false,
     milestone: false,
     weight: false,
-  });
-
-  // Swipe navigation for tab switching
-  const { panGesture, translateX } = useTabSwipeNavigation('home');
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
   });
 
   useEffect(() => {
@@ -174,21 +151,6 @@ export default function Home() {
     });
   };
 
-<<<<<<< Updated upstream
-  return (
-    <SafeAreaView style={styles.container}>
-      <AnimatedCloudBackground>
-        <CornerIndicators
-          selectedChild={selectedChild}
-          childrenList={childrenList}
-          onSelectChild={saveSelectedChild}
-          onNavigateToAddChild={handleNavigateToAddChild}
-        />
-
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.contentContainer, animatedStyle]}>
-            <View style={styles.headerSection}>
-=======
   const getActionColor = (actionKey: string, theme: any) => {
     switch (actionKey) {
       case 'sleep':
@@ -267,50 +229,13 @@ export default function Home() {
                   contentFit="contain"
                 />
               </View>
->>>>>>> Stashed changes
             </View>
-
-            {selectedChild ? (
-              <View style={[styles.childInfoCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
-                <View style={styles.childInfoLayout}>
-                  <View style={styles.childDetails}>
-                    <Text style={[styles.childName, { color: theme.text }]}>
-                      {selectedChild.first_name} {selectedChild.last_name}
-                    </Text>
-                    <View style={styles.detailRow}>
-                      <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Age:</Text>
-                      <Text style={[styles.detailValue, { color: theme.text }]}>
-                        {calculateAge(selectedChild.dob)}
-                      </Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Born:</Text>
-                      <Text style={[styles.detailValue, { color: theme.text }]}>
-                        {formatDate(selectedChild.dob)}
-                      </Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Text style={[styles.detailLabel, { color: theme.secondaryText }]}>Sex:</Text>
-                      <Text style={[styles.detailValue, { color: theme.text }]}>
-                        {selectedChild.sex === 'male' ? 'Male' : 'Female'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={[styles.childImageContainer, { backgroundColor: theme.primary }]}>
-                    <MaterialCommunityIcons
-                      name="account-child"
-                      size={48}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                </View>
-              </View>
-            ) : (
-          <View style={[styles.noChildCard, { backgroundColor: theme.cardBackground }]}>
+          </View>
+        ) : (
+          <View style={[styles.noChildCard, { backgroundColor: theme.secondaryBackground }]}>
             <MaterialCommunityIcons
               name="account-child-outline"
-              size={48}
+              size={32}
               color={theme.secondaryText}
             />
             <Text style={[styles.noChildText, { color: theme.secondaryText }]}>
@@ -320,22 +245,6 @@ export default function Home() {
         )}
 
         <View style={styles.actionsContainer}>
-<<<<<<< Updated upstream
-          {ACTION_TYPES.map((action, index) => {
-            const actionColor = selectedChild ? theme[action.colorKey as keyof typeof theme] : theme.background;
-            return (
-              <AnimatedActionButton
-                key={action.key}
-                icon={action.icon}
-                label={action.label}
-                color={actionColor}
-                onPress={() => handleActionPress(action.modalKey)}
-                disabled={!selectedChild}
-                delay={index * 100} // Staggered animation
-              />
-            );
-          })}
-=======
           {ACTION_TYPES.map((action, index) => (
             <AnimatedActionButton
               key={action.key}
@@ -347,7 +256,6 @@ export default function Home() {
               delay={index * 100}
             />
           ))}
->>>>>>> Stashed changes
         </View>
 
         {!selectedChild && (
@@ -357,13 +265,8 @@ export default function Home() {
             </Text>
           </View>
         )}
-<<<<<<< Updated upstream
-          </Animated.View>
-        </GestureDetector>
-=======
           </View>
         </SafeAreaView>
->>>>>>> Stashed changes
       </AnimatedCloudBackground>
 
       <ChildSelectionModal
@@ -425,14 +328,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-<<<<<<< Updated upstream
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 16,
-    paddingTop: 80, // Account for corner indicator buttons
-    paddingBottom: 90, // Account for overlapping tab bar
-=======
   },
   safeAreaContainer: {
     flex: 1,
@@ -442,42 +337,42 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
     paddingBottom: 90, // Add padding for tab bar
->>>>>>> Stashed changes
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 8,
-    paddingVertical: 10,
+    marginBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '400',
     textAlign: 'center',
-    marginTop: 8,
-    letterSpacing: 0.3,
   },
   childInfoCard: {
     width: '100%',
     padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 12,
+    marginBottom: 24,
+    borderWidth: 2,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 4,
+    elevation: 3,
   },
   noChildCard: {
     width: '100%',
-    padding: 16,
+    padding: 20,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 24,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -498,8 +393,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   childName: {
-    fontSize: 22,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     marginBottom: 12,
   },
   detailRow: {
@@ -516,21 +411,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   childImageContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   logoImage: {
     width: 96,
@@ -542,8 +427,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 16,
+  },
+  actionButton: {
+    width: '30%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  actionButtonDisabled: {
+    opacity: 0.5,
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  actionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   infoContainer: {
     alignItems: 'center',

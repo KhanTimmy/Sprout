@@ -598,7 +598,7 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Feed Data</Text>
       {renderFeedGraph()}
 
-      <View style={styles.listContainer}>
+      <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Feed Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -616,7 +616,6 @@ export const FeedVisualization: React.FC<FeedVisualizationProps> = ({ feedData: 
             keyExtractor={(item, index) => `feed-${index}`}
             style={[styles.feedList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -647,11 +646,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
-  listContainer: {
-    height: 300, // Fixed height for better scrolling
-  },
   feedList: {
-    height: 250, // Fixed height for the FlatList
+    flex: 1,
   },
   feedEntry: {
     padding: 12,

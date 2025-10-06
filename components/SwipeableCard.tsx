@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SwipeableCardProps {
   children: React.ReactNode;
@@ -17,8 +16,7 @@ export default function SwipeableCard({
   onSwipeRight,
   swipeThreshold = 100
 }: SwipeableCardProps) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
   
   const translateX = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;

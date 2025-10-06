@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-<<<<<<< Updated upstream
-import { StyleSheet } from 'react-native';
-=======
 import { StyleSheet, View, Text } from 'react-native';
->>>>>>> Stashed changes
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';

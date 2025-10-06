@@ -81,7 +81,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ selectedRange, on
             height: '100%',
             backgroundColor: theme.slider,
             borderColor: theme.tint,
-            borderRadius: 20,
+            borderRadius: 16,
             borderWidth: 1,
           }}
         />
@@ -96,8 +96,6 @@ const styles = StyleSheet.create({
     marginVertical: 0,
     marginHorizontal: 0,
     position: 'relative',
-    borderRadius: 20,
-    overflow: 'hidden',
   },
   track: {
     flexDirection: 'row',

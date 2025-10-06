@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Text, TextInput, StyleSheet, View, Alert, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { View as SafeAreaView } from 'react-native';
+import { SafeAreaView, Text, TextInput, StyleSheet, View, Alert, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/firebase.config';
 import { router } from 'expo-router';
 import CustomButton from '@/components/CustomButton';
-import { useTheme } from '@/contexts/ThemeContext';
+import AnimatedCloudBackground from '@/components/AnimatedCloudBackground';
+import Colors from "@/constants/Colors";
+import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AddCaregiver() {
@@ -14,7 +15,8 @@ export default function AddCaregiver() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { theme } = useTheme();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   const handleAddCaregiver = async () => {
     setError('');
@@ -59,90 +61,92 @@ export default function AddCaregiver() {
   const isInputValid = email.trim() !== '';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, width: '100%' }}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}>
+      <AnimatedCloudBackground>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, width: '100%' }}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.inner}>
-              <View style={styles.headerSection}>
-                <Text style={[styles.title, { color: theme.text }]}>Add Caregiver</Text>
-                <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
-                  Grant access to another caregiver to view and update your child's information
-                </Text>
-              </View>
-
-              <View style={styles.formSection}>
-                {error ? (
-                  <View style={styles.errorContainer}>
-                    <Ionicons name="alert-circle" size={20} color="#DC3545" />
-                    <Text style={styles.errorText}>{error}</Text>
-                  </View>
-                ) : null}
-
-                <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: theme.text }]}>Caregiver's Email</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: theme.secondaryBackground,
-                        borderColor: theme.tint,
-                        color: theme.text,
-                      }
-                    ]}
-                    placeholder="Enter caregiver's email address"
-                    placeholderTextColor={theme.placeholder}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    textContentType="emailAddress"
-                  />
-                </View>
-
-                <View style={[styles.infoContainer, { backgroundColor: 'rgba(92, 184, 228, 0.1)', borderColor: theme.tint }]}>
-                  <Ionicons name="information-circle" size={20} color={theme.tint} />
-                  <Text style={[styles.infoText, { color: theme.text }]}>
-                    The caregiver will receive access to view and update your child's information. They will need to create an account with the same email address.
+          <ScrollView 
+            contentContainerStyle={styles.scrollContainer} 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.inner}>
+                <View style={styles.headerSection}>
+                  <Text style={[styles.title, { color: theme.text }]}>Add Caregiver</Text>
+                  <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
+                    Grant access to another caregiver to view and update your child's information
                   </Text>
                 </View>
 
-                {loading ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={theme.tint} />
-                    <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
-                      Adding caregiver...
+                <View style={styles.formSection}>
+                  {error ? (
+                    <View style={styles.errorContainer}>
+                      <Ionicons name="alert-circle" size={20} color="#DC3545" />
+                      <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                  ) : null}
+
+                  <View style={styles.inputContainer}>
+                    <Text style={[styles.inputLabel, { color: theme.text }]}>Caregiver's Email</Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: theme.cardBackground,
+                          borderColor: theme.primary,
+                          color: theme.text,
+                        }
+                      ]}
+                      placeholder="Enter caregiver's email address"
+                      placeholderTextColor={theme.placeholder}
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      textContentType="emailAddress"
+                    />
+                  </View>
+
+                  <View style={[styles.infoContainer, { backgroundColor: 'rgba(92, 184, 228, 0.1)', borderColor: theme.primary }]}>
+                    <Ionicons name="information-circle" size={20} color={theme.primary} />
+                    <Text style={[styles.infoText, { color: theme.text }]}>
+                      The caregiver will receive access to view and update your child's information. They will need to create an account with the same email address.
                     </Text>
                   </View>
-                ) : (
-                  <CustomButton
-                    title="Add Caregiver"
-                    onPress={handleAddCaregiver}
-                    variant={isInputValid ? "primary" : "secondary"}
-                    style={!isInputValid ? styles.disabledButton : undefined}
-                    disabled={!isInputValid}
-                  />
-                )}
 
-                <CustomButton
-                  title="Cancel"
-                  onPress={() => router.back()}
-                  variant="secondary"
-                  style={styles.cancelButton}
-                />
+                  {loading ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="large" color={theme.primary} />
+                      <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
+                        Adding caregiver...
+                      </Text>
+                    </View>
+                  ) : (
+                    <CustomButton
+                      title="Add Caregiver"
+                      onPress={handleAddCaregiver}
+                      variant={isInputValid ? "primary" : "secondary"}
+                      style={!isInputValid ? styles.disabledButton : undefined}
+                      disabled={!isInputValid}
+                    />
+                  )}
+
+                  <CustomButton
+                    title="Cancel"
+                    onPress={() => router.back()}
+                    variant="secondary"
+                    style={styles.cancelButton}
+                  />
+                </View>
               </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </AnimatedCloudBackground>
     </SafeAreaView>
   );
 }

@@ -557,7 +557,7 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Sleep Data</Text>
       {renderSleepGraph()}
       
-      <View style={styles.listContainer}>
+      <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Sleep Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -575,7 +575,6 @@ export const SleepVisualization: React.FC<SleepVisualizationProps> = ({ sleepDat
             keyExtractor={(item, index) => `sleep-${index}`}
             style={[styles.sleepList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -606,11 +605,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
-  listContainer: {
-    height: 300, // Fixed height for better scrolling
-  },
   sleepList: {
-    height: 250, // Fixed height for the FlatList
+    flex: 1,
   },
   sleepEntry: {
     padding: 12,

@@ -159,15 +159,22 @@ const ActivityModal = ({
 
 
 
-      </View>
-      
-      <View style={styles.buttonContainer}>
-        <CustomButton
-          title="Save"
-          onPress={handleSave}
-          variant="success"
-          style={styles.button}
-        />
+        <View style={styles.buttonContainer}>
+          {isEditMode && onDelete && (
+            <CustomButton
+              title="Delete"
+              onPress={handleDelete}
+              variant="danger"
+              style={styles.button}
+            />
+          )}
+          <CustomButton
+            title={isEditMode ? "Update" : "Save"}
+            onPress={handleSave}
+            variant="success"
+            style={styles.button}
+          />
+        </View>
       </View>
     </CustomModal>
   );

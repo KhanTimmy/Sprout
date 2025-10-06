@@ -3,10 +3,6 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 
-<<<<<<< Updated upstream
-import Colors from '@/constants/Colors';
-=======
->>>>>>> Stashed changes
 import { useTheme } from '@/contexts/ThemeContext';
 
 function TabBarIcon(props: {

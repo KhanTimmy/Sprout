@@ -651,7 +651,7 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
       <Text style={[styles.graphTitle,{ color: theme.text, backgroundColor: theme.secondaryBackground }]}>Diaper Data</Text>
       {renderDiaperGraph()}
 
-      <View style={styles.listContainer}>
+      <View>
         <Text style={[styles.listTitle, { color: theme.text, backgroundColor: theme.secondaryBackground }]}>Diaper Entries</Text>
         {isLoading ? (
           <View style={[styles.loadingListContainer, { backgroundColor: theme.secondaryBackground }]}>
@@ -669,7 +669,6 @@ export const DiaperVisualization: React.FC<DiaperVisualizationProps> = ({ diaper
             keyExtractor={(item, index) => `diaper-${index}`}
             style={[styles.diaperList, { backgroundColor: theme.secondaryBackground }]}
             showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}
           />
         )}
       </View>
@@ -700,11 +699,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     padding: 10,
   },
-  listContainer: {
-    height: 300, // Fixed height for better scrolling
-  },
   diaperList: {
-    height: 250, // Fixed height for the FlatList
+    flex: 1,
   },
   diaperEntry: {
     padding: 12,

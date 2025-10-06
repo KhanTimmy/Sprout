@@ -1,18 +1,11 @@
 import React from 'react';
-<<<<<<< Updated upstream
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, Animated } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '@/contexts/ThemeContext';
-import { hapticFeedback } from '@/utils/hapticFeedback';
-=======
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
->>>>>>> Stashed changes
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'gradient';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success';
   fullWidth?: boolean;
   style?: ViewStyle;
   disabled?: boolean;
@@ -27,119 +20,44 @@ export default function CustomButton({
   disabled = false 
 }: ButtonProps) {
   const { theme } = useTheme();
-<<<<<<< Updated upstream
-  const scaleValue = React.useRef(new Animated.Value(1)).current;
-=======
->>>>>>> Stashed changes
 
   const backgroundColors: Record<string, string> = {
-    primary: theme.primary,
-    secondary: theme.secondary,
-    danger: theme.error,
-    success: theme.accent,
-    gradient: 'transparent',
+    primary: theme.tint,
+    secondary: '#6C757D',
+    danger: '#DC3545',
+    success: '#28A745',
   };
 
   const textColors: Record<string, string> = {
-    primary: '#FFFFFF',
-    secondary: '#FFFFFF',
-    danger: '#FFFFFF',
-    success: '#FFFFFF',
-    gradient: '#FFFFFF',
+    primary: theme.text,
+    secondary: '#fff',
+    danger: '#fff',
+    success: '#fff',
   };
 
-  const buttonBackground = disabled ? '#E5E7EB' : backgroundColors[variant];
-  const buttonText = disabled ? '#9CA3AF' : textColors[variant];
-
-  const handlePressIn = () => {
-    if (!disabled) {
-      Animated.spring(scaleValue, {
-        toValue: 0.95,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }).start();
-    }
-  };
-
-  const handlePressOut = () => {
-    if (!disabled) {
-      Animated.spring(scaleValue, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }).start();
-    }
-  };
-
-  const handlePress = () => {
-    if (!disabled) {
-      hapticFeedback.light();
-      onPress();
-    }
-  };
-
-  if (variant === 'gradient' && !disabled) {
-    return (
-      <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            fullWidth && styles.fullWidth,
-            style,
-            disabled && styles.disabledButton,
-          ]}
-          onPress={handlePress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          disabled={disabled}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={[theme.gradientStart, theme.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradient}
-          >
-            <Text style={[
-              styles.buttonText,
-              { color: buttonText },
-              disabled && styles.disabledButtonText,
-            ]}>
-              {title}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  }
+  const buttonBackground = disabled ? '#E9ECEF' : backgroundColors[variant];
+  const buttonText = disabled ? '#6C757D' : textColors[variant];
 
   return (
-    <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-      <TouchableOpacity
-        style={[
-          styles.button,
-          { backgroundColor: buttonBackground },
-          fullWidth && styles.fullWidth,
-          style,
-          disabled && styles.disabledButton,
-        ]}
-        onPress={handlePress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={disabled}
-        activeOpacity={0.8}
-      >
-        <Text style={[
-          styles.buttonText,
-          { color: buttonText },
-          disabled && styles.disabledButtonText,
-        ]}>
-          {title}
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
+    <TouchableOpacity
+      style={[
+        styles.button,
+        { backgroundColor: buttonBackground },
+        fullWidth && styles.fullWidth,
+        style,
+        disabled && styles.disabledButton,
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+    >
+      <Text style={[
+        styles.buttonText,
+        { color: buttonText },
+        disabled && styles.disabledButtonText,
+      ]}>
+        {title}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -148,37 +66,17 @@ const styles = StyleSheet.create({
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  gradient: {
-    height: '100%',
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   fullWidth: {
     width: '100%',
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontWeight: 'bold',
   },
   disabledButton: {
     opacity: 0.6,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   disabledButtonText: {},
 });

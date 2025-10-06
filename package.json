@@ -1,5 +1,5 @@
 {
-  "name": "swaddle",
+  "name": "sprout",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -26,14 +26,10 @@
     "expo-image": "~3.0.8",
     "expo-linear-gradient": "^15.0.7",
     "expo-linking": "~8.0.8",
-<<<<<<< Updated upstream
-    "expo-router": "~6.0.7",
-=======
     "expo-mail-composer": "~14.1.6",
     "expo-print": "~14.1.4",
     "expo-router": "~6.0.7",
     "expo-sharing": "^14.0.7",
->>>>>>> Stashed changes
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-system-ui": "~6.0.7",
@@ -59,11 +55,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@types/react": "^19.1.13",
+    "@types/react": "~19.1.0",
     "jest": "^29.2.1",
-    "jest-expo": "~54.0.12",
+    "jest-expo": "~53.0.0",
     "react-test-renderer": "19.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.8.3"
   },
   "private": true
 }

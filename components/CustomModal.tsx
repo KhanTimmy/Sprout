@@ -64,16 +64,14 @@ const CustomModal = ({
             </TouchableOpacity>
           </View>
          
-          <View style={styles.contentContainer}>
-            <ScrollView 
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={true}
-              bounces={false}
-            >
-              {children}
-            </ScrollView>
-          </View>
+          <ScrollView 
+            style={styles.contentContainer}
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={true}
+            bounces={false}
+          >
+            {children}
+          </ScrollView>
          
           {showCloseButton && (
             <TouchableOpacity
@@ -130,15 +128,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     width: '100%',
-    marginBottom: 15,
-  },
-  scrollView: {
-    flex: 1,
-    width: '100%',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 10,
   },
   closeButton: {
     borderRadius: 12,

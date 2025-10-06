@@ -57,8 +57,7 @@ const CornerIndicators: React.FC<CornerIndicatorsProps> = ({
         style={[
           styles.leftCornerIndicator, 
           { 
-            backgroundColor: theme.cardBackground,
-            borderColor: theme.cardBorder,
+            backgroundColor: theme.secondaryBackground,
             top: insets.top + 12
           }
         ]}
@@ -83,7 +82,7 @@ const CornerIndicators: React.FC<CornerIndicatorsProps> = ({
           activeOpacity={1}
           onPressOut={() => setIsLeftDropdownVisible(false)}
         >
-          <View style={[styles.dropdownMenu, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+          <View style={[styles.dropdownMenu, { backgroundColor: theme.secondaryBackground }]}>
             <TouchableOpacity style={styles.dropdownItem} onPress={handleAddChildPress}>
               <Text style={[styles.dropdownItemText, { color: theme.text }]}>Add Child</Text>
             </TouchableOpacity>
@@ -126,8 +125,7 @@ const CornerIndicators: React.FC<CornerIndicatorsProps> = ({
         style={[
           styles.rightCornerIndicator, 
           { 
-            backgroundColor: theme.cardBackground,
-            borderColor: theme.cardBorder,
+            backgroundColor: theme.secondaryBackground,
             top: insets.top + 12
           }
         ]}
@@ -152,7 +150,7 @@ const CornerIndicators: React.FC<CornerIndicatorsProps> = ({
           activeOpacity={1}
           onPressOut={() => setIsRightDropdownVisible(false)}
         >
-          <View style={[styles.dropdownMenu, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+          <View style={[styles.dropdownMenu, { backgroundColor: theme.secondaryBackground }]}>
             <TouchableOpacity style={styles.dropdownItem} onPress={navigateToAccess}>
               <Text style={[styles.dropdownItemText, { color: theme.text }]}>Access</Text>
             </TouchableOpacity>
@@ -171,43 +169,23 @@ const styles = StyleSheet.create({
   leftCornerIndicator: {
     position: 'absolute',
     left: 12,
-    borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     maxWidth: '50%',
     zIndex: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
   },
   rightCornerIndicator: {
     position: 'absolute',
     right: 12,
-    borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     maxWidth: '50%',
     zIndex: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
   },
   cornerText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
   },
   leftModalOverlay: {
@@ -225,23 +203,14 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   dropdownMenu: {
-    borderRadius: 20,
+    borderRadius: 8,
     width: 200,
-    elevation: 10,
+    elevation: 5,
     shadowColor: '#000',
-<<<<<<< Updated upstream
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    marginTop: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-=======
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     marginTop: 0,
->>>>>>> Stashed changes
   },
   dropdownRow: {
     flexDirection: 'row',
